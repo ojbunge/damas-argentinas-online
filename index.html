@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Damas Argentinas</title>
+
+    <style>
+        h1 {
+            font-family: 'Garamond', 'Georgia', serif;
+            font-size: 3.5em;
+            color: #f1c40f;
+            /* Dorado base */
+            text-shadow: 2px 2px 0px #9e7e0a, 4px 4px 8px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border-bottom: 3px double #f1c40f;
+            padding-bottom: 10px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            /* El Tapiz de Godofredo */
+            background-image: url('assets/autumn-background.jpg');
+            background-size: cover;
+            /* La imagen se estira para cubrir todo */
+            background-attachment: fixed;
+            /* El fondo no se mueve al scrollear */
+            background-position: center;
+
+            /* Agregamos un filtro oscuro para que el tablero resalte más */
+            background-color: rgba(0, 0, 0, 0.6);
+            background-blend-mode: overlay;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .status-container {
+            /* Ajustamos un poco el ancho para que coincida con el tablero */
+            width: 630px;
+        }
+
+        :root {
+            --sq-size: 60px;
+            /* Tamaño base de la casilla */
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(10, var(--sq-size));
+            grid-template-rows: repeat(10, var(--sq-size));
+            width: fit-content;
+            border: 15px solid #2c1a10;
+            border-radius: 15px;
+            padding: 5px;
+            background-color: #2c1a10;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            margin: 20px auto;
+        }
+
+        /* El Escudo de Adaptación (Responsividad para móviles) */
+        @media (max-width: 700px) {
+            :root {
+                --sq-size: 8vw;
+            }
+
+            /* La casilla se achica según el ancho de pantalla */
+            #board {
+                border: 8px solid #2c1a10;
+            }
+
+            .status-container {
+                width: 90vw;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .piece {
+                width: 80%;
+                height: 80%;
+                margin: 10%;
+            }
+        }
+
+        /* La Huella en el Barro (Resaltado del último movimiento) */
+        .last-move-highlight {
+            background-color: rgba(255, 165, 0, 0.4) !important;
+            /* Naranja suave */
+        }
+
+        /* Estilo para el Botón de Rendición */
+        #surrenderBtn {
+            padding: 8px 15px;
+            background: #7f8c8d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-left: 5px;
+        }
+
+        #surrenderBtn:hover {
+            background: #95a5a6;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            /* Magia de centrado */
+            justify-content: center;
+            /* Centrado horizontal */
+            align-items: center;
+            /* Centrado vertical */
+        }
+
+        .light {
+            background-color: #f0d9b5;
+        }
+
+        .dark {
+            background-color: #b58863;
+        }
+
+        .piece {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            box-sizing: border-box;
+            /* El borde se cuenta hacia adentro */
+            transition: transform 0.3s ease-in-out, opacity 0.3s;
+            position: relative;
+            /* Ayuda a la estabilidad visual */
+        }
+
+        .white {
+            background-color: white;
+            border: 2px solid black;
+        }
+
+        .black {
+            background-color: black;
+            border: 2px solid grey;
+        }
+
+        .king {
+            box-shadow: 0 0 0 7px #ffb300da inset;
+        }
+
+        .selected {
+            outline: 4px solid red;
+        }
+
+        .highlight {
+            box-shadow: inset 0 0 0 4px lime;
+        }
+
+
+        /* Nuevo tablero de mandos */
+        .status-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 600px;
+            margin-bottom: 10px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-box {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        #resetBtn {
+            padding: 8px 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #resetBtn:hover {
+            background: #c0392b;
+        }
+
+        /* Animación para piezas obligatorias (Art. 9 y 10) */
+        @keyframes pulse-gold {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(255, 215, 0, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+            }
+        }
+
+        .must-move {
+            animation: pulse-gold 1.5s infinite;
+            border: 4px solid gold !important;
+            /* Un poquito más grueso para que se note el rango */
+        }
+
+        /* Suavizado para la aparición de piezas */
+        .piece {
+            transition: transform 0.3s ease-in-out, opacity 0.3s;
+        }
+
+        /* Clase para girar el tablero completo */
+        .flipped-board {
+            transform: rotate(180deg);
+        }
+
+
+        /* Muy importante: las piezas deben girar para quedar derecho */
+        .piece.reverse-rotate {
+            transform: rotate(180deg);
+        }
+
+
+        /* Pantalla de Espera */
+        #waitingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            color: #f1c40f;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            /* Esto hace que el tablero de atrás se vea borroso, ¡muy fancy! */
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .spinner {
+            border: 8px solid rgba(255, 255, 255, 0.1);
+            border-top: 8px solid #f1c40f;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h1>Damas Argentinas</h1>
+
+
+    <div class="status-container">
+        <div>
+            <span id="turnIndicator">Turno: Blancas</span>
+        </div>
+        <div class="score-box">
+            ⚪ <span id="whiteCount">15</span> | ⚫ <span id="blackCount">15</span>
+        </div>
+        <button id="resetBtn" onclick="location.reload()">Reiniciar Partida</button>
+        <button id="surrenderBtn" onclick="surrender()">Rendirse</button>
+    </div>
+
+
+    <div id="board"></div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+
+
+    <script>
+
+        // --- LA ORQUESTA DE GODOFREDO ---
+        const soundMove = new Audio('assets/move.mp3');
+        const soundCapture = new Audio('assets/capture.mp3');
+        const soundVictory = new Audio('assets/victory.mp3');
+        const soundCrowning = new Audio('assets/crowning.mp3');
+
+        let myColor = null; // Guardará 'w' o 'b'
+
+        const socket = io(); // Esto inicia la conexión mágica con el servidor
+
+        let lastMoveCoords = null; // Guardará {fromRow, fromCol, toRow, toCol}
+
+        let currentAllowedMoves = []; // Guardará solo los movimientos que cumplen las reglas
+
+        let highlightedSquares = [];
+
+        const board = [
+
+            [null, "b", null, "b", null, "b", null, "b", null, "b"],
+            ["b", null, "b", null, "b", null, "b", null, "b", null],
+            [null, "b", null, "b", null, "b", null, "b", null, "b"],
+
+            [null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null, null, null],
+
+            ["w", null, "w", null, "w", null, "w", null, "w", null],
+            [null, "w", null, "w", null, "w", null, "w", null, "w"],
+            ["w", null, "w", null, "w", null, "w", null, "w", null]
+
+        ];
+
+        function clearHighlights() {
+
+            highlightedSquares.forEach(square => {
+                square.classList.remove("highlight");
+            });
+
+            highlightedSquares = [];
+        }
+
+        function isEnemyPiece(piece, currentPiece) {
+
+            if (!piece) {
+                return false;
+            }
+
+            return piece.toLowerCase() !==
+                currentPiece.toLowerCase();
+        }
+
+
+        function playerHasCapture(player) {
+
+            for (let row = 0; row < 10; row++) {
+
+                for (let col = 0; col < 10; col++) {
+
+                    const piece = board[row][col];
+
+                    if (!piece) {
+                        continue;
+                    }
+
+                    if (piece.toLowerCase() !== player) {
+                        continue;
+                    }
+
+                    const moves =
+                        getLegalMoves(row, col);
+
+                    const hasCapture =
+                        moves.some(move =>
+                            move.type === "capture"
+                        );
+
+                    if (hasCapture) {
+                        return true;
+                    }
+
+                }
+
+            }
+
+            return false;
+
+        }
+
+
+        function pieceHasCapture(row, col) {
+
+            const moves = getLegalMoves(row, col);
+
+            return moves.some(
+                move => move.type === "capture"
+            );
+
+        }
+
+
+        function getLegalMoves(row, col) {
+
+            const piece = board[row][col];
+
+            if (!piece) {
+                return [];
+            }
+
+            const moves = [];
+
+            if (piece === "w") {
+
+                const moveTargets = [
+                    [row - 1, col - 1],
+                    [row - 1, col + 1]
+                ];
+
+                moveTargets.forEach(([r, c]) => {
+
+                    if (
+                        r >= 0 &&
+                        r < 10 &&
+                        c >= 0 &&
+                        c < 10 &&
+                        board[r][c] === null
+                    ) {
+                        moves.push({
+                            type: "move",
+                            row: r,
+                            col: c
+                        });
+                    }
+
+                });
+
+                const captureTargets = [
+                    {
+                        enemyRow: row - 1,
+                        enemyCol: col - 1,
+                        landingRow: row - 2,
+                        landingCol: col - 2
+                    },
+                    {
+                        enemyRow: row - 1,
+                        enemyCol: col + 1,
+                        landingRow: row - 2,
+                        landingCol: col + 2
+                    }
+                ];
+
+                captureTargets.forEach(target => {
+
+                    const enemyPiece =
+                        board[target.enemyRow]?.[target.enemyCol];
+
+                    if (
+                        isEnemyPiece(enemyPiece, piece) &&
+                        target.landingRow >= 0 &&
+                        target.landingRow < 10 &&
+                        target.landingCol >= 0 &&
+                        target.landingCol < 10 &&
+                        board[target.landingRow][target.landingCol] === null
+                    ) {
+                        moves.push({
+                            type: "capture",
+                            row: target.landingRow,
+                            col: target.landingCol,
+                            capturedRow: target.enemyRow,
+                            capturedCol: target.enemyCol
+                        });
+                    }
+
+                });
+
+            }
+
+            if (piece === "b") {
+
+                const moveTargets = [
+                    [row + 1, col - 1],
+                    [row + 1, col + 1]
+                ];
+
+                moveTargets.forEach(([r, c]) => {
+
+                    if (
+                        r >= 0 &&
+                        r < 10 &&
+                        c >= 0 &&
+                        c < 10 &&
+                        board[r][c] === null
+                    ) {
+                        moves.push({
+                            type: "move",
+                            row: r,
+                            col: c
+                        });
+                    }
+
+                });
+
+                const captureTargets = [
+                    {
+                        enemyRow: row + 1,
+                        enemyCol: col - 1,
+                        landingRow: row + 2,
+                        landingCol: col - 2
+                    },
+                    {
+                        enemyRow: row + 1,
+                        enemyCol: col + 1,
+                        landingRow: row + 2,
+                        landingCol: col + 2
+                    }
+                ];
+
+                captureTargets.forEach(target => {
+
+                    const enemyPiece =
+                        board[target.enemyRow]?.[target.enemyCol];
+
+                    if (
+                        isEnemyPiece(enemyPiece, piece) &&
+                        target.landingRow >= 0 &&
+                        target.landingRow < 10 &&
+                        target.landingCol >= 0 &&
+                        target.landingCol < 10 &&
+                        board[target.landingRow][target.landingCol] === null
+                    ) {
+                        moves.push({
+                            type: "capture",
+                            row: target.landingRow,
+                            col: target.landingCol,
+                            capturedRow: target.enemyRow,
+                            capturedCol: target.enemyCol
+                        });
+                    }
+
+                });
+
+            }
+
+            // --- LÓGICA DE LAS DAMAS (W y B) ---
+            if (piece === "W" || piece === "B") {
+                // Las 4 direcciones diagonales
+                const directions = [
+                    { dr: -1, dc: -1 }, // Arriba-Izquierda
+                    { dr: -1, dc: 1 },  // Arriba-Derecha
+                    { dr: 1, dc: -1 },  // Abajo-Izquierda
+                    { dr: 1, dc: 1 }   // Abajo-Derecha
+                ];
+
+                directions.forEach(dir => {
+                    let r = row + dir.dr;
+                    let c = col + dir.dc;
+
+                    // Mientras estemos dentro del tablero...
+                    while (r >= 0 && r < 10 && c >= 0 && c < 10) {
+                        if (board[r][c] === null) {
+                            // CASILLA VACÍA: La dama puede moverse aquí (Vuelo)
+                            moves.push({
+                                type: "move",
+                                row: r,
+                                col: c
+                            });
+                            // Seguimos explorando en la misma dirección
+                            r += dir.dr;
+                            c += dir.dc;
+                        } else {
+                            // CHOCAMOS CON UNA PIEZA: ¿Es enemiga?
+                            if (isEnemyPiece(board[r][c], piece)) {
+                                const nextR = r + dir.dr;
+                                const nextC = c + dir.dc;
+
+                                // ¿La casilla de atrás está libre? (Art. 7)
+                                if (
+                                    nextR >= 0 && nextR < 10 &&
+                                    nextC >= 0 && nextC < 10 &&
+                                    board[nextR][nextC] === null
+                                ) {
+                                    moves.push({
+                                        type: "capture",
+                                        row: nextR,
+                                        col: nextC,
+                                        capturedRow: r,
+                                        capturedCol: c
+                                    });
+                                }
+                            }
+                            // Después de chocar con cualquier pieza (amiga o enemiga), 
+                            // la dama no puede seguir volando en esa dirección.
+                            break;
+                        }
+                    }
+                });
+            }
+
+            return moves;
+        }
+
+        const boardElement = document.getElementById("board");
+
+
+        let selectedPiece = null;
+        let selectedPosition = null;
+
+        let currentPlayer = "w";
+
+        let pieceMustContinueCapturing = null; // Guarda la posición {row, col} si una pieza debe seguir saltando
+
+
+        function updateTurnIndicator() {
+
+            const turnIndicator = document.getElementById("turnIndicator");
+            if (!turnIndicator) return;
+
+            if (currentPlayer === "w") {
+                turnIndicator.textContent = "Turno: Blancas";
+                turnIndicator.style.color = "white";
+                turnIndicator.style.textShadow = "0 0 10px rgba(255,255,255,0.5)";
+            } else {
+                turnIndicator.textContent = "Turno: Negras";
+                turnIndicator.style.color = "#aaa"; // Un gris clarito para que resalte en el fondo oscuro
+                turnIndicator.style.textShadow = "none";
+            }
+
+        }
+
+
+        function renderBoard() {
+            boardElement.innerHTML = "";
+
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const square = document.createElement("div");
+                    square.id = `square-${row}-${col}`;
+                    square.classList.add("square");
+                    if ((row + col) % 2 === 0) square.classList.add("light");
+                    else square.classList.add("dark");
+
+                    // --- PINTAR HUELLAS DEL ÚLTIMO MOVIMIENTO ---
+                    if (lastMoveCoords) {
+                        if ((row === lastMoveCoords.fromRow && col === lastMoveCoords.fromCol) ||
+                            (row === lastMoveCoords.toRow && col === lastMoveCoords.toCol)) {
+                            square.classList.add("last-move-highlight");
+                        }
+                    }
+
+                    // --- CLICK EN EL CASILLERO (DESTINO) ---
+                    square.addEventListener("click", () => {
+                        if (!selectedPosition) return;
+                        if (!square.classList.contains("highlight")) return;
+
+                        // Buscamos el movimiento en la lista de PERMITIDOS (Art 10 y 11)
+                        const chosenMove = currentAllowedMoves.find(m => m.row === row && m.col === col);
+
+                        if (chosenMove) {
+                            executeMove(chosenMove);
+                        }
+                    });
+
+                    const pieceValue = board[row][col];
+
+                    if (pieceValue) {
+                        const piece = document.createElement("div");
+                        piece.classList.add("piece");
+
+                        // --- EL BRILLO DE GODOFREDO (Efecto Visual) ---
+                        const bestGlobal = getGlobalBestMoves(currentPlayer);
+                        if (bestGlobal.length > 0 && !pieceMustContinueCapturing) {
+                            if (bestGlobal.some(bg => bg.row === row && bg.col === col)) {
+                                piece.classList.add("must-move");
+                            }
+                        } else if (pieceMustContinueCapturing) {
+                            if (row === pieceMustContinueCapturing.row && col === pieceMustContinueCapturing.col) {
+                                piece.classList.add("must-move");
+                            }
+                        }
+
+                        // --- TU LÓGICA DE CLICK ---
+                        piece.addEventListener("click", (e) => {
+                            e.stopPropagation();
+
+                            const pieceColor = pieceValue.toLowerCase();
+
+                            // --- EL CANDADO DE GODOFREDO ---
+                            if (pieceColor !== myColor) {
+                                console.log("¡Alto ahí! No puedes dar órdenes a las tropas enemigas.");
+                                return;
+                            }
+
+                            if (pieceColor !== currentPlayer) return;
+
+                            if (pieceMustContinueCapturing) {
+                                if (row !== pieceMustContinueCapturing.row || col !== pieceMustContinueCapturing.col) return;
+                            }
+
+                            const bestGlobalCaptures = getGlobalBestMoves(currentPlayer);
+                            const hasAnyCapture = bestGlobalCaptures.length > 0;
+
+                            clearHighlights();
+                            currentAllowedMoves = [];
+
+                            if (hasAnyCapture) {
+                                const canThisPieceMove = bestGlobalCaptures.find(bc => bc.row === row && bc.col === col);
+                                if (!canThisPieceMove) {
+                                    console.log("Art 10/11: Hay otra pieza con prioridad.");
+                                    return;
+                                }
+                                currentAllowedMoves = canThisPieceMove.moves;
+                            } else {
+                                currentAllowedMoves = getLegalMoves(row, col);
+                            }
+
+                            currentAllowedMoves.forEach(m => {
+                                const targetSquare = document.getElementById(`square-${m.row}-${m.col}`);
+                                if (targetSquare) {
+                                    targetSquare.classList.add("highlight");
+                                    highlightedSquares.push(targetSquare);
+                                }
+                            });
+
+                            if (selectedPiece) selectedPiece.classList.remove("selected");
+                            piece.classList.add("selected");
+                            selectedPiece = piece;
+                            selectedPosition = { row, col };
+                        });
+
+                        // --- CLASES VISUALES (Colores y coronas) ---
+                        if (pieceValue.toLowerCase() === "w") piece.classList.add("white");
+                        if (pieceValue.toLowerCase() === "b") piece.classList.add("black");
+                        if (pieceValue === "W" || pieceValue === "B") piece.classList.add("king");
+
+                        // --- EL TOQUE DE GODOFREDO (Giro de piezas) ---
+                        // Si el jugador es Negras, el tablero está girado 180°, 
+                        // así que giramos las piezas 180° también para que se vean derechas.
+                        if (myColor === 'b') {
+                            piece.classList.add("reverse-rotate");
+                        }
+
+                        square.appendChild(piece);
+                    }
+
+                    boardElement.appendChild(square);
+                }
+            }
+
+            // Actualizar contadores reales
+            let w = 0, b = 0;
+            board.flat().forEach(p => {
+                if (p?.toLowerCase() === 'w') w++;
+                if (p?.toLowerCase() === 'b') b++;
+            });
+            document.getElementById("whiteCount").textContent = w;
+            document.getElementById("blackCount").textContent = b;
+
+            // --- LÓGICA DE AUTO-SELECCIÓN (Captura Múltiple) ---
+            if (pieceMustContinueCapturing) {
+                const r = pieceMustContinueCapturing.row;
+                const c = pieceMustContinueCapturing.col;
+
+                const bestGlobal = getGlobalBestMoves(currentPlayer);
+                const thisPieceMoves = bestGlobal.find(bg => bg.row === r && bg.col === c);
+
+                if (thisPieceMoves) {
+                    currentAllowedMoves = thisPieceMoves.moves;
+
+                    currentAllowedMoves.forEach(m => {
+                        const targetSquare = document.getElementById(`square-${m.row}-${m.col}`);
+                        if (targetSquare) {
+                            targetSquare.classList.add("highlight");
+                            highlightedSquares.push(targetSquare);
+                        }
+                    });
+
+                    const squareElement = document.getElementById(`square-${r}-${c}`);
+                    const pieceElement = squareElement.querySelector('.piece');
+                    if (pieceElement) {
+                        pieceElement.classList.add("selected");
+                        selectedPiece = pieceElement;
+                    }
+                }
+            }
+        }
+
+
+        function movePiece(fromRow, fromCol, toRow, toCol) {
+
+            const piece = board[fromRow][fromCol];
+
+            board[fromRow][fromCol] = null;
+            board[toRow][toCol] = piece;
+
+        }
+
+        function executeMove(move, isFromNetwork = false) {
+            // Si el movimiento lo hicimos nosotros (no viene del servidor), lo enviamos
+            if (!isFromNetwork) {
+                socket.emit('make-move', {
+                    from: selectedPosition,
+                    move: move
+                });
+            }
+
+            // 1. REGISTRAMOS LA HUELLA (Art. de Godofredo)
+            // Guardamos de dónde viene y a dónde va para que el renderBoard lo pinte
+            lastMoveCoords = {
+                fromRow: selectedPosition.row,
+                fromCol: selectedPosition.col,
+                toRow: move.row,
+                toCol: move.col
+            };
+
+            // 2. MOVEMOS LA PIEZA en la matriz 'board'
+            movePiece(
+                selectedPosition.row,
+                selectedPosition.col,
+                move.row,
+                move.col
+            );
+
+            // 3. LÓGICA DE CORONACIÓN (Art. 5)
+            let piece = board[move.row][move.col];
+            let justCrowned = false;
+
+            // Si es blanca y llegó a la fila 0, o es negra y llegó a la fila 9
+            if ((piece === "w" && move.row === 0) || (piece === "b" && move.row === 9)) {
+                board[move.row][move.col] = piece.toUpperCase(); // Se convierte en "W" o "B"
+                justCrowned = true;
+                soundCrowning.play().catch(e => console.log("Sonido de coronación bloqueado"));
+                console.log("¡Habemus Dama! Godofredo le entrega la corona.");
+            }
+
+            // 4. LÓGICA DE CAPTURA Y TURNO
+            if (move.type === "capture") {
+                // Eliminamos la pieza enemiga capturada
+                board[move.capturedRow][move.capturedCol] = null;
+
+                // Si acaba de coronar, el turno termina SI O SI (Art. 5)
+                if (justCrowned) {
+                    changeTurn();
+                } else {
+                    // Verificamos si la misma pieza puede seguir capturando
+                    const nextMoves = getLegalMoves(move.row, move.col);
+                    const canCaptureMore = nextMoves.some(m => m.type === "capture");
+
+                    if (canCaptureMore) {
+                        // Sigue el mismo jugador y la misma pieza
+                        pieceMustContinueCapturing = { row: move.row, col: move.col };
+                        selectedPosition = { row: move.row, col: move.col };
+                    } else {
+                        changeTurn();
+                    }
+                }
+            } else {
+                // Si fue un movimiento normal, termina el turno
+                changeTurn();
+            }
+
+            // 5. LIMPIEZA FINAL Y RENDER
+            // Si no hay capturas pendientes, limpiamos la selección
+            if (!pieceMustContinueCapturing) {
+                selectedPiece = null;
+                selectedPosition = null;
+            } else {
+                // Si hay captura múltiple, mantenemos la selección en la nueva casilla
+                selectedPosition = { row: move.row, col: move.col };
+            }
+
+            clearHighlights();
+
+            // Reproducir sonido según el tipo de movimiento
+            if (move.type === "capture") {
+                soundCapture.play().catch(e => console.log("Sonido bloqueado por el navegador"));
+            } else {
+                soundMove.play().catch(e => console.log("Sonido bloqueado por el navegador"));
+            }
+
+            // Redibujamos el tablero con el delay de 150ms que pidió el Gran Arquitecto
+            setTimeout(() => {
+                renderBoard();
+            }, 150);
+        }
+
+
+
+        function changeTurn() {
+            currentPlayer = (currentPlayer === "w") ? "b" : "w";
+            pieceMustContinueCapturing = null;
+            selectedPiece = null;
+            selectedPosition = null;
+            updateTurnIndicator();
+
+            // Godofredo revisa el campo de batalla después de cada turno
+            checkGameOver();
+        }
+
+
+        renderBoard();
+        updateTurnIndicator();
+
+
+        console.log(
+            "Blancas capturan:",
+            playerHasCapture("w")
+        );
+
+        console.log(
+            "Negras capturan:",
+            playerHasCapture("b")
+        );
+
+
+        function getBestCaptureSequences(row, col, currentBoard, isKing) {
+            const piece = currentBoard[row][col];
+            // IMPORTANTE: getLegalMoves ya usa el board global, lo cual es arriesgado en simulación.
+            // Pero por ahora, como restauramos todo, funcionará.
+            const moves = getLegalMoves(row, col);
+            const captures = moves.filter(m => m.type === "capture");
+
+            if (captures.length === 0) {
+                return { max: 0, sequences: [] };
+            }
+
+            let globalMax = 0;
+            let allPaths = [];
+
+            captures.forEach(c => {
+                // --- SIMULACIÓN ---
+                const originalEnemy = currentBoard[c.capturedRow][c.capturedCol];
+                const originalPiece = currentBoard[row][col];
+
+                // Ejecutamos salto
+                currentBoard[c.row][c.col] = originalPiece;
+                currentBoard[row][col] = null;
+                currentBoard[c.capturedRow][c.capturedCol] = null;
+
+                // Regla Art 5: Coronación detiene secuencia
+                const isWhiteCoronation = originalPiece === "w" && c.row === 0;
+                const isBlackCoronation = originalPiece === "b" && c.row === 9;
+
+                let resultMax = 0;
+                if (!(isWhiteCoronation || isBlackCoronation)) {
+                    const nextResult = getBestCaptureSequences(c.row, c.col, currentBoard, isKing);
+                    resultMax = nextResult.max;
+                }
+
+                const totalCaptures = 1 + resultMax;
+
+                if (totalCaptures > globalMax) {
+                    globalMax = totalCaptures;
+                    allPaths = [c];
+                } else if (totalCaptures === globalMax) {
+                    allPaths.push(c);
+                }
+
+                // --- DESHACER (Crucial que sea exacto) ---
+                currentBoard[row][col] = originalPiece;
+                currentBoard[c.row][c.col] = null;
+                currentBoard[c.capturedRow][c.capturedCol] = originalEnemy;
+            });
+
+            return { max: globalMax, sequences: allPaths };
+        }
+
+
+        function getGlobalBestMoves(player) {
+            let kingCaptures = [];
+            let pawnCaptures = [];
+            let maxKingCaptures = 0;
+            let maxPawnCaptures = 0;
+
+            // Recorremos todo el tablero buscando piezas del jugador
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const piece = board[r][c];
+                    if (piece && piece.toLowerCase() === player) {
+                        const isKing = (piece === "W" || piece === "B");
+                        const result = getBestCaptureSequences(r, c, board, isKing);
+
+                        if (result.max > 0) {
+                            if (isKing) {
+                                if (result.max > maxKingCaptures) {
+                                    maxKingCaptures = result.max;
+                                    kingCaptures = [{ row: r, col: c, moves: result.sequences }];
+                                } else if (result.max === maxKingCaptures) {
+                                    kingCaptures.push({ row: r, col: c, moves: result.sequences });
+                                }
+                            } else {
+                                if (result.max > maxPawnCaptures) {
+                                    maxPawnCaptures = result.max;
+                                    pawnCaptures = [{ row: r, col: c, moves: result.sequences }];
+                                } else if (result.max === maxPawnCaptures) {
+                                    pawnCaptures.push({ row: r, col: c, moves: result.sequences });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // APLICAMOS PRIORIDAD (Art. 11): Si hay damas que pueden capturar, ignoramos peones
+            if (kingCaptures.length > 0) {
+                return kingCaptures;
+            }
+            // Si no hay damas, devolvemos las mejores capturas de peones (Art. 10)
+            return pawnCaptures;
+        }
+
+
+        function checkGameOver() {
+            // 1. Contar piezas de cada uno
+            let whitePieces = 0;
+            let blackPieces = 0;
+
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const p = board[r][c];
+                    if (p) {
+                        if (p.toLowerCase() === 'w') whitePieces++;
+                        if (p.toLowerCase() === 'b') blackPieces++;
+                    }
+                }
+            }
+
+            // 2. ¿Alguien se quedó sin piezas?
+            if (whitePieces === 0) {
+                announceWinner("¡LAS NEGRAS GANAN!");
+                return true;
+            }
+            if (blackPieces === 0) {
+                announceWinner("¡LAS BLANCAS GANAN!");
+                return true;
+            }
+
+            // 3. ¿El jugador actual tiene algún movimiento posible?
+            // (Buscamos si existe al menos una pieza que devuelva algún movimiento legal)
+            const currentMoves = getGlobalBestMoves(currentPlayer);
+
+            // Si no hay capturas obligatorias, chequeamos movimientos normales
+            if (currentMoves.length === 0) {
+                let hasAnyMove = false;
+                for (let r = 0; r < 10; r++) {
+                    for (let c = 0; c < 10; c++) {
+                        const p = board[r][c];
+                        if (p && p.toLowerCase() === currentPlayer) {
+                            if (getLegalMoves(r, c).length > 0) {
+                                hasAnyMove = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!hasAnyMove) {
+                    const winner = (currentPlayer === 'w') ? "NEGRAS" : "BLANCAS";
+                    announceWinner(`¡LAS ${winner} GANAN POR BLOQUEO!`);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function announceWinner(message) {
+
+
+            soundVictory.play().catch(e => console.log("Sonido bloqueado"));
+
+            // Creamos un cartel visual simple
+            const banner = document.createElement("div");
+            banner.style.position = "absolute";
+            banner.style.top = "50%";
+            banner.style.left = "50%";
+            banner.style.transform = "translate(-50%, -50%)";
+            banner.style.backgroundColor = "rgba(0,0,0,0.8)";
+            banner.style.color = "gold";
+            banner.style.padding = "40px";
+            banner.style.fontSize = "30px";
+            banner.style.border = "5px solid gold";
+            banner.style.textAlign = "center";
+            banner.style.zIndex = "1000";
+            banner.innerHTML = `<h1>${message}</h1><button onclick="location.reload()" style="padding:10px; cursor:pointer">Jugar de nuevo</button>`;
+            document.body.appendChild(banner);
+        }
+
+        function surrender() {
+            const winner = (currentPlayer === 'w') ? "NEGRAS" : "BLANCAS";
+            const msg = `¡EL JUGADOR DE LAS ${currentPlayer === 'w' ? 'BLANCAS' : 'NEGRAS'} SE HA RENDIDO!`;
+            announceWinner(`${msg}<br>VICTORIA PARA LAS ${winner}`);
+        }
+
+
+        // Escuchar movimientos que vienen del servidor
+        socket.on('move-received', (data) => {
+            console.log("Noticia del frente: ¡El enemigo ha movido!");
+
+            // Seteamos temporalmente la selección en la posición de origen del enemigo
+            selectedPosition = data.from;
+
+            // Ejecutamos el movimiento, avisando que viene de la red
+            executeMove(data.move, true);
+        });
+
+
+        // El servidor nos dice qué color somos
+        socket.on('assign-role', (role) => {
+            myColor = role;
+            const boardElement = document.getElementById("board");
+
+            if (role === 'b') {
+                console.log("Godofredo me dice que soy Negras. Girando el tablero...");
+                boardElement.classList.add("flipped-board");
+            } else {
+                boardElement.classList.remove("flipped-board");
+            }
+
+            if (role === 'spectator') {
+                alert("El castillo está lleno. Estás en modo espectador.");
+            }
+        });
+
+
+        // Cuando el servidor dice que ambos están listos
+        socket.on('start-game', () => {
+            console.log("¡El rival ha llegado! Godofredo da la señal.");
+            document.getElementById("waitingOverlay").style.display = "none";
+        });
+
+        // Si el rival se desconecta durante la partida
+        socket.on('opponent-left', () => {
+            console.log("El rival ha huido. Esperando un nuevo caballero...");
+            const overlay = document.getElementById("waitingOverlay");
+            const msg = document.getElementById("waitingMessage");
+
+            overlay.style.display = "flex";
+            msg.textContent = "El oponente se ha desconectado. Esperando...";
+        });
+
+    </script>
+
+
+    <div id="waitingOverlay">
+        <div class="spinner"></div>
+        <h2 id="waitingMessage">Esperando al oponente...</h2>
+        <p>Godofredo está preparando el campo de batalla.</p>
+    </div>
+
+</body>
+
+</html>

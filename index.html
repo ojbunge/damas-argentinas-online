@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <title>Damas Argentinas</title>
 
+    <!-- EB Garamond: la usamos para el pergamino de las reglas (aire de libro antiguo, bien legible) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
     <style>
         h1 {
             font-family: 'Garamond', 'Georgia', serif;
@@ -62,8 +67,8 @@
             border-radius: 15px;
             padding: 5px;
             background-color: #2c1a10;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            margin: 20px auto;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            margin: 10px auto; /* Reducimos el margen de 20px a 10px para acercarlo a los nombres */
         }
 
         /* El Escudo de Adaptación (Responsividad para móviles) */
@@ -91,7 +96,6 @@
             .piece {
                 width: 80%;
                 height: 80%;
-                margin: 10%;
             }
         }
 
@@ -118,14 +122,11 @@
         }
 
         .square {
-            width: 60px;
-            height: 60px;
+            width: var(--sq-size);
+            height: var(--sq-size);
             display: flex;
-            /* Magia de centrado */
             justify-content: center;
-            /* Centrado horizontal */
             align-items: center;
-            /* Centrado vertical */
         }
 
         .light {
@@ -137,14 +138,17 @@
         }
 
         .piece {
-            width: 46px;
-            height: 46px;
+            width: 80%;
+            height: 80%;
             border-radius: 50%;
             box-sizing: border-box;
-            /* El borde se cuenta hacia adentro */
             transition: transform 0.3s ease-in-out, opacity 0.3s;
             position: relative;
-            /* Ayuda a la estabilidad visual */
+            cursor: pointer;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .white {
@@ -157,8 +161,25 @@
             border: 2px solid grey;
         }
 
+        /* --- LA CORONA DE GODOFREDO (Independiente del brillo) --- */
+        .king::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            right: 15%;
+            bottom: 15%;
+            border: 4px solid #ffb300da;
+            /* El dorado de las Reinas */
+            border-radius: 50%;
+            pointer-events: none;
+            /* Para que no interfiera con los clicks */
+            box-sizing: border-box;
+        }
+
+        /* Quitamos el box-shadow viejo del .king original para que no haya conflictos */
         .king {
-            box-shadow: 0 0 0 7px #ffb300da inset;
+            /* Ya no necesita nada aquí, la corona vive en el ::after */
         }
 
         .selected {
@@ -168,7 +189,6 @@
         .highlight {
             box-shadow: inset 0 0 0 4px lime;
         }
-
 
         /* Nuevo tablero de mandos */
         .status-container {
@@ -224,22 +244,15 @@
             /* Celeste brillante */
         }
 
-        /* Suavizado para la aparición de piezas */
-        .piece {
-            transition: transform 0.3s ease-in-out, opacity 0.3s;
-        }
-
         /* Clase para girar el tablero completo */
         .flipped-board {
             transform: rotate(180deg);
         }
 
-
         /* Muy importante: las piezas deben girar para quedar derecho */
         .piece.reverse-rotate {
             transform: rotate(180deg);
         }
-
 
         /* Pantalla de Espera */
         #waitingOverlay {
@@ -268,7 +281,32 @@
             width: 60px;
             height: 60px;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+
+            /* --- EL AJUSTE DE GODOFREDO --- */
+            margin: 0 auto 20px auto;
+            /* 0 arriba, auto a los lados, 20px abajo */
+            display: block;
+            /* Nos aseguramos de que se comporte como un bloque */
+        }
+
+        #entranceSection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Centra todo el contenido internamente */
+            text-align: center;
+        }
+
+        /* El Castillo de Godofredo: fondo de la pantalla de entrada.
+           background-size: cover + background-position: center logran
+           exactamente lo pedido: la imagen nunca se estira ni se achica
+           de forma despareja, solo se recorta por los bordes a medida que
+           la ventana cambia de tamaño, y el centro es lo último que se pierde. */
+        #waitingOverlay.entrance-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url('assets/castillo.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         @keyframes spin {
@@ -280,14 +318,288 @@
                 transform: rotate(360deg);
             }
         }
+
+        #usernameInput {
+            padding: 12px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: 2px solid #f1c40f;
+            background: #2c3e50;
+            color: white;
+            margin-bottom: 15px;
+            width: 250px;
+            text-align: center;
+        }
+
+        #enterBtn {
+            padding: 12px 25px;
+            background: #f1c40f;
+            color: #2c3e50;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        #userList {
+            margin: 20px 0;
+            width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .user-item {
+            padding: 10px;
+            margin: 5px;
+            background: rgba(241, 196, 15, 0.2);
+            border: 1px solid #f1c40f;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .user-item:hover {
+            background: rgba(241, 196, 15, 0.5);
+        }
+
+        #spectatorsBox {
+            width: 630px;
+            margin: 0 auto 5px auto;
+            /* Reducimos el margen inferior de 10px a 5px */
+            text-align: left;
+            color: #f1c40f;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        .player-name-label {
+            font-family: 'Garamond', 'Georgia', serif;
+            font-size: 1.5em;
+            color: white;
+            text-shadow: 1px 1px 3px black;
+            margin: 5px 0; /* Reducimos el margen superior e inferior de 10px a 5px */
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .name-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 1px solid gold;
+        }
+
+        /* --- LOS PERGAMINOS DE GODOFREDO (Botones y modal de Reglas) --- */
+
+        #rulesButtonsBar {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 2500;
+            display: flex;
+            gap: 8px;
+        }
+
+        .rules-btn {
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1c0a;
+            border: 2px solid #7a5a24;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.15s ease, filter 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .rules-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        /* En ventanas angostas, los botones dejan de flotar sobre el título
+           y pasan a ocupar su lugar en el flujo normal, arriba de él, para
+           que el "Damas Argentinas" quede siempre visible y sin tapar. */
+        @media (max-width: 700px) {
+            #rulesButtonsBar {
+                position: static;
+                justify-content: center;
+                width: 100%;
+                margin: 10px auto 0 auto;
+            }
+        }
+
+        #rulesModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 4000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        #rulesModalFrame {
+            position: relative;
+            width: min(680px, 92vw);
+            height: min(720px, 85vh);
+            background-image: url('assets/pergamino.jpg');
+            background-size: cover;
+            background-position: center;
+            border-radius: 6px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #rulesModalHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            flex-shrink: 0;
+        }
+
+        .lang-toggle-btn {
+            background: rgba(58, 42, 21, 0.85);
+            color: #f1c40f;
+            border: 1px solid rgba(241, 196, 15, 0.5);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            cursor: pointer;
+            margin-right: 6px;
+        }
+
+        .lang-toggle-btn:hover {
+            background: rgba(58, 42, 21, 1);
+        }
+
+        #closeRulesBtn {
+            background: rgba(58, 42, 21, 0.85);
+            color: #f1c40f;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        #closeRulesBtn:hover {
+            background: rgba(58, 42, 21, 1);
+        }
+
+        #rulesScrollArea {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 42px 40px 42px;
+        }
+
+        .rules-text h2 {
+            font-family: 'EB Garamond', 'Garamond', serif;
+            font-weight: 700;
+            font-size: 1.9em;
+            text-align: center;
+            letter-spacing: 1px;
+            margin: 0 0 6px 0;
+            color: #2c1c0a;
+            border-bottom: 2px solid rgba(107, 76, 26, 0.5);
+            padding-bottom: 14px;
+        }
+
+        .rules-subtitle {
+            display: block;
+            font-size: 0.5em;
+            font-weight: 500;
+            font-style: italic;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 8px;
+            color: #5c4425;
+        }
+
+        .rules-text h3 {
+            font-family: 'EB Garamond', 'Garamond', serif;
+            font-weight: 600;
+            font-variant: small-caps;
+            font-size: 1.3em;
+            letter-spacing: 0.5px;
+            margin: 24px 0 6px 0;
+            color: #4a2f10;
+        }
+
+        .rules-text p,
+        .rules-text li {
+            font-family: 'EB Garamond', 'Garamond', serif;
+            font-size: 1.12em;
+            line-height: 1.55;
+            color: #3a2a15;
+        }
+
+        .rules-text ul {
+            margin: 4px 0 4px 22px;
+            padding: 0;
+        }
+
+        .rules-text li {
+            margin-bottom: 4px;
+        }
+
+        .rules-text table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0 20px 0;
+            font-size: 0.95em;
+        }
+
+        .rules-text th,
+        .rules-text td {
+            border: 1px solid rgba(107, 76, 26, 0.4);
+            padding: 8px 10px;
+            text-align: center;
+            font-family: 'EB Garamond', 'Garamond', serif;
+            color: #3a2a15;
+        }
+
+        .rules-text th {
+            background: rgba(107, 76, 26, 0.18);
+            font-weight: 700;
+        }
     </style>
 
 </head>
 
 <body>
 
-    <h1>Damas Argentinas</h1>
+    <!-- La Barra de Godofredo: botones de Reglas, flotando siempre visibles -->
+    <div id="rulesButtonsBar">
+        <button class="rules-btn" onclick="openRules('es')">📜 Reglas 🇦🇷</button>
+        <button class="rules-btn" onclick="openRules('en')">📜 Rules 🇬🇧</button>
+    </div>
 
+    <h1>Damas Argentinas</h1>
 
     <div class="status-container">
         <div>
@@ -296,16 +608,362 @@
         <div class="score-box">
             ⚪ <span id="whiteCount">15</span> | ⚫ <span id="blackCount">15</span>
         </div>
-        <button id="resetBtn" onclick="location.reload()">Reiniciar Partida</button>
+        <!-- Solo queda el botón de Rendición -->
         <button id="surrenderBtn" onclick="surrender()">Rendirse</button>
+        <button id="leaveLobbyBtn" onclick="location.reload()"
+            style="display: none; padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Salir
+            al Lobby</button>
     </div>
 
+    <!-- El Mirador de Godofredo (Lista de Espectadores) -->
+    <div id="spectatorsBox"
+        style="width: 630px; margin: 0 auto 10px auto; text-align: left; color: #f1c40f; font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; border-left: 3px solid #f1c40f;">
+        <span id="spectatorListDisplay">Espectadores: -</span>
+    </div>
 
+    <!-- Estandarte del oponente (Arriba) -->
+    <div id="topPlayerName" class="player-name-label"></div>
     <div id="board"></div>
+    <!-- Estandarte propio (Abajo) -->
+    <div id="bottomPlayerName" class="player-name-label"></div>
 
+    <!-- La Puerta de Entrada y el Lobby de Godofredo -->
+    <div id="waitingOverlay" class="entrance-bg">
+        <div id="entranceSection">
+            <h1>🇦🇷 Damas Argentinas 🇦🇷</h1>
+            <div class="spinner"></div>
+            <h3>Identifíquese, noble Caballero</h3>
+            <input type="text" id="usernameInput" placeholder="Tu nombre o apodo..." maxlength="15">
+            <button id="enterBtn" onclick="registerUser()">Entrar al Castillo</button>
+        </div>
+
+        <div id="lobbySection" style="display: none;">
+            <h2>Salón de los Caballeros</h2>
+            <p>Seleccione un oponente o espere un desafío...</p>
+            <div id="userList">
+                <!-- Aquí aparecerán los nombres -->
+            </div>
+            <div class="spinner"></div>
+            <p id="waitingStatus">Buscando oponentes en la red...</p>
+        </div>
+
+    </div>
+
+    <!-- El Pop-up de Desafío de Godofredo -->
+    <!-- GODOFREDO LO LIBERÓ DE LA TORRE: antes vivía adentro de #waitingOverlay,
+         así que cuando alguien estaba espectando (con waitingOverlay en display:none)
+         un desafío entrante jamás podía verse, por más que este div dijera "block".
+         Ahora vive afuera, como hermano de waitingOverlay, y puede mostrarse
+         flotando sobre el tablero en cualquier momento. -->
+    <div id="challengeModal"
+        style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3000;">
+        <h3 id="challengeText">¡Un caballero te desafía!</h3>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+            <button id="acceptBtn"
+                style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">Aceptar</button>
+            <button id="declineBtn"
+                style="padding: 10px 20px; background: #c0392b; color: white; border: none; border-radius: 5px; cursor: pointer;">Rechazar</button>
+        </div>
+    </div>
+
+    <!-- El Pergamino de Godofredo: modal de Reglas, en español e inglés -->
+    <div id="rulesModal">
+        <div id="rulesModalFrame">
+            <div id="rulesModalHeader">
+                <div>
+                    <button class="lang-toggle-btn" onclick="showRulesLang('es')">🇦🇷 Español</button>
+                    <button class="lang-toggle-btn" onclick="showRulesLang('en')">🇬🇧 English</button>
+                </div>
+                <button id="closeRulesBtn" onclick="closeRules()">✕</button>
+            </div>
+            <div id="rulesScrollArea">
+
+                <div id="rulesTextEs" class="rules-text">
+                    <h2>Damas Argentinas Online<span class="rules-subtitle">Reglamento Oficial v1.0</span></h2>
+
+                    <h3>1. Tablero y piezas</h3>
+                    <ul>
+                        <li>El juego se desarrolla sobre un tablero de 10×10 casillas.</li>
+                        <li>Sólo se utilizan las casillas oscuras.</li>
+                        <li>Cada jugador comienza la partida con 15 fichas.</li>
+                        <li>Un jugador controla las fichas blancas y el otro las negras.</li>
+                        <li>Las fichas se colocan en las tres primeras filas de casillas jugables de cada lado del
+                            tablero.</li>
+                    </ul>
+
+                    <h3>2. Objetivo</h3>
+                    <p>Un jugador gana la partida cuando:</p>
+                    <ul>
+                        <li>captura todas las piezas del rival; o</li>
+                        <li>deja al rival sin movimientos legales.</li>
+                    </ul>
+                    <p>Los jugadores pueden acordar un empate en cualquier momento de la partida.</p>
+
+                    <h3>3. Movimiento del peón</h3>
+                    <ul>
+                        <li>El peón se mueve una casilla en diagonal hacia adelante.</li>
+                        <li>No puede mover hacia atrás.</li>
+                        <li>No puede mover sobre una casilla ocupada.</li>
+                    </ul>
+
+                    <h3>4. Captura del peón</h3>
+                    <ul>
+                        <li>El peón captura saltando sobre una pieza rival ubicada en una casilla diagonal
+                            adyacente hacia adelante.</li>
+                        <li>La casilla inmediatamente posterior a la pieza capturada debe estar libre.</li>
+                        <li>El peón aterriza en dicha casilla libre.</li>
+                        <li>El peón sólo puede capturar hacia adelante.</li>
+                        <li>Las capturas múltiples se rigen por lo establecido en el Artículo 8.</li>
+                    </ul>
+
+                    <h3>5. Coronación</h3>
+                    <ul>
+                        <li>Cuando un peón alcanza la última fila del tablero se convierte en dama.</li>
+                        <li>La coronación finaliza inmediatamente el turno.</li>
+                        <li>Si la coronación ocurre durante una secuencia de captura, dicha secuencia termina en
+                            ese momento.</li>
+                    </ul>
+
+                    <h3>6. Movimiento de la dama</h3>
+                    <ul>
+                        <li>La dama puede desplazarse cualquier cantidad de casillas libres en diagonal.</li>
+                        <li>Puede moverse tanto hacia adelante como hacia atrás.</li>
+                    </ul>
+
+                    <h3>7. Captura de la dama</h3>
+                    <ul>
+                        <li>La dama puede capturar una pieza rival situada en cualquier punto de una diagonal
+                            libre.</li>
+                        <li>Para capturar, la dama debe saltar sobre la pieza rival. La casilla inmediatamente
+                            posterior a dicha pieza debe estar libre, ya que la dama debe aterrizar
+                            obligatoriamente en esa casilla.</li>
+                        <li>No puede elegir una casilla de aterrizaje más alejada.</li>
+                        <li>Puede capturar tanto hacia adelante como hacia atrás.</li>
+                    </ul>
+
+                    <h3>8. Capturas múltiples</h3>
+                    <ul>
+                        <li>Siempre que, tras una captura, exista una nueva captura disponible para la misma
+                            pieza, el jugador debe continuar capturando.</li>
+                        <li>La secuencia continúa hasta que no existan más capturas legales para esa pieza.</li>
+                        <li>Todas las piezas capturadas se retiran del tablero al finalizar la secuencia.</li>
+                    </ul>
+
+                    <h3>9. Captura obligatoria</h3>
+                    <ul>
+                        <li>Si existe al menos una captura legal, el jugador está obligado a capturar.</li>
+                        <li>No se permiten movimientos normales mientras exista una captura disponible.</li>
+                    </ul>
+
+                    <h3>10. Regla de máxima captura</h3>
+                    <ul>
+                        <li>Cuando existen varias capturas posibles, el jugador debe elegir una secuencia que
+                            capture la mayor cantidad de piezas.</li>
+                        <li>Para determinar la máxima captura sólo se considera la cantidad total de piezas
+                            capturadas.</li>
+                        <li>Peones y damas capturadas tienen el mismo valor a este efecto.</li>
+                    </ul>
+
+                    <h3>11. Prioridad de la dama</h3>
+                    <ul>
+                        <li>Si existe al menos una captura legal disponible para una dama, el jugador deberá
+                            capturar con una dama.</li>
+                        <li>Las capturas realizadas por peones no son legales mientras exista una captura legal
+                            disponible para una dama.</li>
+                        <li>Si varias damas disponen de capturas legales, se aplican las reglas de máxima
+                            captura y de elección entre secuencias equivalentes establecidas en los artículos 10
+                            y 12.</li>
+                    </ul>
+
+                    <h3>12. Elección entre secuencias equivalentes</h3>
+                    <ul>
+                        <li>Si existen varias secuencias legales que cumplen las reglas aplicables y capturan la
+                            misma cantidad máxima de piezas, el jugador puede elegir libremente cualquiera de
+                            ellas.</li>
+                    </ul>
+
+                    <h3>13. Movimientos ilegales</h3>
+                    <ul>
+                        <li>El sistema no permite realizar movimientos ilegales.</li>
+                        <li>Las reglas de captura obligatoria, máxima captura y prioridad de dama son aplicadas
+                            automáticamente por el juego.</li>
+                    </ul>
+
+                    <h3>Nota histórica</h3>
+                    <p>En algunas versiones tradicionales de tablero físico existe la regla denominada "soplo",
+                        mediante la cual un jugador puede ser penalizado por omitir una captura obligatoria. En
+                        esta implementación digital los movimientos ilegales simplemente no pueden realizarse,
+                        por lo que dicha regla no es necesaria.</p>
+
+                    <h3>Cuadro para entender prioridades de captura</h3>
+                    <table>
+                        <tr>
+                            <th>Situación</th>
+                            <th>Igual número de capturas posibles</th>
+                            <th>Distinto número de capturas posibles</th>
+                        </tr>
+                        <tr>
+                            <td>Peón vs peón</td>
+                            <td>Quien captura es optativo</td>
+                            <td>Debe capturar quien más capturas tiene disponibles</td>
+                        </tr>
+                        <tr>
+                            <td>Peón vs dama</td>
+                            <td>Debe capturar la dama</td>
+                            <td>Debe capturar la dama, sin importar si el peón tiene más capturas disponibles
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Dama vs dama</td>
+                            <td>Quien captura es optativo</td>
+                            <td>Debe capturar quien más capturas tiene disponibles</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="rulesTextEn" class="rules-text" style="display: none;">
+                    <h2>Argentine Draughts Online<span class="rules-subtitle">Official Rules v1.0</span></h2>
+
+                    <h3>1. Board and Pieces</h3>
+                    <ul>
+                        <li>The game is played on a 10×10 board.</li>
+                        <li>Only the dark squares are used for play.</li>
+                        <li>Each player starts the game with 15 pieces.</li>
+                        <li>One player controls the white pieces and the other controls the black pieces.</li>
+                        <li>Pieces are placed on the first three rows of playable squares on each side of the
+                            board.</li>
+                    </ul>
+
+                    <h3>2. Objective</h3>
+                    <p>A player wins the game when:</p>
+                    <ul>
+                        <li>They capture all of the opponent's pieces; or</li>
+                        <li>They leave the opponent with no legal moves (blocking).</li>
+                    </ul>
+                    <p>Players may agree to a draw at any point during the match.</p>
+
+                    <h3>3. Pawn Movement</h3>
+                    <ul>
+                        <li>A pawn moves one square diagonally forward.</li>
+                        <li>It cannot move backward.</li>
+                        <li>It cannot move onto an occupied square.</li>
+                    </ul>
+
+                    <h3>4. Pawn Capture</h3>
+                    <ul>
+                        <li>A pawn captures by jumping over an opponent's piece located on an adjacent diagonal
+                            square forward.</li>
+                        <li>The square immediately behind the captured piece must be empty.</li>
+                        <li>The pawn lands on said empty square.</li>
+                        <li>A pawn can only capture forward.</li>
+                        <li>Multiple captures are governed by the rules set in Article 8.</li>
+                    </ul>
+
+                    <h3>5. Promotion (Kinging)</h3>
+                    <ul>
+                        <li>When a pawn reaches the last row of the board, it is promoted to a King.</li>
+                        <li>Promotion immediately ends the turn.</li>
+                        <li>If promotion occurs during a capture sequence, the sequence ends at that moment.</li>
+                    </ul>
+
+                    <h3>6. King Movement</h3>
+                    <ul>
+                        <li>A King can move any number of empty squares along a diagonal.</li>
+                        <li>It can move both forward and backward.</li>
+                    </ul>
+
+                    <h3>7. King Capture</h3>
+                    <ul>
+                        <li>A King can capture an opponent's piece located at any point on an open diagonal.</li>
+                        <li>To capture, the King must jump over the opponent's piece. The square immediately
+                            behind said piece must be empty, as the King is required to land on that square.
+                        </li>
+                        <li>The King cannot choose a further landing square.</li>
+                        <li>It can capture both forward and backward.</li>
+                    </ul>
+
+                    <h3>8. Multiple Captures</h3>
+                    <ul>
+                        <li>Whenever a new capture is available for the same piece after a jump, the player
+                            must continue capturing.</li>
+                        <li>The sequence continues until there are no more legal captures for that piece.</li>
+                        <li>All captured pieces are removed from the board only after the sequence is finished.
+                        </li>
+                    </ul>
+
+                    <h3>9. Mandatory Capture</h3>
+                    <ul>
+                        <li>If at least one legal capture exists, the player is obligated to capture.</li>
+                        <li>Normal moves are not allowed as long as a capture is available.</li>
+                    </ul>
+
+                    <h3>10. Maximum Capture Rule</h3>
+                    <ul>
+                        <li>When several capture sequences are possible, the player must choose the sequence
+                            that captures the highest number of pieces.</li>
+                        <li>To determine the maximum capture, only the total count of captured pieces is
+                            considered.</li>
+                        <li>Pawns and Kings have the same value for this purpose.</li>
+                    </ul>
+
+                    <h3>11. King Priority</h3>
+                    <ul>
+                        <li>If a legal capture is available for a King, the player must capture with the King.
+                        </li>
+                        <li>Captures performed by pawns are not legal as long as there is a legal capture
+                            available for a King.</li>
+                        <li>If multiple Kings have legal captures, the Maximum Capture and Equivalent Sequence
+                            rules (Articles 10 and 12) apply.</li>
+                    </ul>
+
+                    <h3>12. Choice between Equivalent Sequences</h3>
+                    <ul>
+                        <li>If several legal sequences fulfill the applicable rules and capture the same
+                            maximum number of pieces, the player may freely choose any of them.</li>
+                    </ul>
+
+                    <h3>13. Illegal Moves</h3>
+                    <ul>
+                        <li>The system does not allow illegal moves to be performed.</li>
+                        <li>The Mandatory Capture, Maximum Capture, and King Priority rules are applied
+                            automatically by the game.</li>
+                    </ul>
+
+                    <h3>Historical Note</h3>
+                    <p>In some traditional physical versions, a rule called "huffing" (soplo) exists, through
+                        which a player can be penalized for omitting a mandatory capture. In this digital
+                        implementation, illegal moves simply cannot be made, so this rule is unnecessary.</p>
+
+                    <h3>Capture Priority Chart</h3>
+                    <table>
+                        <tr>
+                            <th>Situation</th>
+                            <th>Equal number of possible captures</th>
+                            <th>Different number of possible captures</th>
+                        </tr>
+                        <tr>
+                            <td>Pawn vs Pawn</td>
+                            <td>Capturing piece is optional</td>
+                            <td>Must capture with whichever piece has more jumps</td>
+                        </tr>
+                        <tr>
+                            <td>Pawn vs King</td>
+                            <td>The King must capture</td>
+                            <td>The King must capture, regardless of jump count</td>
+                        </tr>
+                        <tr>
+                            <td>King vs King</td>
+                            <td>Capturing piece is optional</td>
+                            <td>Must capture with whichever King has more jumps</td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
-
 
     <script>
 
@@ -314,6 +972,9 @@
         const soundCapture = new Audio('assets/capture.mp3');
         const soundVictory = new Audio('assets/victory.mp3');
         const soundCrowning = new Audio('assets/crowning.mp3');
+
+        let whitePlayerName = "Blancas";
+        let blackPlayerName = "Negras";
 
         let myColor = null; // Guardará 'w' o 'b'
 
@@ -325,7 +986,7 @@
 
         let highlightedSquares = [];
 
-        const board = [
+        let board = [
 
             [null, "b", null, "b", null, "b", null, "b", null, "b"],
             ["b", null, "b", null, "b", null, "b", null, "b", null],
@@ -360,7 +1021,6 @@
             return piece.toLowerCase() !==
                 currentPiece.toLowerCase();
         }
-
 
         function playerHasCapture(player) {
 
@@ -398,7 +1058,6 @@
 
         }
 
-
         function pieceHasCapture(row, col) {
 
             const moves = getLegalMoves(row, col);
@@ -408,7 +1067,6 @@
             );
 
         }
-
 
         function getLegalMoves(row, col) {
 
@@ -612,14 +1270,12 @@
 
         const boardElement = document.getElementById("board");
 
-
         let selectedPiece = null;
         let selectedPosition = null;
 
         let currentPlayer = "w";
 
         let pieceMustContinueCapturing = null; // Guarda la posición {row, col} si una pieza debe seguir saltando
-
 
         function updateTurnIndicator() {
 
@@ -638,9 +1294,21 @@
 
         }
 
-
         function renderBoard() {
             boardElement.innerHTML = "";
+            highlightedSquares = []; // Limpiamos la lista de elementos visuales
+
+            // --- EL FILTRO DE GODOFREDO ---
+            const surrenderBtn = document.getElementById("surrenderBtn");
+            const leaveBtn = document.getElementById("leaveLobbyBtn");
+
+            if (myColor === 'spectator') {
+                if (surrenderBtn) surrenderBtn.style.display = "none";
+                if (leaveBtn) leaveBtn.style.display = "inline-block"; // El espectador puede salir
+            } else {
+                if (surrenderBtn) surrenderBtn.style.display = "inline-block";
+                if (leaveBtn) leaveBtn.style.display = "none";
+            }
 
             for (let row = 0; row < 10; row++) {
                 for (let col = 0; col < 10; col++) {
@@ -650,7 +1318,7 @@
                     if ((row + col) % 2 === 0) square.classList.add("light");
                     else square.classList.add("dark");
 
-                    // --- PINTAR HUELLAS DEL ÚLTIMO MOVIMIENTO ---
+                    // --- RE-PINTAR HUELLAS ---
                     if (lastMoveCoords) {
                         if ((row === lastMoveCoords.fromRow && col === lastMoveCoords.fromCol) ||
                             (row === lastMoveCoords.toRow && col === lastMoveCoords.toCol)) {
@@ -658,26 +1326,41 @@
                         }
                     }
 
-                    // --- CLICK EN EL CASILLERO (DESTINO) ---
+                    // --- RE-PINTAR INDICADORES VERDES (Highlight) ---
+                    // Solo se muestran a quien de verdad puede jugar ahora mismo
+                    // (su propio color y su propio turno). Así evitamos que el
+                    // rival o un espectador vean "fantasmas" de una captura en
+                    // cadena que no les pertenece.
+                    const isHighlighted = (myColor === currentPlayer) &&
+                        currentAllowedMoves.some(m => m.row === row && m.col === col);
+                    if (isHighlighted) {
+                        square.classList.add("highlight");
+                        highlightedSquares.push(square);
+                    }
+
+                    // Click en el casillero para mover
                     square.addEventListener("click", () => {
                         if (!selectedPosition) return;
                         if (!square.classList.contains("highlight")) return;
-
-                        // Buscamos el movimiento en la lista de PERMITIDOS (Art 10 y 11)
                         const chosenMove = currentAllowedMoves.find(m => m.row === row && m.col === col);
-
-                        if (chosenMove) {
-                            executeMove(chosenMove);
-                        }
+                        if (chosenMove) executeMove(chosenMove);
                     });
 
                     const pieceValue = board[row][col];
-
                     if (pieceValue) {
                         const piece = document.createElement("div");
                         piece.classList.add("piece");
 
-                        // --- EL BRILLO DE GODOFREDO (Efecto Visual) ---
+                        // --- RE-PINTAR ANILLO ROJO (Selección) ---
+                        // Igual que con el verde: solo se lo mostramos a quien
+                        // de verdad tiene el turno con su propio color. Si no,
+                        // en una captura en cadena el rival/espectador terminaba
+                        // viendo el anillo de la ficha que sigue capturando del otro lado.
+                        if ((myColor === currentPlayer) && selectedPosition && selectedPosition.row === row && selectedPosition.col === col) {
+                            piece.classList.add("selected");
+                        }
+
+                        // --- RE-PINTAR BRILLO CELESTE (Obligación) ---
                         const bestGlobal = getGlobalBestMoves(currentPlayer);
                         if (bestGlobal.length > 0 && !pieceMustContinueCapturing) {
                             if (bestGlobal.some(bg => bg.row === row && bg.col === col)) {
@@ -689,112 +1372,72 @@
                             }
                         }
 
-                        // --- TU LÓGICA DE CLICK ---
+                        // Click en la pieza para seleccionar
                         piece.addEventListener("click", (e) => {
                             e.stopPropagation();
-
                             const pieceColor = pieceValue.toLowerCase();
 
-                            // --- EL CANDADO DE GODOFREDO ---
-                            if (pieceColor !== myColor) {
-                                console.log("¡Alto ahí! No puedes dar órdenes a las tropas enemigas.");
-                                return;
-                            }
+                            // Solo podés tocar tus fichas y solo en tu turno
+                            if (pieceColor !== myColor || pieceColor !== currentPlayer) return;
 
-                            if (pieceColor !== currentPlayer) return;
-
+                            // Bloqueo si hay captura múltiple en curso
                             if (pieceMustContinueCapturing) {
                                 if (row !== pieceMustContinueCapturing.row || col !== pieceMustContinueCapturing.col) return;
                             }
 
-                            const bestGlobalCaptures = getGlobalBestMoves(currentPlayer);
-                            const hasAnyCapture = bestGlobalCaptures.length > 0;
-
-                            clearHighlights();
-                            currentAllowedMoves = [];
-
-                            if (hasAnyCapture) {
-                                const canThisPieceMove = bestGlobalCaptures.find(bc => bc.row === row && bc.col === col);
-                                if (!canThisPieceMove) {
-                                    console.log("Art 10/11: Hay otra pieza con prioridad.");
-                                    return;
-                                }
-                                currentAllowedMoves = canThisPieceMove.moves;
-                            } else {
-                                currentAllowedMoves = getLegalMoves(row, col);
+                            // Si tocamos la que ya está seleccionada, deseleccionamos
+                            if (selectedPosition && selectedPosition.row === row && selectedPosition.col === col) {
+                                selectedPosition = null;
+                                currentAllowedMoves = [];
+                                renderBoard();
+                                return;
                             }
 
-                            currentAllowedMoves.forEach(m => {
-                                const targetSquare = document.getElementById(`square-${m.row}-${m.col}`);
-                                if (targetSquare) {
-                                    targetSquare.classList.add("highlight");
-                                    highlightedSquares.push(targetSquare);
-                                }
-                            });
+                            // Si es una pieza nueva, calculamos sus movimientos
+                            const bestGlobalCaptures = getGlobalBestMoves(currentPlayer);
+                            let movesForThisPiece = [];
 
-                            if (selectedPiece) selectedPiece.classList.remove("selected");
-                            piece.classList.add("selected");
-                            selectedPiece = piece;
+                            if (bestGlobalCaptures.length > 0) {
+                                const canThisPieceMove = bestGlobalCaptures.find(bc => bc.row === row && bc.col === col);
+                                // Si hay captura obligatoria en el tablero y esta ficha
+                                // no es una de las obligadas, directamente no se puede
+                                // seleccionar (ni con aro rojo ni con nada).
+                                if (!canThisPieceMove) return;
+                                movesForThisPiece = canThisPieceMove.moves;
+                            } else {
+                                movesForThisPiece = getLegalMoves(row, col);
+                            }
+
+                            currentAllowedMoves = movesForThisPiece;
+
+                            // Guardamos la posición y re-dibujamos para que aparezcan los cambios
                             selectedPosition = { row, col };
+                            renderBoard();
                         });
 
-                        // --- CLASES VISUALES (Colores y coronas) ---
+                        // Clases visuales de colores y rotación
                         if (pieceValue.toLowerCase() === "w") piece.classList.add("white");
                         if (pieceValue.toLowerCase() === "b") piece.classList.add("black");
                         if (pieceValue === "W" || pieceValue === "B") piece.classList.add("king");
-
-                        // --- EL TOQUE DE GODOFREDO (Giro de piezas) ---
-                        // Si el jugador es Negras, el tablero está girado 180°, 
-                        // así que giramos las piezas 180° también para que se vean derechas.
-                        if (myColor === 'b') {
-                            piece.classList.add("reverse-rotate");
-                        }
+                        if (myColor === 'b') piece.classList.add("reverse-rotate");
 
                         square.appendChild(piece);
                     }
-
                     boardElement.appendChild(square);
                 }
             }
 
-            // Actualizar contadores reales
+            // Actualizar contadores
             let w = 0, b = 0;
             board.flat().forEach(p => {
                 if (p?.toLowerCase() === 'w') w++;
                 if (p?.toLowerCase() === 'b') b++;
             });
-            document.getElementById("whiteCount").textContent = w;
-            document.getElementById("blackCount").textContent = b;
-
-            // --- LÓGICA DE AUTO-SELECCIÓN (Captura Múltiple) ---
-            if (pieceMustContinueCapturing) {
-                const r = pieceMustContinueCapturing.row;
-                const c = pieceMustContinueCapturing.col;
-
-                const bestGlobal = getGlobalBestMoves(currentPlayer);
-                const thisPieceMoves = bestGlobal.find(bg => bg.row === r && bg.col === c);
-
-                if (thisPieceMoves) {
-                    currentAllowedMoves = thisPieceMoves.moves;
-
-                    currentAllowedMoves.forEach(m => {
-                        const targetSquare = document.getElementById(`square-${m.row}-${m.col}`);
-                        if (targetSquare) {
-                            targetSquare.classList.add("highlight");
-                            highlightedSquares.push(targetSquare);
-                        }
-                    });
-
-                    const squareElement = document.getElementById(`square-${r}-${c}`);
-                    const pieceElement = squareElement.querySelector('.piece');
-                    if (pieceElement) {
-                        pieceElement.classList.add("selected");
-                        selectedPiece = pieceElement;
-                    }
-                }
-            }
+            const wCounter = document.getElementById("whiteCount");
+            const bCounter = document.getElementById("blackCount");
+            if (wCounter) wCounter.textContent = w;
+            if (bCounter) bCounter.textContent = b;
         }
-
 
         function movePiece(fromRow, fromCol, toRow, toCol) {
 
@@ -806,16 +1449,16 @@
         }
 
         function executeMove(move, isFromNetwork = false) {
-            // Si el movimiento lo hicimos nosotros (no viene del servidor), lo enviamos
+            // 1. Si el movimiento es nuestro, avisamos al servidor con el mapa actualizado
             if (!isFromNetwork) {
                 socket.emit('make-move', {
                     from: selectedPosition,
-                    move: move
+                    move: move,
+                    boardState: board // Enviamos el mapa actual
                 });
             }
 
-            // 1. REGISTRAMOS LA HUELLA (Art. de Godofredo)
-            // Guardamos de dónde viene y a dónde va para que el renderBoard lo pinte
+            // 2. Registramos huellas
             lastMoveCoords = {
                 fromRow: selectedPosition.row,
                 fromCol: selectedPosition.col,
@@ -823,94 +1466,88 @@
                 toCol: move.col
             };
 
-            // 2. MOVEMOS LA PIEZA en la matriz 'board'
-            movePiece(
-                selectedPosition.row,
-                selectedPosition.col,
-                move.row,
-                move.col
-            );
+            // 3. Movemos la pieza en la matriz local
+            movePiece(selectedPosition.row, selectedPosition.col, move.row, move.col);
 
-            // 3. LÓGICA DE CORONACIÓN (Art. 5)
             let piece = board[move.row][move.col];
             let justCrowned = false;
 
-            // Si es blanca y llegó a la fila 0, o es negra y llegó a la fila 9
+            // 4. Coronación
             if ((piece === "w" && move.row === 0) || (piece === "b" && move.row === 9)) {
-                board[move.row][move.col] = piece.toUpperCase(); // Se convierte en "W" o "B"
+                board[move.row][move.col] = piece.toUpperCase();
                 justCrowned = true;
-                soundCrowning.play().catch(e => console.log("Sonido de coronación bloqueado"));
-                console.log("¡Habemus Dama! Godofredo le entrega la corona.");
+                soundCrowning.play().catch(e => { });
             }
 
-            // 4. LÓGICA DE CAPTURA Y TURNO
+            // 5. Captura y Turno
             if (move.type === "capture") {
-                // Eliminamos la pieza enemiga capturada
                 board[move.capturedRow][move.capturedCol] = null;
 
-                // Si acaba de coronar, el turno termina SI O SI (Art. 5)
                 if (justCrowned) {
                     changeTurn();
                 } else {
-                    // Verificamos si la misma pieza puede seguir capturando
                     const nextMoves = getLegalMoves(move.row, move.col);
                     const canCaptureMore = nextMoves.some(m => m.type === "capture");
 
                     if (canCaptureMore) {
-                        // Sigue el mismo jugador y la misma pieza
                         pieceMustContinueCapturing = { row: move.row, col: move.col };
                         selectedPosition = { row: move.row, col: move.col };
+
+                        const bestGlobal = getGlobalBestMoves(currentPlayer);
+                        const thisPieceMoves = bestGlobal.find(bg => bg.row === move.row && bg.col === move.col);
+                        if (thisPieceMoves) {
+                            currentAllowedMoves = thisPieceMoves.moves;
+                        }
                     } else {
                         changeTurn();
                     }
                 }
             } else {
-                // Si fue un movimiento normal, termina el turno
                 changeTurn();
             }
 
-            // 5. LIMPIEZA FINAL Y RENDER
-            // Si no hay capturas pendientes, limpiamos la selección
+            // 6. Limpieza visual
             if (!pieceMustContinueCapturing) {
-                selectedPiece = null;
                 selectedPosition = null;
-            } else {
-                // Si hay captura múltiple, mantenemos la selección en la nueva casilla
-                selectedPosition = { row: move.row, col: move.col };
+                currentAllowedMoves = [];
             }
 
             clearHighlights();
 
-            // Reproducir sonido según el tipo de movimiento
-            if (move.type === "capture") {
-                soundCapture.play().catch(e => console.log("Sonido bloqueado por el navegador"));
-            } else {
-                soundMove.play().catch(e => console.log("Sonido bloqueado por el navegador"));
+            if (move.type === "capture") soundCapture.play().catch(e => { });
+            else soundMove.play().catch(e => { });
+
+            // 7. Le avisamos al servidor cómo quedó la foto REAL (ya con el movimiento
+            // aplicado), para que quien entre a espectar después reciba el tablero
+            // actualizado y no la posición inicial. No reemplaza al 'make-move' de
+            // arriba (ese sigue sincronizando al rival en vivo); esto es solo para
+            // que el servidor tenga siempre una foto al día.
+            if (!isFromNetwork) {
+                socket.emit('sync-board-state', {
+                    boardState: board,
+                    currentPlayer: currentPlayer
+                });
             }
 
-            // Redibujamos el tablero con el delay de 150ms que pidió el Gran Arquitecto
             setTimeout(() => {
                 renderBoard();
             }, 150);
         }
 
-
-
         function changeTurn() {
             currentPlayer = (currentPlayer === "w") ? "b" : "w";
-            pieceMustContinueCapturing = null;
-            selectedPiece = null;
-            selectedPosition = null;
-            updateTurnIndicator();
 
-            // Godofredo revisa el campo de batalla después de cada turno
+            // --- LA LIMPIEZA DE GODOFREDO ---
+            pieceMustContinueCapturing = null;
+            selectedPosition = null;
+            currentAllowedMoves = []; // ¡Esto quita los círculos verdes al pasar el turno!
+
+            updateTurnIndicator();
             checkGameOver();
         }
 
-
         renderBoard();
         updateTurnIndicator();
-
 
         console.log(
             "Blancas capturan:",
@@ -921,7 +1558,6 @@
             "Negras capturan:",
             playerHasCapture("b")
         );
-
 
         function getBestCaptureSequences(row, col, currentBoard, isKing) {
             const piece = currentBoard[row][col];
@@ -975,7 +1611,6 @@
             return { max: globalMax, sequences: allPaths };
         }
 
-
         function getGlobalBestMoves(player) {
             let kingCaptures = [];
             let pawnCaptures = [];
@@ -1019,12 +1654,11 @@
             return pawnCaptures;
         }
 
-
         function checkGameOver() {
-            // 1. Contar piezas de cada uno
             let whitePieces = 0;
             let blackPieces = 0;
 
+            // Contamos las piezas
             for (let r = 0; r < 10; r++) {
                 for (let c = 0; c < 10; c++) {
                     const p = board[r][c];
@@ -1035,86 +1669,101 @@
                 }
             }
 
-            // 2. ¿Alguien se quedó sin piezas?
+            // 1. Victoria por aniquilación
             if (whitePieces === 0) {
-                announceWinner("¡LAS NEGRAS GANAN!");
+                announceWinner(`¡${blackPlayerName} ha aniquilado a ${whitePlayerName}!`);
                 return true;
             }
             if (blackPieces === 0) {
-                announceWinner("¡LAS BLANCAS GANAN!");
+                announceWinner(`¡${whitePlayerName} ha aniquilado a ${blackPlayerName}!`);
                 return true;
             }
 
-            // 3. ¿El jugador actual tiene algún movimiento posible?
-            // (Buscamos si existe al menos una pieza que devuelva algún movimiento legal)
+            // 2. Victoria por bloqueo
             const currentMoves = getGlobalBestMoves(currentPlayer);
+            let canMove = currentMoves.length > 0;
 
-            // Si no hay capturas obligatorias, chequeamos movimientos normales
-            if (currentMoves.length === 0) {
-                let hasAnyMove = false;
+            // Si no hay capturas, buscamos movimientos normales
+            if (!canMove) {
                 for (let r = 0; r < 10; r++) {
                     for (let c = 0; c < 10; c++) {
                         const p = board[r][c];
                         if (p && p.toLowerCase() === currentPlayer) {
                             if (getLegalMoves(r, c).length > 0) {
-                                hasAnyMove = true;
+                                canMove = true;
                                 break;
                             }
                         }
                     }
                 }
+            }
 
-                if (!hasAnyMove) {
-                    const winner = (currentPlayer === 'w') ? "NEGRAS" : "BLANCAS";
-                    announceWinner(`¡LAS ${winner} GANAN POR BLOQUEO!`);
-                    return true;
-                }
+            if (!canMove) {
+                const winnerName = (currentPlayer === 'w') ? blackPlayerName : whitePlayerName;
+                const loserName = (currentPlayer === 'w') ? whitePlayerName : blackPlayerName;
+                announceWinner(`¡${winnerName} ha bloqueado a ${loserName}!`);
+                return true;
             }
 
             return false;
         }
 
         function announceWinner(message) {
-
-
             soundVictory.play().catch(e => console.log("Sonido bloqueado"));
 
-            // Creamos un cartel visual simple
+            // Eliminamos carteles anteriores si existieran
+            const oldBanner = document.getElementById("victoryBanner");
+            if (oldBanner) oldBanner.remove();
+
             const banner = document.createElement("div");
+            banner.id = "victoryBanner";
             banner.style.position = "absolute";
             banner.style.top = "50%";
             banner.style.left = "50%";
             banner.style.transform = "translate(-50%, -50%)";
-            banner.style.backgroundColor = "rgba(0,0,0,0.8)";
+            banner.style.backgroundColor = "rgba(0,0,0,0.9)";
             banner.style.color = "gold";
             banner.style.padding = "40px";
-            banner.style.fontSize = "30px";
+            banner.style.fontSize = "24px";
             banner.style.border = "5px solid gold";
+            banner.style.borderRadius = "20px";
             banner.style.textAlign = "center";
-            banner.style.zIndex = "1000";
-            banner.innerHTML = `<h1>${message}</h1><button onclick="location.reload()" style="padding:10px; cursor:pointer">Jugar de nuevo</button>`;
+            banner.style.zIndex = "3000"; // Por encima de todo
+
+            // El mensaje ahora es dinámico y el botón nos saca al lobby
+            banner.innerHTML = `
+        <h1 style="font-size: 40px; color: gold; border: none;">¡FIN DEL DUELO!</h1>
+        <p style="margin-bottom: 20px;">${message}</p>
+        <button onclick="location.reload()" style="padding:15px 30px; font-size: 20px; cursor:pointer; background: #f1c40f; border: none; border-radius: 10px; font-weight: bold;">
+            SALIR AL LOBBY
+        </button>
+        `;
             document.body.appendChild(banner);
         }
 
         function surrender() {
-            const winner = (currentPlayer === 'w') ? "NEGRAS" : "BLANCAS";
-            const msg = `¡EL JUGADOR DE LAS ${currentPlayer === 'w' ? 'BLANCAS' : 'NEGRAS'} SE HA RENDIDO!`;
-            announceWinner(`${msg}<br>VICTORIA PARA LAS ${winner}`);
-        }
+            // 1. Pedir confirmación (Art. de Godofredo)
+            if (!confirm("¿Noble Caballero, realmente desea entregar sus armas y rendirse?")) {
+                return; // Si cancela, no pasa nada
+            }
 
+            // 2. Avisar al servidor para que el rival también lo sepa
+            socket.emit('player-surrendered');
+
+            // 3. Mostrar el mensaje localmente
+            const winnerName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
+            announceWinner(`TE HAS RENDIDO.<br>VICTORIA PARA ${winnerName}`);
+        }
 
         // Escuchar movimientos que vienen del servidor
         socket.on('move-received', (data) => {
             console.log("Noticia del frente: ¡El enemigo ha movido!");
-
-            // Seteamos temporalmente la selección en la posición de origen del enemigo
+            if (data.boardState) board = data.boardState; // Sincronizamos mapa
             selectedPosition = data.from;
-
-            // Ejecutamos el movimiento, avisando que viene de la red
             executeMove(data.move, true);
         });
 
-
+        // El servidor nos dice qué color somos
         // El servidor nos dice qué color somos
         socket.on('assign-role', (role) => {
             myColor = role;
@@ -1127,36 +1776,219 @@
                 boardElement.classList.remove("flipped-board");
             }
 
-            if (role === 'spectator') {
-                alert("El castillo está lleno. Estás en modo espectador.");
+            // --- EL RECORTE DE GODOFREDO ---
+            // Hemos eliminado el alert() que decía "El castillo está lleno".
+            // Ahora el caballero entra al balcón en silencio y con elegancia.
+        });
+
+        // Cuando el servidor dice que ambos están listos
+        socket.on('start-game', (data) => {
+            console.log("¡La puerta se abre! Godofredo da la señal.");
+
+            if (data) {
+                if (data.white) whitePlayerName = data.white;
+                if (data.black) blackPlayerName = data.black;
+                if (data.board) board = JSON.parse(JSON.stringify(data.board));
+                if (data.turn) {
+                    currentPlayer = data.turn;
+                }
+
+                // --- LA ESCOBA DE GODOFREDO ---
+                // Si veníamos de espectar otra partida (o de una jugada a medio
+                // resolver), limpiamos cualquier resabio visual antes de mostrar
+                // esta partida nueva: nada de fichas "seleccionadas" fantasma ni
+                // listas de espectadores de la partida anterior.
+                selectedPosition = null;
+                currentAllowedMoves = [];
+                pieceMustContinueCapturing = null;
+                lastMoveCoords = null;
+                const spectatorDisplay = document.getElementById("spectatorListDisplay");
+                if (spectatorDisplay) spectatorDisplay.textContent = "Espectadores: -";
+
+                // --- LOS ESTANDARTES DE GODOFREDO ---
+                const topLabel = document.getElementById("topPlayerName");
+                const bottomLabel = document.getElementById("bottomPlayerName");
+
+                // Lógica de posición según el color
+                if (myColor === 'b') {
+                    // Si soy NEGRAS: yo abajo, Blancas arriba
+                    topLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
+                    bottomLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}`;
+                } else {
+                    // Si soy BLANCAS o ESPECTADOR: Blancas abajo, Negras arriba
+                    topLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}`;
+                    bottomLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
+                }
+            }
+
+            document.getElementById("waitingOverlay").style.display = "none";
+            renderBoard();
+            updateTurnIndicator();
+        });
+
+        // Si el rival o los jugadores se desconectan
+        socket.on('opponent-left', () => {
+            if (myColor !== 'spectator') {
+                // Si soy jugador, aviso que el rival huyó y doy opción de salir
+                announceWinner("¡TU RIVAL HA HUIDO!<br>La partida ha terminado por abandono.");
+            } else {
+                // Si soy espectador, aviso que la partida terminó
+                announceWinner("LOS CONTENDIENTES SE HAN IDO.<br>La partida ha finalizado.");
             }
         });
 
+        // --- LÓGICA DEL SALÓN DE GODOFREDO ---
 
-        // Cuando el servidor dice que ambos están listos
-        socket.on('start-game', () => {
-            console.log("¡El rival ha llegado! Godofredo da la señal.");
-            document.getElementById("waitingOverlay").style.display = "none";
+        function registerUser() {
+            const input = document.getElementById("usernameInput");
+            const name = input.value.trim();
+
+            if (name.length < 2) {
+                alert("Noble Caballero, su nombre es demasiado corto.");
+                return;
+            }
+
+            // --- EL TRUCO DE GODOFREDO: Guardar nombre en la sesión ---
+            sessionStorage.setItem('damas_username', name);
+
+            socket.emit('set-username', name);
+
+            document.getElementById("entranceSection").style.display = "none";
+            document.getElementById("lobbySection").style.display = "block";
+
+            // Ya cruzamos la puerta: el castillo de fondo queda atrás
+            document.getElementById("waitingOverlay").classList.remove("entrance-bg");
+        }
+
+        // --- LOS PERGAMINOS DE GODOFREDO (Reglas) ---
+
+        function openRules(lang) {
+            document.getElementById("rulesModal").style.display = "flex";
+            showRulesLang(lang);
+        }
+
+        function closeRules() {
+            document.getElementById("rulesModal").style.display = "none";
+        }
+
+        function showRulesLang(lang) {
+            document.getElementById("rulesTextEs").style.display = (lang === 'es') ? "block" : "none";
+            document.getElementById("rulesTextEn").style.display = (lang === 'en') ? "block" : "none";
+            // Al cambiar de idioma (o al abrir), volvemos al principio del pergamino
+            document.getElementById("rulesScrollArea").scrollTop = 0;
+        }
+
+        // Cerrar haciendo click afuera del pergamino (sobre el fondo oscuro)
+        document.getElementById("rulesModal").addEventListener('click', (e) => {
+            if (e.target.id === "rulesModal") closeRules();
         });
 
-        // Si el rival se desconecta durante la partida
-        socket.on('opponent-left', () => {
-            console.log("El rival ha huido. Esperando un nuevo caballero...");
-            const overlay = document.getElementById("waitingOverlay");
-            const msg = document.getElementById("waitingMessage");
+        // Cerrar con la tecla Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") closeRules();
+        });
 
-            overlay.style.display = "flex";
-            msg.textContent = "El oponente se ha desconectado. Esperando...";
+        // Escuchar la lista de usuarios actualizada
+        socket.on('update-lobby', (data) => {
+            const listElement = document.getElementById("userList");
+            listElement.innerHTML = "";
+
+            // SECCIÓN 1: Caballeros Libres
+            if (data.users.length > 0) {
+                const header = document.createElement("div");
+                header.innerHTML = "<strong>Caballeros Libres:</strong>";
+                listElement.appendChild(header);
+
+                data.users.forEach(u => {
+                    if (u.username === document.getElementById("usernameInput").value) return;
+                    const item = document.createElement("div");
+                    item.className = "user-item";
+                    const etiqueta = (u.status === "spectating") ? " (espectando)" : "";
+                    item.textContent = `🛡️ ${u.username}${etiqueta} (Desafiar)`;
+                    item.onclick = () => {
+                        if (confirm(`¿Deseas enviar un desafío a ${u.username}?`)) {
+                            socket.emit('send-challenge', u.username);
+                            document.getElementById("waitingStatus").textContent = `Esperando respuesta de ${u.username}...`;
+                        }
+                    };
+                    listElement.appendChild(item);
+                });
+            }
+
+            // SECCIÓN 2: Partidas en Curso (Estandartes)
+            if (data.games.length > 0) {
+                const header = document.createElement("div");
+                header.innerHTML = "<br><strong>Torneos en Curso:</strong>";
+                listElement.appendChild(header);
+
+                data.games.forEach(game => {
+                    const item = document.createElement("div");
+                    item.className = "user-item";
+                    item.style.borderColor = "#27ae60"; // Verde para partidas
+                    item.textContent = `⚔️ ${game.name} (Espectar)`;
+                    item.onclick = () => {
+                        if (confirm(`¿Deseas observar la partida ${game.name}?`)) {
+                            socket.emit('join-as-spectator', game.id);
+                        }
+                    };
+                    listElement.appendChild(item);
+                });
+            }
+        });
+
+        let currentChallengerId = null;
+
+        // Recibir una invitación
+        socket.on('receive-challenge', (data) => {
+            currentChallengerId = data.fromId;
+            document.getElementById("challengeText").textContent = `¡${data.fromName} te desafía a un duelo!`;
+            document.getElementById("challengeModal").style.display = "block";
+        });
+
+        // Botones del Modal
+        document.getElementById("acceptBtn").onclick = () => {
+            socket.emit('challenge-response', { fromId: currentChallengerId, accepted: true });
+            document.getElementById("challengeModal").style.display = "none";
+        };
+
+        document.getElementById("declineBtn").onclick = () => {
+            socket.emit('challenge-response', { fromId: currentChallengerId, accepted: false });
+            document.getElementById("challengeModal").style.display = "none";
+        };
+
+        // Si nos rechazan
+        socket.on('challenge-declined', (name) => {
+            alert(`${name} ha declinado el duelo. ¡Quizás en otra ocasión!`);
+            document.getElementById("waitingStatus").textContent = "Buscando oponentes en la red...";
+        });
+
+        socket.on('opponent-surrendered', () => {
+            const winnerName = (myColor === 'w') ? whitePlayerName : blackPlayerName;
+            const loserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
+            announceWinner(`¡${loserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`);
+        });
+
+        // --- AUTO-LOGIN DE GODOFREDO ---
+        window.onload = () => {
+            const savedName = sessionStorage.getItem('damas_username');
+            if (savedName) {
+                // Si el nombre ya existe, lo ponemos en el input y entramos solos
+                document.getElementById("usernameInput").value = savedName;
+                registerUser();
+            }
+        };
+
+        // --- EL PREGÓN DE GODOFREDO (Actualizar lista visual) ---
+        socket.on('update-spectators-list', (spectators) => {
+            const display = document.getElementById("spectatorListDisplay");
+            if (spectators.length > 0) {
+                display.textContent = "Espectadores: " + spectators.join(", ");
+            } else {
+                display.textContent = "Espectadores: -";
+            }
         });
 
     </script>
-
-
-    <div id="waitingOverlay">
-        <div class="spinner"></div>
-        <h2 id="waitingMessage">Esperando al oponente...</h2>
-        <p>Godofredo está preparando el campo de batalla.</p>
-    </div>
 
 </body>
 

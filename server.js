@@ -8,43 +8,210 @@ const io = new Server(server);
 
 app.use(express.static(__dirname));
 
-let players = {}; 
+let connectedUsers = {}; // { socketId: { username, status, room } }
+let activeGames = {};    // { roomName: { w: id, b: id, name, board, turn } }
+
+// La posición inicial, igual a la que arranca en el cliente.
+// La usamos para que el servidor tenga SIEMPRE una foto válida del tablero,
+// aunque todavía no se haya jugado ningún movimiento.
+function createInitialBoard() {
+    return [
+        [null, "b", null, "b", null, "b", null, "b", null, "b"],
+        ["b", null, "b", null, "b", null, "b", null, "b", null],
+        [null, "b", null, "b", null, "b", null, "b", null, "b"],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        ["w", null, "w", null, "w", null, "w", null, "w", null],
+        [null, "w", null, "w", null, "w", null, "w", null, "w"],
+        ["w", null, "w", null, "w", null, "w", null, "w", null]
+    ];
+}
+
+// Si el usuario indicado está espectando una partida, lo saca prolijamente:
+// lo borra de la lista de espectadores de esa sala, avisa a esa sala que la
+// lista cambió, y lo hace abandonar la room de socket.io correspondiente
+// (para que deje de recibir jugadas y demás eventos de esa partida vieja).
+function leaveSpectatingIfAny(userId, connectedUsers, activeGames, io) {
+    const user = connectedUsers[userId];
+    if (user && user.status === "spectating" && user.room && activeGames[user.room]) {
+        const game = activeGames[user.room];
+        game.spectators = game.spectators.filter(name => name !== user.username);
+        io.to(user.room).emit('update-spectators-list', game.spectators);
+
+        const userSocket = io.sockets.sockets.get(userId);
+        if (userSocket) userSocket.leave(user.room);
+    }
+}
 
 io.on('connection', (socket) => {
-    const currentPlayers = Object.values(players);
-    
-    if (!currentPlayers.includes('w')) {
-        players[socket.id] = 'w';
-        socket.emit('assign-role', 'w');
-    } else if (!currentPlayers.includes('b')) {
-        players[socket.id] = 'b';
-        socket.emit('assign-role', 'b');
-    } else {
-        socket.emit('assign-role', 'spectator');
-    }
 
-    // --- REGLA DE GODOFREDO: ¿Están ambos listos? ---
-    const updatedPlayers = Object.values(players);
-    if (updatedPlayers.includes('w') && updatedPlayers.includes('b')) {
-        io.emit('start-game'); // Avisa a TODOS que la batalla empieza
-        console.log('¡Ambos caballeros están listos! Que comience el torneo.');
-    }
+    socket.on('set-username', (username) => {
+        connectedUsers[socket.id] = { username: username, status: "lobby", room: null };
+        broadcastStatus();
+    });
+
+    socket.on('send-challenge', (targetUsername) => {
+        const targetId = Object.keys(connectedUsers).find(id => connectedUsers[id].username === targetUsername);
+        if (targetId) {
+            io.to(targetId).emit('receive-challenge', { fromName: connectedUsers[socket.id].username, fromId: socket.id });
+        }
+    });
+
+    socket.on('challenge-response', (data) => {
+        if (data.accepted) {
+            const challengerId = data.fromId;
+            const roomName = `room_${challengerId}_${socket.id}`;
+
+            // Si alguna de las dos partes venía espectando otra partida, la
+            // sacamos prolijamente de ahí antes de meterla en la sala nueva.
+            leaveSpectatingIfAny(challengerId, connectedUsers, activeGames, io);
+            leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
+
+            // Crear la sala (con su propia foto de tablero, arrancando en posición inicial)
+            activeGames[roomName] = {
+                w: challengerId,
+                b: socket.id,
+                name: `${connectedUsers[challengerId].username} vs ${connectedUsers[socket.id].username}`,
+                board: createInitialBoard(),
+                turn: "w",
+                spectators: [] // <--- GODOFREDO PREPARA LA LISTA DE INVITADOS
+            };
+
+            // Actualizar estados Y ROLES en el censo (Vital para la desconexión)
+            connectedUsers[challengerId].status = "playing";
+            connectedUsers[challengerId].room = roomName;
+            connectedUsers[challengerId].role = "w"; // <--- GODOFREDO ANOTA EL ROL
+
+            connectedUsers[socket.id].status = "playing";
+            connectedUsers[socket.id].room = roomName;
+            connectedUsers[socket.id].role = "b"; // <--- GODOFREDO ANOTA EL ROL
+
+            // Unirlos a la sala
+            const challengerSocket = io.sockets.sockets.get(challengerId);
+            if (challengerSocket) challengerSocket.join(roomName);
+            socket.join(roomName);
+
+            // Avisar roles e iniciar
+            const gameInfo = {
+                roomName: roomName,
+                white: connectedUsers[challengerId].username,
+                black: connectedUsers[socket.id].username,
+                board: activeGames[roomName].board,
+                turn: activeGames[roomName].turn
+            };
+
+            io.to(challengerId).emit('assign-role', 'w');
+            io.to(socket.id).emit('assign-role', 'b');
+            io.to(roomName).emit('start-game', gameInfo);
+
+            broadcastStatus();
+        } else {
+            io.to(data.fromId).emit('challenge-declined', connectedUsers[socket.id].username);
+        }
+    });
+
+    // --- LÓGICA DE ESPECTADOR ---
+    socket.on('join-as-spectator', (roomName) => {
+        const game = activeGames[roomName];
+        if (game) {
+            // Si ya estaba espectando otra partida, lo sacamos prolijamente de
+            // ahí antes de meterlo en esta (para no quedar "fantasma" en dos salas).
+            leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
+
+            socket.join(roomName);
+            connectedUsers[socket.id].status = "spectating";
+            connectedUsers[socket.id].room = roomName;
+            connectedUsers[socket.id].role = "spectator";
+
+            // --- GODOFREDO ANOTA AL VISITANTE ---
+            const username = connectedUsers[socket.id].username;
+            if (!game.spectators.includes(username)) {
+                game.spectators.push(username);
+            }
+
+            const gameInfo = {
+                white: connectedUsers[game.w].username,
+                black: connectedUsers[game.b].username,
+                board: game.board,
+                turn: game.turn
+            };
+
+            socket.emit('assign-role', 'spectator');
+            socket.emit('start-game', gameInfo);
+
+            // Avisamos a todos en la sala (incluidos jugadores) que la lista cambió
+            io.to(roomName).emit('update-spectators-list', game.spectators);
+
+            broadcastStatus();
+        }
+    });
 
     socket.on('make-move', (data) => {
-        socket.broadcast.emit('move-received', data);
+        const room = connectedUsers[socket.id]?.room;
+        if (room) {
+            socket.to(room).emit('move-received', data);
+        }
+    });
+
+    // --- LA FOTO ACTUALIZADA DE GODOFREDO ---
+    // Evento separado de 'make-move': no se retransmite a nadie, solo actualiza
+    // la foto que el servidor guarda de la partida. Así, cuando un espectador
+    // (o un jugador reconectando) se une, el servidor ya sabe cómo está el
+    // tablero de verdad, en vez de tener que esperar al próximo movimiento.
+    socket.on('sync-board-state', (data) => {
+        const room = connectedUsers[socket.id]?.room;
+        if (room && activeGames[room]) {
+            activeGames[room].board = data.boardState;
+            activeGames[room].turn = data.currentPlayer;
+        }
     });
 
     socket.on('disconnect', () => {
-        const role = players[socket.id];
-        delete players[socket.id];
-        console.log(`Un caballero (${role}) ha abandonado el castillo.`);
-        
-        // Si uno se va, volvemos a poner el cartel de espera a los que queden
-        io.emit('opponent-left');
+        const user = connectedUsers[socket.id];
+        if (user) {
+            if (user.room && activeGames[user.room]) {
+                if (user.role === 'w' || user.role === 'b') {
+                    socket.to(user.room).emit('opponent-left');
+                    delete activeGames[user.room];
+                } else if (user.role === 'spectator') {
+                    // --- GODOFREDO BORRA AL VISITANTE QUE SE VA ---
+                    const game = activeGames[user.room];
+                    game.spectators = game.spectators.filter(name => name !== user.username);
+                    io.to(user.room).emit('update-spectators-list', game.spectators);
+                }
+            }
+            delete connectedUsers[socket.id];
+            broadcastStatus();
+        }
     });
+
+    socket.on('player-surrendered', () => {
+        const user = connectedUsers[socket.id];
+        if (user && user.room) {
+            console.log(`El caballero ${user.username} ha tirado la toalla.`);
+            // Avisamos al otro jugador en la sala
+            socket.to(user.room).emit('opponent-surrendered');
+        }
+    });
+
+    function broadcastStatus() {
+        // Caballeros Libres = los del lobby en sentido estricto + los que están
+        // espectando (siguen siendo desafiables, solo que con la etiqueta
+        // "espectando" para que se sepa que están mirando una partida ajena).
+        const lobbyUsers = Object.values(connectedUsers)
+            .filter(u => u.status === "lobby" || u.status === "spectating")
+            .map(u => ({ username: u.username, status: u.status }));
+
+        const games = Object.keys(activeGames).map(id => ({
+            id: id,
+            name: activeGames[id].name
+        }));
+
+        io.emit('update-lobby', { users: lobbyUsers, games: games });
+    }
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`--- EL REINO ESTÁ ONLINE ---`);
-});
+server.listen(PORT, () => console.log(`--- TORNEO REAL ONLINE ---`));

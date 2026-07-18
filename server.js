@@ -45,10 +45,37 @@ function leaveSpectatingIfAny(userId, connectedUsers, activeGames, io) {
     }
 }
 
+// --- EL CUERVO MENSAJERO DE GODOFREDO (Chat del Salón) ---
+// Un feed único y global (no por partida) con los mensajes de los jugadores
+// y los avisos automáticos del sistema (desafíos aceptados, espectadores,
+// llegadas, victorias). Guardamos solo los últimos 30 en memoria: alcanza
+// de sobra para el scroll hacia atrás, y no hace falta base de datos.
+let chatHistory = [];
+const CHAT_HISTORY_LIMIT = 30;
+const CHAT_MAX_LENGTH = 300;
+
+function pushChatMessage(io, msg) {
+    chatHistory.push(msg);
+    if (chatHistory.length > CHAT_HISTORY_LIMIT) chatHistory.shift();
+    io.emit('chat-message', msg);
+}
+
+function pushSystemMessage(io, text) {
+    pushChatMessage(io, { type: 'system', text: text, time: Date.now() });
+}
+
 io.on('connection', (socket) => {
 
     socket.on('set-username', (username) => {
         connectedUsers[socket.id] = { username: username, status: "lobby", room: null };
+
+        // Le mandamos el historial reciente del chat antes que nada
+        socket.emit('chat-history', chatHistory);
+
+        // Y anunciamos su llegada (esto sí lo va a recibir también él mismo,
+        // como mensaje en vivo, ya que io.emit llega a todos los conectados)
+        pushSystemMessage(io, `🛡️ ${username} se encuentra en el Salón de los Caballeros`);
+
         broadcastStatus();
     });
 
@@ -106,6 +133,8 @@ io.on('connection', (socket) => {
             io.to(socket.id).emit('assign-role', 'b');
             io.to(roomName).emit('start-game', gameInfo);
 
+            pushSystemMessage(io, `⚔️ ${gameInfo.white} desafía a ${gameInfo.black} a duelo`);
+
             broadcastStatus();
         } else {
             io.to(data.fromId).emit('challenge-declined', connectedUsers[socket.id].username);
@@ -143,6 +172,8 @@ io.on('connection', (socket) => {
 
             // Avisamos a todos en la sala (incluidos jugadores) que la lista cambió
             io.to(roomName).emit('update-spectators-list', game.spectators);
+
+            pushSystemMessage(io, `👀 ${username} está espectando el duelo ${game.name}`);
 
             broadcastStatus();
         }
@@ -193,15 +224,65 @@ io.on('connection', (socket) => {
             console.log(`El caballero ${user.username} ha tirado la toalla.`);
             // Avisamos al otro jugador en la sala
             socket.to(user.room).emit('opponent-surrendered');
+
+            // Anunciamos la victoria en el chat (una sola vez por partida)
+            const game = activeGames[user.room];
+            if (game && !game.concluded) {
+                game.concluded = true;
+                const winnerId = (user.role === 'w') ? game.b : game.w;
+                const winnerName = connectedUsers[winnerId]?.username;
+                if (winnerName) {
+                    pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${user.username}`);
+                }
+            }
         }
     });
 
+    // --- LA CRÓNICA DE GODOFREDO ---
+    // Cuando un cliente detecta localmente que la partida terminó "de forma
+    // natural" (captura total o bloqueo, a diferencia de la rendición, que
+    // ya se maneja arriba), nos avisa acá para anunciarlo en el chat. Como
+    // AMBOS jugadores detectan el mismo final de forma independiente en sus
+    // pantallas, los dos van a mandar este evento — por eso usamos la bandera
+    // "concluded" para asegurarnos de anunciarlo una sola vez.
+    socket.on('game-over', (data) => {
+        const room = connectedUsers[socket.id]?.room;
+        const game = activeGames[room];
+        if (game && !game.concluded) {
+            game.concluded = true;
+            const winnerId = (data.winner === 'w') ? game.w : game.b;
+            const loserId = (data.winner === 'w') ? game.b : game.w;
+            const winnerName = connectedUsers[winnerId]?.username;
+            const loserName = connectedUsers[loserId]?.username;
+            if (winnerName && loserName) {
+                pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${loserName}`);
+            }
+        }
+    });
+
+    // --- EL CUERVO MENSAJERO: mensajes de chat de los propios jugadores ---
+    socket.on('chat-message', (data) => {
+        const user = connectedUsers[socket.id];
+        if (!user) return; // todavía no puso su nombre
+
+        const text = String(data?.text || '').slice(0, CHAT_MAX_LENGTH).trim();
+        if (!text) return;
+
+        pushChatMessage(io, {
+            type: 'user',
+            username: user.username,
+            text: text,
+            time: Date.now()
+        });
+    });
+
     function broadcastStatus() {
-        // Caballeros Libres = los del lobby en sentido estricto + los que están
-        // espectando (siguen siendo desafiables, solo que con la etiqueta
-        // "espectando" para que se sepa que están mirando una partida ajena).
-        const lobbyUsers = Object.values(connectedUsers)
-            .filter(u => u.status === "lobby" || u.status === "spectating")
+        // Mandamos a TODOS los conectados con su status (lobby / spectating /
+        // playing). El cliente decide qué mostrar como "desafiable" en el
+        // Salón (todos menos los que están jugando), pero necesita conocer
+        // también a los que están jugando para poder resaltar @menciones
+        // a ellos en el chat.
+        const allUsers = Object.values(connectedUsers)
             .map(u => ({ username: u.username, status: u.status }));
 
         const games = Object.keys(activeGames).map(id => ({
@@ -209,7 +290,7 @@ io.on('connection', (socket) => {
             name: activeGames[id].name
         }));
 
-        io.emit('update-lobby', { users: lobbyUsers, games: games });
+        io.emit('update-lobby', { users: allUsers, games: games });
     }
 });
 

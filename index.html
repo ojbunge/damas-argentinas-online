@@ -587,6 +587,171 @@
             background: rgba(107, 76, 26, 0.18);
             font-weight: 700;
         }
+
+        /* --- EL CUERVO MENSAJERO DE GODOFREDO (Chat del Salón) --- */
+
+        #chatBubble {
+            display: none;
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            border: 2px solid #7a5a24;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+            z-index: 2500;
+        }
+
+        #chatBubble:hover {
+            filter: brightness(1.1);
+        }
+
+        #chatUnreadBadge {
+            display: none;
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #c0392b;
+            color: white;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        #chatPanel {
+            display: none;
+            position: fixed;
+            bottom: 84px;
+            right: 18px;
+            width: min(300px, 90vw);
+            height: min(380px, 60vh);
+            background: #1c2733;
+            border: 2px solid #f1c40f;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            z-index: 2500;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        #chatPanelHeader {
+            background: #2c3e50;
+            color: #f1c40f;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        #closeChatBtn {
+            background: none;
+            border: none;
+            color: #f1c40f;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #chatMessages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .chat-msg {
+            font-size: 13px;
+            color: #ecf0f1;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .chat-msg .chat-time {
+            color: #7f8c9b;
+            font-size: 11px;
+            margin-right: 4px;
+        }
+
+        .chat-msg .chat-username {
+            font-weight: 700;
+            color: #f1c40f;
+        }
+
+        .chat-msg.chat-system {
+            color: #a9c2d9;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .chat-msg.chat-mentioned {
+            background: rgba(241, 196, 15, 0.15);
+            border-left: 3px solid #f1c40f;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+
+        .chat-mention-tag {
+            color: #f1c40f;
+            font-weight: 700;
+        }
+
+        #chatInputBar {
+            display: flex;
+            gap: 6px;
+            padding: 10px;
+            border-top: 1px solid #34495e;
+            flex-shrink: 0;
+        }
+
+        #chatInput {
+            flex: 1;
+            min-width: 0;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #4a5c6e;
+            background: #29394a;
+            color: white;
+            font-size: 13px;
+        }
+
+        #chatInput:focus {
+            outline: none;
+            border-color: #f1c40f;
+        }
+
+        #chatSendBtn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            background: #f1c40f;
+            color: #2c1c0a;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        #chatSendBtn:hover {
+            filter: brightness(1.1);
+        }
     </style>
 
 </head>
@@ -963,6 +1128,25 @@
         </div>
     </div>
 
+    <!-- El Cuervo Mensajero de Godofredo: chat global del Salón -->
+    <div id="chatBubble" onclick="toggleChat()">
+        💬
+        <span id="chatUnreadBadge">0</span>
+    </div>
+
+    <div id="chatPanel">
+        <div id="chatPanelHeader">
+            <span>💬 Chat del Salón</span>
+            <button id="closeChatBtn" onclick="toggleChat()">✕</button>
+        </div>
+        <div id="chatMessages"></div>
+        <div id="chatInputBar">
+            <input type="text" id="chatInput" placeholder="Escribí un mensaje..." maxlength="300"
+                onkeydown="handleChatKeydown(event)">
+            <button id="chatSendBtn" onclick="sendChatMessage()">Enviar</button>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
@@ -972,11 +1156,13 @@
         const soundCapture = new Audio('assets/capture.mp3');
         const soundVictory = new Audio('assets/victory.mp3');
         const soundCrowning = new Audio('assets/crowning.mp3');
+        const soundChatAlert = new Audio('assets/chatalarm.mp3');
 
         let whitePlayerName = "Blancas";
         let blackPlayerName = "Negras";
 
         let myColor = null; // Guardará 'w' o 'b'
+        let knownUsernames = []; // Nombres conocidos (jugando/espectando/libres), para @menciones en el chat
 
         const socket = io(); // Esto inicia la conexión mágica con el servidor
 
@@ -1672,10 +1858,12 @@
             // 1. Victoria por aniquilación
             if (whitePieces === 0) {
                 announceWinner(`¡${blackPlayerName} ha aniquilado a ${whitePlayerName}!`);
+                socket.emit('game-over', { winner: 'b' });
                 return true;
             }
             if (blackPieces === 0) {
                 announceWinner(`¡${whitePlayerName} ha aniquilado a ${blackPlayerName}!`);
+                socket.emit('game-over', { winner: 'w' });
                 return true;
             }
 
@@ -1702,6 +1890,7 @@
                 const winnerName = (currentPlayer === 'w') ? blackPlayerName : whitePlayerName;
                 const loserName = (currentPlayer === 'w') ? whitePlayerName : blackPlayerName;
                 announceWinner(`¡${winnerName} ha bloqueado a ${loserName}!`);
+                socket.emit('game-over', { winner: (currentPlayer === 'w') ? 'b' : 'w' });
                 return true;
             }
 
@@ -1858,6 +2047,9 @@
 
             // Ya cruzamos la puerta: el castillo de fondo queda atrás
             document.getElementById("waitingOverlay").classList.remove("entrance-bg");
+
+            // Ahora que ya tenemos nombre, el Cuervo Mensajero puede aparecer
+            document.getElementById("chatBubble").style.display = "flex";
         }
 
         // --- LOS PERGAMINOS DE GODOFREDO (Reglas) ---
@@ -1888,18 +2080,151 @@
             if (e.key === "Escape") closeRules();
         });
 
+        // --- EL CUERVO MENSAJERO DE GODOFREDO (Chat del Salón) ---
+
+        let chatIsOpen = false;
+        let chatUnreadCount = 0;
+
+        function toggleChat() {
+            chatIsOpen = !chatIsOpen;
+            document.getElementById("chatPanel").style.display = chatIsOpen ? "flex" : "none";
+            if (chatIsOpen) {
+                chatUnreadCount = 0;
+                updateChatBadge();
+                const box = document.getElementById("chatMessages");
+                box.scrollTop = box.scrollHeight;
+                document.getElementById("chatInput").focus();
+            }
+        }
+
+        function updateChatBadge() {
+            const badge = document.getElementById("chatUnreadBadge");
+            if (chatUnreadCount > 0) {
+                badge.textContent = (chatUnreadCount > 9) ? "9+" : chatUnreadCount;
+                badge.style.display = "flex";
+            } else {
+                badge.style.display = "none";
+            }
+        }
+
+        // Nunca insertamos texto de otros crudo con innerHTML: primero lo
+        // escapamos, y sobre ese texto YA escapado es que aplicamos nuestro
+        // propio resaltado de @menciones (ver highlightMentions).
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function escapeRegExp(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function formatChatTime(timestamp) {
+            const d = new Date(timestamp);
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+
+        // Resalta "@Nombre" únicamente cuando coincide con alguien realmente
+        // conocido (conectado ahora o hasta hace un ratito), para no marcar
+        // cualquier arroba suelta como si fuera una mención.
+        function highlightMentions(safeText) {
+            let result = safeText;
+            knownUsernames.forEach(name => {
+                const safeName = escapeHtml(name);
+                const pattern = new RegExp('@' + escapeRegExp(safeName) + '\\b', 'gi');
+                result = result.replace(pattern, `<span class="chat-mention-tag">@${safeName}</span>`);
+            });
+            return result;
+        }
+
+        function messageJSMentionsMe(text, myUsername) {
+            if (!myUsername) return false;
+            const pattern = new RegExp('@' + escapeRegExp(myUsername) + '\\b', 'i');
+            return pattern.test(text);
+        }
+
+        function renderChatMessage(msg) {
+            const box = document.getElementById("chatMessages");
+            const div = document.createElement("div");
+            const timeStr = formatChatTime(msg.time);
+
+            if (msg.type === 'system') {
+                div.className = "chat-msg chat-system";
+                div.textContent = `${msg.text} · ${timeStr}`;
+            } else {
+                const myUsername = document.getElementById("usernameInput").value;
+                const mentionsMe = messageJSMentionsMe(msg.text, myUsername);
+                div.className = "chat-msg" + (mentionsMe ? " chat-mentioned" : "");
+
+                const safeUsername = escapeHtml(msg.username);
+                const safeText = highlightMentions(escapeHtml(msg.text));
+                div.innerHTML = `<span class="chat-time">${timeStr}</span><span class="chat-username">${safeUsername}:</span> ${safeText}`;
+            }
+
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById("chatInput");
+            const text = input.value.trim();
+            if (!text) return;
+            socket.emit('chat-message', { text: text });
+            input.value = "";
+        }
+
+        function handleChatKeydown(event) {
+            if (event.key === "Enter") {
+                sendChatMessage();
+            }
+        }
+
+        socket.on('chat-history', (history) => {
+            const box = document.getElementById("chatMessages");
+            box.innerHTML = "";
+            history.forEach(msg => renderChatMessage(msg));
+        });
+
+        socket.on('chat-message', (msg) => {
+            renderChatMessage(msg);
+
+            if (!chatIsOpen) {
+                chatUnreadCount++;
+                updateChatBadge();
+            }
+
+            // El sonidito solo para mensajes de gente de verdad (no para los
+            // avisos del sistema, que ya son bastante frecuentes de por sí),
+            // y no por nuestros propios mensajes.
+            const myUsername = document.getElementById("usernameInput").value;
+            if (msg.type === 'user' && msg.username !== myUsername) {
+                soundChatAlert.play().catch(e => { });
+            }
+        });
+
         // Escuchar la lista de usuarios actualizada
         socket.on('update-lobby', (data) => {
+            // Guardamos todos los nombres conocidos (jugando, espectando o
+            // libres) para poder resaltar @menciones de cualquiera en el chat.
+            knownUsernames = data.users.map(u => u.username);
+
             const listElement = document.getElementById("userList");
             listElement.innerHTML = "";
 
-            // SECCIÓN 1: Caballeros Libres
-            if (data.users.length > 0) {
+            // SECCIÓN 1: Caballeros Libres (todos menos los que están jugando)
+            const freeUsers = data.users.filter(u => u.status !== "playing");
+            if (freeUsers.length > 0) {
                 const header = document.createElement("div");
                 header.innerHTML = "<strong>Caballeros Libres:</strong>";
                 listElement.appendChild(header);
 
-                data.users.forEach(u => {
+                freeUsers.forEach(u => {
                     if (u.username === document.getElementById("usernameInput").value) return;
                     const item = document.createElement("div");
                     item.className = "user-item";

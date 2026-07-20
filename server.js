@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -7,6 +8,12 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static(__dirname));
+
+// Página de Términos de Uso, en su propia ruta (según lo recomendado para
+// que sea un link "de verdad", no solo un modal dentro del juego).
+app.get('/terminos', (req, res) => {
+    res.sendFile(path.join(__dirname, 'terminos.html'));
+});
 
 let connectedUsers = {}; // { socketId: { username, status, room } }
 let activeGames = {};    // { roomName: { w: id, b: id, name, board, turn } }
@@ -235,6 +242,10 @@ io.on('connection', (socket) => {
                     pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${user.username}`);
                 }
             }
+
+            // La partida terminó: la sacamos de "Torneos en Curso"
+            delete activeGames[user.room];
+            broadcastStatus();
         }
     });
 
@@ -257,6 +268,10 @@ io.on('connection', (socket) => {
             if (winnerName && loserName) {
                 pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${loserName}`);
             }
+
+            // La partida terminó: la sacamos de "Torneos en Curso"
+            delete activeGames[room];
+            broadcastStatus();
         }
     });
 

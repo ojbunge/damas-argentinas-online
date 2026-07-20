@@ -1,8 +1,10 @@
 <!DOCTYPE html>
+<!-- © 2026 Otto Helmut - Damas Argentinas Online - Todos los derechos reservados -->
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="copyright" content="© 2026 Otto Helmut. Todos los derechos reservados.">
     <title>Damas Argentinas</title>
 
     <!-- EB Garamond: la usamos para el pergamino de las reglas (aire de libro antiguo, bien legible) -->
@@ -274,21 +276,6 @@
             background-color: rgba(0, 0, 0, 0.7);
         }
 
-        .spinner {
-            border: 8px solid rgba(255, 255, 255, 0.1);
-            border-top: 8px solid #f1c40f;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-
-            /* --- EL AJUSTE DE GODOFREDO --- */
-            margin: 0 auto 20px auto;
-            /* 0 arriba, auto a los lados, 20px abajo */
-            display: block;
-            /* Nos aseguramos de que se comporte como un bloque */
-        }
-
         #entranceSection {
             display: flex;
             flex-direction: column;
@@ -309,14 +296,13 @@
             background-repeat: no-repeat;
         }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+        /* El Salón de los Caballeros de Godofredo: fondo del lobby, mismo
+           criterio que el castillo de la entrada (cover + center). */
+        #waitingOverlay.lobby-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url('assets/saloncaballeros.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         #usernameInput {
@@ -340,6 +326,38 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 18px;
+        }
+
+        #enterBtn:disabled {
+            background: #7f8c8d;
+            color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        #termsCheckboxLabel {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #ecf0f1;
+            font-size: 14px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        #termsCheckboxLabel input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #f1c40f;
+        }
+
+        #termsCheckboxLabel a {
+            color: #f1c40f;
+            text-decoration: underline;
+        }
+
+        #termsCheckboxLabel a:hover {
+            color: #ffe28a;
         }
 
         #userList {
@@ -752,11 +770,44 @@
         #chatSendBtn:hover {
             filter: brightness(1.1);
         }
+
+        /* --- EL PERGAMINO DE AUTORÍA DE GODOFREDO (footer de copyright) --- */
+        #siteFooter {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2100;
+            /* Por encima del overlay de entrada/lobby (2000), pero por debajo
+               de los botones de Reglas, el chat y los modales (2500+), así
+               que siempre está visible sin taparle el click a nada. */
+            background: rgba(0, 0, 0, 0.55);
+            color: #cfd8e3;
+            font-size: 11px;
+            text-align: center;
+            padding: 4px 8px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            box-sizing: border-box;
+        }
+
+        #siteFooter a {
+            color: #f1c40f;
+            text-decoration: underline;
+        }
+
+        #siteFooter a:hover {
+            color: #ffe28a;
+        }
     </style>
 
 </head>
 
 <body>
+
+    <footer id="siteFooter">
+        © 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.
+        <a href="/terminos" target="_blank" rel="noopener">Ver Términos de Uso</a>.
+    </footer>
 
     <!-- La Barra de Godofredo: botones de Reglas, flotando siempre visibles -->
     <div id="rulesButtonsBar">
@@ -796,10 +847,13 @@
     <div id="waitingOverlay" class="entrance-bg">
         <div id="entranceSection">
             <h1>🇦🇷 Damas Argentinas 🇦🇷</h1>
-            <div class="spinner"></div>
             <h3>Identifíquese, noble Caballero</h3>
             <input type="text" id="usernameInput" placeholder="Tu nombre o apodo..." maxlength="15">
-            <button id="enterBtn" onclick="registerUser()">Entrar al Castillo</button>
+            <label id="termsCheckboxLabel">
+                <input type="checkbox" id="termsCheckbox" onchange="updateEnterButtonState()">
+                Acepto los <a href="/terminos" target="_blank" rel="noopener">Términos de Uso</a>
+            </label>
+            <button id="enterBtn" onclick="registerUser()" disabled>Entrar al Castillo</button>
         </div>
 
         <div id="lobbySection" style="display: none;">
@@ -808,7 +862,6 @@
             <div id="userList">
                 <!-- Aquí aparecerán los nombres -->
             </div>
-            <div class="spinner"></div>
             <p id="waitingStatus">Buscando oponentes en la red...</p>
         </div>
 
@@ -1157,6 +1210,7 @@
         const soundVictory = new Audio('assets/victory.mp3');
         const soundCrowning = new Audio('assets/crowning.mp3');
         const soundChatAlert = new Audio('assets/chatalarm.mp3');
+        const soundChallenge = new Audio('assets/ritmoespadas3.mp3');
 
         let whitePlayerName = "Blancas";
         let blackPlayerName = "Negras";
@@ -2028,7 +2082,25 @@
 
         // --- LÓGICA DEL SALÓN DE GODOFREDO ---
 
+        function updateEnterButtonState() {
+            document.getElementById("enterBtn").disabled = !document.getElementById("termsCheckbox").checked;
+        }
+
         function registerUser() {
+            // --- EL PORTERO DE GODOFREDO ---
+            // Nadie entra al castillo sin aceptar los Términos de Uso. Si ya
+            // los aceptó antes en esta misma sesión (por ejemplo, al volver
+            // al lobby tras una partida, que recarga la página), no se le
+            // vuelve a pedir.
+            const termsAccepted = document.getElementById("termsCheckbox").checked
+                || sessionStorage.getItem('damas_terms_accepted') === 'true';
+
+            if (!termsAccepted) {
+                alert("Noble Caballero, para ingresar primero debe aceptar los Términos de Uso.");
+                return;
+            }
+            sessionStorage.setItem('damas_terms_accepted', 'true');
+
             const input = document.getElementById("usernameInput");
             const name = input.value.trim();
 
@@ -2045,8 +2117,10 @@
             document.getElementById("entranceSection").style.display = "none";
             document.getElementById("lobbySection").style.display = "block";
 
-            // Ya cruzamos la puerta: el castillo de fondo queda atrás
+            // Ya cruzamos la puerta: el castillo de fondo queda atrás,
+            // y entramos al Salón, con su propio fondo
             document.getElementById("waitingOverlay").classList.remove("entrance-bg");
+            document.getElementById("waitingOverlay").classList.add("lobby-bg");
 
             // Ahora que ya tenemos nombre, el Cuervo Mensajero puede aparecer
             document.getElementById("chatBubble").style.display = "flex";
@@ -2268,6 +2342,7 @@
             currentChallengerId = data.fromId;
             document.getElementById("challengeText").textContent = `¡${data.fromName} te desafía a un duelo!`;
             document.getElementById("challengeModal").style.display = "block";
+            soundChallenge.play().catch(e => { });
         });
 
         // Botones del Modal

@@ -93,6 +93,17 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- EL MENSAJERO QUE DA MEDIA VUELTA (cancelar un desafío ya enviado) ---
+    // Mismo mecanismo de búsqueda que send-challenge: el que cancela solo sabe
+    // el nombre del destinatario, no su socket id. Si el destinatario ya no
+    // está conectado, simplemente no hay a quién avisarle (no pasa nada).
+    socket.on('cancel-challenge', (targetUsername) => {
+        const targetId = Object.keys(connectedUsers).find(id => connectedUsers[id].username === targetUsername);
+        if (targetId) {
+            io.to(targetId).emit('challenge-canceled', { fromId: socket.id, fromName: connectedUsers[socket.id]?.username });
+        }
+    });
+
     socket.on('challenge-response', (data) => {
         if (data.accepted) {
             const challengerId = data.fromId;
@@ -110,7 +121,8 @@ io.on('connection', (socket) => {
                 name: `${connectedUsers[challengerId].username} vs ${connectedUsers[socket.id].username}`,
                 board: createInitialBoard(),
                 turn: "w",
-                spectators: [] // <--- GODOFREDO PREPARA LA LISTA DE INVITADOS
+                spectators: [], // <--- GODOFREDO PREPARA LA LISTA DE INVITADOS
+                moveHistory: [] // <--- LA CRÓNICA DEL MENSAJERO: arranca en blanco
             };
 
             // Actualizar estados Y ROLES en el censo (Vital para la desconexión)
@@ -171,7 +183,8 @@ io.on('connection', (socket) => {
                 white: connectedUsers[game.w].username,
                 black: connectedUsers[game.b].username,
                 board: game.board,
-                turn: game.turn
+                turn: game.turn,
+                moveHistory: game.moveHistory || [] // <--- EL MENSAJERO LE CUENTA LO YA JUGADO
             };
 
             socket.emit('assign-role', 'spectator');
@@ -203,6 +216,10 @@ io.on('connection', (socket) => {
         if (room && activeGames[room]) {
             activeGames[room].board = data.boardState;
             activeGames[room].turn = data.currentPlayer;
+            if (data.lastMoveEntry) {
+                if (!activeGames[room].moveHistory) activeGames[room].moveHistory = [];
+                activeGames[room].moveHistory.push(data.lastMoveEntry);
+            }
         }
     });
 
@@ -211,7 +228,18 @@ io.on('connection', (socket) => {
         if (user) {
             if (user.room && activeGames[user.room]) {
                 if (user.role === 'w' || user.role === 'b') {
-                    socket.to(user.room).emit('opponent-left');
+                    // --- EL PREGÓN DEL MENSAJERO (quién abandonó, quién gana) ---
+                    // Lo calculamos ANTES de borrar la sala: así el rival Y
+                    // los espectadores del balcón (ambos siguen en esta room
+                    // de socket.io) reciben el nombre de quien se fue y el de
+                    // quien gana por abandono, en vez de un aviso genérico.
+                    const game = activeGames[user.room];
+                    const winnerId = (user.role === 'w') ? game.b : game.w;
+                    const winnerName = connectedUsers[winnerId]?.username;
+                    socket.to(user.room).emit('opponent-left', {
+                        leaverName: user.username,
+                        winnerName: winnerName
+                    });
                     delete activeGames[user.room];
                 } else if (user.role === 'spectator') {
                     // --- GODOFREDO BORRA AL VISITANTE QUE SE VA ---
@@ -228,12 +256,22 @@ io.on('connection', (socket) => {
     socket.on('player-surrendered', () => {
         const user = connectedUsers[socket.id];
         if (user && user.room) {
+            // Guardamos el nombre de sala en su propia variable ANTES de
+            // tocar nada más. 'user' es el MISMO objeto que
+            // connectedUsers[game.w] o connectedUsers[game.b] (quien se
+            // rinde es uno de los dos jugadores) — así que resetear su
+            // .room más abajo, si siguiéramos leyendo de user.room al
+            // final, terminaría borrando activeGames[null] en vez de la
+            // sala real, dejándola huérfana para siempre en "Torneos en
+            // Curso" aunque el censo ya mostrara a ambos como libres.
+            const room = user.room;
+
             console.log(`El caballero ${user.username} ha tirado la toalla.`);
             // Avisamos al otro jugador en la sala
-            socket.to(user.room).emit('opponent-surrendered');
+            socket.to(room).emit('opponent-surrendered');
 
             // Anunciamos la victoria en el chat (una sola vez por partida)
-            const game = activeGames[user.room];
+            const game = activeGames[room];
             if (game && !game.concluded) {
                 game.concluded = true;
                 const winnerId = (user.role === 'w') ? game.b : game.w;
@@ -241,10 +279,19 @@ io.on('connection', (socket) => {
                 if (winnerName) {
                     pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${user.username}`);
                 }
+
+                // --- GODOFREDO LOS DEVUELVE AL SALÓN ---
+                // La partida terminó: ambos vuelven a estar "libres" en el censo
+                // (antes quedaban con status "playing" para siempre, invisible
+                // porque el único botón post-partida recargaba la página; ahora
+                // que existe el botón de Revancha, hace falta que el lobby los
+                // vuelva a mostrar como disponibles de verdad).
+                if (connectedUsers[game.w]) { connectedUsers[game.w].status = "lobby"; connectedUsers[game.w].room = null; }
+                if (connectedUsers[game.b]) { connectedUsers[game.b].status = "lobby"; connectedUsers[game.b].room = null; }
             }
 
             // La partida terminó: la sacamos de "Torneos en Curso"
-            delete activeGames[user.room];
+            delete activeGames[room];
             broadcastStatus();
         }
     });
@@ -268,6 +315,10 @@ io.on('connection', (socket) => {
             if (winnerName && loserName) {
                 pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${loserName}`);
             }
+
+            // --- GODOFREDO LOS DEVUELVE AL SALÓN --- (ver mismo comentario en player-surrendered)
+            if (connectedUsers[game.w]) { connectedUsers[game.w].status = "lobby"; connectedUsers[game.w].room = null; }
+            if (connectedUsers[game.b]) { connectedUsers[game.b].status = "lobby"; connectedUsers[game.b].room = null; }
 
             // La partida terminó: la sacamos de "Torneos en Curso"
             delete activeGames[room];

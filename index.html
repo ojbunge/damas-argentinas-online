@@ -1,9 +1,18 @@
 <!DOCTYPE html>
 <!-- © 2026 Otto Helmut - Damas Argentinas Online - Todos los derechos reservados -->
+<!--
+    EL INVENTARIO DE GODOFREDO (assets/ usados por el castillo)
+    Fondos:    pergamino.jpg (modal de Reglas), castillo.jpg (entrada),
+               saloncaballeros.jpg (lobby), autumn-background.jpg (tapiz de
+               fondo detrás de todo el sitio, body).
+    Sonidos:   move.mp3, capture.mp3, victory.mp3, crowning.mp3 (juego,
+               preexistentes) · chatalarm.mp3, ritmoespadas3.mp3 (chat/desafío).
+-->
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="copyright" content="© 2026 Otto Helmut. Todos los derechos reservados.">
     <title>Damas Argentinas</title>
 
@@ -15,7 +24,7 @@
     <style>
         h1 {
             font-family: 'Garamond', 'Georgia', serif;
-            font-size: 3.5em;
+            font-size: clamp(1.6em, 6vw, 3.5em);
             color: #f1c40f;
             /* Dorado base */
             text-shadow: 2px 2px 0px #9e7e0a, 4px 4px 8px rgba(0, 0, 0, 0.5);
@@ -50,14 +59,18 @@
             min-height: 100vh;
         }
 
-        .status-container {
-            /* Ajustamos un poco el ancho para que coincida con el tablero */
-            width: 630px;
-        }
-
         :root {
-            --sq-size: 60px;
-            /* Tamaño base de la casilla */
+            /* --- EL ESCUDO FLUIDO DE GODOFREDO --- */
+            /* En vez de un salto brusco a los 700px, el tamaño de casilla
+               escala de forma continua con el ancho de la ventana: nunca
+               baja de 26px (jugable hasta en un celular chico) ni sube de
+               60px (el tamaño de escritorio de siempre). El marco y el
+               relleno del tablero escalan con la misma lógica, y son la
+               única fuente de verdad tanto para el propio #board como para
+               las referencias de coordenadas (ver más abajo). */
+            --sq-size: clamp(26px, 7vw, 60px);
+            --board-border: clamp(13px, 3vw, 20px);
+            --board-padding: clamp(3px, 0.6vw, 5px);
         }
 
         #board {
@@ -65,41 +78,163 @@
             grid-template-columns: repeat(10, var(--sq-size));
             grid-template-rows: repeat(10, var(--sq-size));
             width: fit-content;
-            border: 15px solid #2c1a10;
+            border: var(--board-border) solid #2c1a10;
             border-radius: 15px;
-            padding: 5px;
+            padding: var(--board-padding);
             background-color: #2c1a10;
             box-shadow: 0 15px 35px rgba(0,0,0,0.5);
             margin: 10px auto; /* Reducimos el margen de 20px a 10px para acercarlo a los nombres */
+            position: relative; /* Ancla a las referencias de coordenadas */
+        }
+
+        /* --- LAS PIEDRAS MILIARES DE GODOFREDO (referencias de coordenadas) --- */
+        /* Un <span> por casilla del borde inferior (letra de columna) y del
+           borde izquierdo (número de fila), anclado con position:absolute
+           a SU PROPIA casilla (ver .square { position:relative } más abajo).
+           Como cuelgan de la casilla real, quedan perfectamente centrados
+           en su fila/columna a cualquier tamaño de pantalla, sin cálculos
+           de posición aparte — y el ancho de la franja que ocupan (padding
+           + borde del tablero) sale de las mismas variables que ya usa
+           #board, así que nunca quedan desalineados entre sí. */
+        .coord-label {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d9c19a;
+            /* Crema/dorado claro: contraste sobre el marrón oscuro del marco */
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: clamp(9px, 1.6vw, 11px);
+            line-height: 1;
+            pointer-events: none;
+            /* Que nunca compitan por el click con la casilla */
+            user-select: none;
+        }
+
+        .coord-label-col {
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: calc(var(--board-padding) + var(--board-border));
+        }
+
+        .coord-label-row {
+            top: 0;
+            right: 100%;
+            height: 100%;
+            width: calc(var(--board-padding) + var(--board-border));
+        }
+
+        /* Cuando el tablero está girado 180° (vista de Negras), las
+           casillas (y sus etiquetas) giran con él. Sin este contra-giro el
+           texto quedaría cabeza abajo — mismo mecanismo que .piece.reverse-rotate. */
+        .flipped-board .coord-label {
+            transform: rotate(180deg);
+        }
+        /* Por defecto (y hasta que haya espacio de sobra, ver media query más
+           abajo) el historial vive en flujo normal, apilado debajo del
+           tablero: así #boardAndHistoryWrapper se centra en base al ancho
+           real del tablero (igual que el título, la barra de información y
+           la de espectadores), sin que el historial le corra el eje. */
+        #boardAndHistoryWrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #boardColumn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #moveHistoryPanel {
+            width: min(90vw, 480px);
+            max-height: 220px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(241, 196, 15, 0.4);
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            color: #ecf0f1;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 12.5px;
+            margin-top: 14px;
+        }
+
+        #moveHistoryPanel h3 {
+            color: #f1c40f;
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            border-bottom: 1px solid rgba(241, 196, 15, 0.3);
+            padding-bottom: 6px;
+        }
+
+        .move-entry {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 2px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .move-entry .move-num {
+            color: #9fb0c2;
+            min-width: 20px;
+            flex-shrink: 0;
+        }
+
+        .move-entry .move-color-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            border: 1px solid #f1c40f;
+            flex-shrink: 0;
+        }
+
+        /* Como el tablero queda centrado en TODO el viewport (para alinearse
+           con el título y las barras de arriba), el espacio libre a su
+           derecha es solo la MITAD del sobrante total del viewport — la
+           otra mitad "se gasta" en el margen izquierdo, aunque ahí no haya
+           nada. Por eso hace falta el doble de lo que parece a simple
+           vista: con tablero≈650px (ya en su tope de tamaño), separación
+           18px e historial 190px, la cuenta real es
+           650 + 2×(18+190) ≈ 1066px de viewport como mínimo. Usamos 1100px
+           para dejar margen de sobra. (Esta es la corrección de un cálculo
+           anterior que solo contaba board+gap+historial una vez, sin
+           duplicar por la simetría del centrado — eso causaba que el panel
+           se saliera del viewport en anchos cercanos al viejo umbral de 950px.) */
+        @media (min-width: 1100px) {
+            #boardAndHistoryWrapper {
+                display: block;
+                position: relative;
+                width: fit-content;
+            }
+
+            #moveHistoryPanel {
+                position: absolute;
+                top: 0;
+                left: 100%;
+                margin-left: 18px;
+                margin-top: 0;
+                width: 190px;
+                max-height: 715px;
+                /* El top:0 alinea el techo del panel con el techo de
+                   #boardAndHistoryWrapper, que es el mismo techo que el
+                   estandarte superior (nombre del rival) — quedan a la par. */
+            }
         }
 
         /* El Escudo de Adaptación (Responsividad para móviles) */
-        @media (max-width: 700px) {
-            :root {
-                --sq-size: 8vw;
-            }
-
-            /* La casilla se achica según el ancho de pantalla */
-            #board {
-                border: 8px solid #2c1a10;
-            }
-
-            .status-container {
-                width: 90vw;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 10px;
-            }
-
-            h1 {
-                font-size: 2em;
-            }
-
-            .piece {
-                width: 80%;
-                height: 80%;
-            }
-        }
+        /* --sq-size, --board-border y el tamaño del título ya escalan de
+           forma fluida (ver :root y la regla h1) — no hace falta un salto
+           acá para eso. Lo único que sigue necesitando un quiebre real es
+           #rulesButtonsBar (ver su propia regla, más abajo), que pasa de
+           flotar sobre el título a ocupar su lugar en el flujo normal. */
 
         /* La Huella en el Barro (Resaltado del último movimiento) */
         .last-move-highlight {
@@ -129,6 +264,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
+            /* Ancla para las referencias de coordenadas (.coord-label) */
         }
 
         .light {
@@ -197,13 +334,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 600px;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            width: min(600px, 92vw);
+            box-sizing: border-box;
             margin-bottom: 10px;
             background: #2c3e50;
             color: white;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Si el contenido llegó a envolver (pantallas angostas), centrado
+           se ve más prolijo que el space-between original repartido entre
+           líneas dispares. */
+        @media (max-width: 480px) {
+            .status-container {
+                justify-content: center;
+            }
         }
 
         .score-box {
@@ -313,7 +462,8 @@
             background: #2c3e50;
             color: white;
             margin-bottom: 15px;
-            width: 250px;
+            width: min(250px, 80vw);
+            box-sizing: border-box;
             text-align: center;
         }
 
@@ -362,7 +512,8 @@
 
         #userList {
             margin: 20px 0;
-            width: 300px;
+            width: min(300px, 85vw);
+            box-sizing: border-box;
             max-height: 200px;
             overflow-y: auto;
             background: rgba(255, 255, 255, 0.1);
@@ -385,15 +536,16 @@
         }
 
         #spectatorsBox {
-            width: 630px;
-            margin: 0 auto 5px auto;
-            /* Reducimos el margen inferior de 10px a 5px */
+            width: min(630px, 92vw);
+            box-sizing: border-box;
+            margin: 0 auto 10px auto;
             text-align: left;
             color: #f1c40f;
             font-size: 14px;
             background: rgba(0, 0, 0, 0.5);
             padding: 5px 15px;
             border-radius: 5px;
+            border-left: 3px solid #f1c40f;
         }
 
         .player-name-label {
@@ -809,10 +961,11 @@
         <a href="/terminos" target="_blank" rel="noopener">Ver Términos de Uso</a>.
     </footer>
 
-    <!-- La Barra de Godofredo: botones de Reglas, flotando siempre visibles -->
+    <!-- La Barra de Godofredo: botones de Reglas y sonido, flotando siempre visibles -->
     <div id="rulesButtonsBar">
         <button class="rules-btn" onclick="openRules('es')">📜 Reglas 🇦🇷</button>
         <button class="rules-btn" onclick="openRules('en')">📜 Rules 🇬🇧</button>
+        <button id="muteBtn" class="rules-btn" onclick="toggleMute()" title="Silenciar / activar sonido">🔊</button>
     </div>
 
     <h1>Damas Argentinas</h1>
@@ -832,16 +985,26 @@
     </div>
 
     <!-- El Mirador de Godofredo (Lista de Espectadores) -->
-    <div id="spectatorsBox"
-        style="width: 630px; margin: 0 auto 10px auto; text-align: left; color: #f1c40f; font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; border-left: 3px solid #f1c40f;">
+    <div id="spectatorsBox">
         <span id="spectatorListDisplay">Espectadores: -</span>
     </div>
 
-    <!-- Estandarte del oponente (Arriba) -->
-    <div id="topPlayerName" class="player-name-label"></div>
-    <div id="board"></div>
-    <!-- Estandarte propio (Abajo) -->
-    <div id="bottomPlayerName" class="player-name-label"></div>
+    <!-- La Crónica y la Arena, lado a lado -->
+    <div id="boardAndHistoryWrapper">
+        <div id="boardColumn">
+            <!-- Estandarte del oponente (Arriba) -->
+            <div id="topPlayerName" class="player-name-label"></div>
+            <div id="board"></div>
+            <!-- Estandarte propio (Abajo) -->
+            <div id="bottomPlayerName" class="player-name-label"></div>
+        </div>
+
+        <!-- El Mensajero de Godofredo: crónica de jugadas de la partida -->
+        <div id="moveHistoryPanel">
+            <h3>📜 Crónica</h3>
+            <div id="moveHistoryList"></div>
+        </div>
+    </div>
 
     <!-- La Puerta de Entrada y el Lobby de Godofredo -->
     <div id="waitingOverlay" class="entrance-bg">
@@ -863,6 +1026,9 @@
                 <!-- Aquí aparecerán los nombres -->
             </div>
             <p id="waitingStatus">Buscando oponentes en la red...</p>
+            <button id="cancelChallengeBtn" onclick="cancelPendingChallenge()"
+                style="display: none; padding: 8px 15px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar
+                desafío</button>
         </div>
 
     </div>
@@ -874,7 +1040,7 @@
          Ahora vive afuera, como hermano de waitingOverlay, y puede mostrarse
          flotando sobre el tablero en cualquier momento. -->
     <div id="challengeModal"
-        style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3000;">
+        style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100;">
         <h3 id="challengeText">¡Un caballero te desafía!</h3>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
             <button id="acceptBtn"
@@ -1212,6 +1378,28 @@
         const soundChatAlert = new Audio('assets/chatalarm.mp3');
         const soundChallenge = new Audio('assets/ritmoespadas3.mp3');
 
+        // --- LA MORDAZA DE GODOFREDO (mute/volumen) ---
+        // Un booleano nomás, persistido igual que el nombre de usuario, que se
+        // chequea antes de cada .play(). Centralizamos el chequeo en una sola
+        // función (playSound) para no tener que repetir el if en cada sonido.
+        let isMuted = (sessionStorage.getItem('damas_muted') === 'true');
+
+        function playSound(audio) {
+            if (isMuted) return;
+            audio.play().catch(e => { });
+        }
+
+        function updateMuteButton() {
+            const btn = document.getElementById('muteBtn');
+            if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            sessionStorage.setItem('damas_muted', isMuted ? 'true' : 'false');
+            updateMuteButton();
+        }
+
         let whitePlayerName = "Blancas";
         let blackPlayerName = "Negras";
 
@@ -1225,6 +1413,16 @@
         let currentAllowedMoves = []; // Guardará solo los movimientos que cumplen las reglas
 
         let highlightedSquares = [];
+
+        // --- LA CRÓNICA DEL MENSAJERO (historial de jugadas) ---
+        let moveHistory = []; // Mezcla de jugadas {color, from, to, captured, crowned} y separadores {type:'divider', label}
+
+        // --- EL PREGONERO DE GODOFREDO (aviso de turno en la pestaña) ---
+        const ORIGINAL_TITLE = document.title;
+
+        // --- EL DESAFÍO QUE PUEDE ARREPENTIRSE (cancelar / timeout) ---
+        let pendingChallengeTarget = null;
+        let pendingChallengeTimeout = null;
 
         let board = [
 
@@ -1308,9 +1506,14 @@
 
         }
 
-        function getLegalMoves(row, col) {
+        // Acepta un tablero opcional (por defecto, el global "board" — así
+        // todos los call sites existentes que llaman getLegalMoves(row, col)
+        // sin tercer argumento siguen funcionando exactamente igual). Esto
+        // es lo que permite que getBestCaptureSequences() le pase el
+        // tablero de SU simulación en vez de depender del global.
+        function getLegalMoves(row, col, boardToUse = board) {
 
-            const piece = board[row][col];
+            const piece = boardToUse[row][col];
 
             if (!piece) {
                 return [];
@@ -1332,7 +1535,7 @@
                         r < 10 &&
                         c >= 0 &&
                         c < 10 &&
-                        board[r][c] === null
+                        boardToUse[r][c] === null
                     ) {
                         moves.push({
                             type: "move",
@@ -1361,7 +1564,7 @@
                 captureTargets.forEach(target => {
 
                     const enemyPiece =
-                        board[target.enemyRow]?.[target.enemyCol];
+                        boardToUse[target.enemyRow]?.[target.enemyCol];
 
                     if (
                         isEnemyPiece(enemyPiece, piece) &&
@@ -1369,7 +1572,7 @@
                         target.landingRow < 10 &&
                         target.landingCol >= 0 &&
                         target.landingCol < 10 &&
-                        board[target.landingRow][target.landingCol] === null
+                        boardToUse[target.landingRow][target.landingCol] === null
                     ) {
                         moves.push({
                             type: "capture",
@@ -1398,7 +1601,7 @@
                         r < 10 &&
                         c >= 0 &&
                         c < 10 &&
-                        board[r][c] === null
+                        boardToUse[r][c] === null
                     ) {
                         moves.push({
                             type: "move",
@@ -1427,7 +1630,7 @@
                 captureTargets.forEach(target => {
 
                     const enemyPiece =
-                        board[target.enemyRow]?.[target.enemyCol];
+                        boardToUse[target.enemyRow]?.[target.enemyCol];
 
                     if (
                         isEnemyPiece(enemyPiece, piece) &&
@@ -1435,7 +1638,7 @@
                         target.landingRow < 10 &&
                         target.landingCol >= 0 &&
                         target.landingCol < 10 &&
-                        board[target.landingRow][target.landingCol] === null
+                        boardToUse[target.landingRow][target.landingCol] === null
                     ) {
                         moves.push({
                             type: "capture",
@@ -1466,7 +1669,7 @@
 
                     // Mientras estemos dentro del tablero...
                     while (r >= 0 && r < 10 && c >= 0 && c < 10) {
-                        if (board[r][c] === null) {
+                        if (boardToUse[r][c] === null) {
                             // CASILLA VACÍA: La dama puede moverse aquí (Vuelo)
                             moves.push({
                                 type: "move",
@@ -1478,7 +1681,7 @@
                             c += dir.dc;
                         } else {
                             // CHOCAMOS CON UNA PIEZA: ¿Es enemiga?
-                            if (isEnemyPiece(board[r][c], piece)) {
+                            if (isEnemyPiece(boardToUse[r][c], piece)) {
                                 const nextR = r + dir.dr;
                                 const nextC = c + dir.dc;
 
@@ -1486,7 +1689,7 @@
                                 if (
                                     nextR >= 0 && nextR < 10 &&
                                     nextC >= 0 && nextC < 10 &&
-                                    board[nextR][nextC] === null
+                                    boardToUse[nextR][nextC] === null
                                 ) {
                                     moves.push({
                                         type: "capture",
@@ -1532,6 +1735,78 @@
                 turnIndicator.style.textShadow = "none";
             }
 
+        }
+
+        // --- EL PREGONERO DE GODOFREDO (aviso de turno en el título de la pestaña) ---
+        // Solo le habla a jugadores de verdad (no a espectadores), y solo grita
+        // si de verdad no estás mirando la pestaña en este momento.
+        function updateTurnTitle() {
+            if (myColor !== 'w' && myColor !== 'b') {
+                document.title = ORIGINAL_TITLE;
+                return;
+            }
+            const isMyTurn = (currentPlayer === myColor);
+            document.title = (isMyTurn && document.hidden) ? "¡Tu turno! – Damas Argentinas" : ORIGINAL_TITLE;
+        }
+
+        // Al volver a la pestaña, el pregón se calla. Al irte en tu turno, puede
+        // empezar a gritar (por si el cambio de turno pasó mientras no mirabas).
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                document.title = ORIGINAL_TITLE;
+            } else {
+                updateTurnTitle();
+            }
+        });
+
+        // --- LA CRÓNICA DEL MENSAJERO (historial de jugadas) ---
+        // Notación tipo ajedrez: columna (letra) primero, fila (número)
+        // después — "denominación convencional", como pidió Otto. El
+        // tablero es 10×10, así que las columnas van de 'a' a 'j'.
+        // La columna 0 del array es la 'a' (queda a la izquierda tal cual
+        // se pinta en renderBoard, sin invertir), y la fila 0 del array
+        // (arriba del todo, lado de las Negras) es la "10": las filas
+        // ascienden de abajo (fila 1, lado Blancas) hacia arriba (fila 10).
+        function squareLabel(row, col) {
+            const colLetter = String.fromCharCode(97 + col); // 0 → 'a' ... 9 → 'j'
+            const rowNumber = 10 - row; // 0 → 10 ... 9 → 1
+            return `${colLetter}${rowNumber}`;
+        }
+
+        function renderMoveHistory() {
+            const list = document.getElementById('moveHistoryList');
+            if (!list) return;
+            list.innerHTML = "";
+
+            moveHistory.forEach((m, index) => {
+                const row = document.createElement('div');
+                row.className = 'move-entry';
+
+                const dotColor = (m.color === 'w') ? '#ffffff' : '#1c1c1c';
+                const fromTxt = squareLabel(m.from.row, m.from.col);
+                const toTxt = squareLabel(m.to.row, m.to.col);
+                let suffix = '';
+                if (m.captured) suffix += ' ✕';
+                if (m.crowned) suffix += ' ♛';
+
+                const num = document.createElement('span');
+                num.className = 'move-num';
+                num.textContent = (index + 1) + '.';
+
+                const dot = document.createElement('span');
+                dot.className = 'move-color-dot';
+                dot.style.background = dotColor;
+
+                const txt = document.createElement('span');
+                txt.textContent = `${fromTxt} → ${toTxt}${suffix}`;
+
+                row.appendChild(num);
+                row.appendChild(dot);
+                row.appendChild(txt);
+                list.appendChild(row);
+            });
+
+            list.scrollTop = list.scrollHeight;
         }
 
         function renderBoard() {
@@ -1663,6 +1938,27 @@
 
                         square.appendChild(piece);
                     }
+
+                    // --- LAS PIEDRAS MILIARES DE GODOFREDO ---
+                    // Letra de columna colgando del borde inferior (una sola
+                    // vez por columna, en la última fila) y número de fila
+                    // colgando del borde izquierdo (una sola vez por fila, en
+                    // la primera columna). Misma fórmula que squareLabel(),
+                    // para que la Crónica y el marco del tablero jamás queden
+                    // desincronizados entre sí.
+                    if (row === 9) {
+                        const colLabel = document.createElement("span");
+                        colLabel.classList.add("coord-label", "coord-label-col");
+                        colLabel.textContent = String.fromCharCode(97 + col); // 0→'a' ... 9→'j'
+                        square.appendChild(colLabel);
+                    }
+                    if (col === 0) {
+                        const rowLabel = document.createElement("span");
+                        rowLabel.classList.add("coord-label", "coord-label-row");
+                        rowLabel.textContent = 10 - row; // 0→10 ... 9→1
+                        square.appendChild(rowLabel);
+                    }
+
                     boardElement.appendChild(square);
                 }
             }
@@ -1716,8 +2012,23 @@
             if ((piece === "w" && move.row === 0) || (piece === "b" && move.row === 9)) {
                 board[move.row][move.col] = piece.toUpperCase();
                 justCrowned = true;
-                soundCrowning.play().catch(e => { });
+                playSound(soundCrowning);
             }
+
+            // 4.5 La Crónica del Mensajero: registramos esta jugada puntual.
+            // Un salto en una captura múltiple es SU PROPIA llamada a executeMove
+            // (el jugador hace click en cada escalón de la cadena), así que cada
+            // salto queda anotado como su propia línea, cosa que además es la
+            // forma más clara de leerlo después.
+            const historyEntry = {
+                color: piece.toLowerCase(),
+                from: { row: lastMoveCoords.fromRow, col: lastMoveCoords.fromCol },
+                to: { row: lastMoveCoords.toRow, col: lastMoveCoords.toCol },
+                captured: move.type === "capture",
+                crowned: justCrowned
+            };
+            moveHistory.push(historyEntry);
+            renderMoveHistory();
 
             // 5. Captura y Turno
             if (move.type === "capture") {
@@ -1754,8 +2065,8 @@
 
             clearHighlights();
 
-            if (move.type === "capture") soundCapture.play().catch(e => { });
-            else soundMove.play().catch(e => { });
+            if (move.type === "capture") playSound(soundCapture);
+            else playSound(soundMove);
 
             // 7. Le avisamos al servidor cómo quedó la foto REAL (ya con el movimiento
             // aplicado), para que quien entre a espectar después reciba el tablero
@@ -1765,7 +2076,8 @@
             if (!isFromNetwork) {
                 socket.emit('sync-board-state', {
                     boardState: board,
-                    currentPlayer: currentPlayer
+                    currentPlayer: currentPlayer,
+                    lastMoveEntry: historyEntry
                 });
             }
 
@@ -1783,11 +2095,13 @@
             currentAllowedMoves = []; // ¡Esto quita los círculos verdes al pasar el turno!
 
             updateTurnIndicator();
+            updateTurnTitle();
             checkGameOver();
         }
 
         renderBoard();
         updateTurnIndicator();
+        updateMuteButton();
 
         console.log(
             "Blancas capturan:",
@@ -1801,9 +2115,13 @@
 
         function getBestCaptureSequences(row, col, currentBoard, isKing) {
             const piece = currentBoard[row][col];
-            // IMPORTANTE: getLegalMoves ya usa el board global, lo cual es arriesgado en simulación.
-            // Pero por ahora, como restauramos todo, funcionará.
-            const moves = getLegalMoves(row, col);
+            // Le pasamos currentBoard explícitamente: durante la simulación
+            // de una secuencia de capturas, getLegalMoves ahora opera sobre
+            // ESTE tablero (el de la simulación en curso), no sobre el board
+            // global. Antes funcionaba solo porque currentBoard y board eran
+            // siempre la misma referencia en la práctica — ya no depende de esa
+            // coincidencia.
+            const moves = getLegalMoves(row, col, currentBoard);
             const captures = moves.filter(m => m.type === "capture");
 
             if (captures.length === 0) {
@@ -1911,12 +2229,12 @@
 
             // 1. Victoria por aniquilación
             if (whitePieces === 0) {
-                announceWinner(`¡${blackPlayerName} ha aniquilado a ${whitePlayerName}!`);
+                announceWinner(`¡${blackPlayerName} ha aniquilado a ${whitePlayerName}!`, { allowRematch: true });
                 socket.emit('game-over', { winner: 'b' });
                 return true;
             }
             if (blackPieces === 0) {
-                announceWinner(`¡${whitePlayerName} ha aniquilado a ${blackPlayerName}!`);
+                announceWinner(`¡${whitePlayerName} ha aniquilado a ${blackPlayerName}!`, { allowRematch: true });
                 socket.emit('game-over', { winner: 'w' });
                 return true;
             }
@@ -1943,7 +2261,7 @@
             if (!canMove) {
                 const winnerName = (currentPlayer === 'w') ? blackPlayerName : whitePlayerName;
                 const loserName = (currentPlayer === 'w') ? whitePlayerName : blackPlayerName;
-                announceWinner(`¡${winnerName} ha bloqueado a ${loserName}!`);
+                announceWinner(`¡${winnerName} ha bloqueado a ${loserName}!`, { allowRematch: true });
                 socket.emit('game-over', { winner: (currentPlayer === 'w') ? 'b' : 'w' });
                 return true;
             }
@@ -1951,8 +2269,11 @@
             return false;
         }
 
-        function announceWinner(message) {
-            soundVictory.play().catch(e => console.log("Sonido bloqueado"));
+        function announceWinner(message, { allowRematch = false } = {}) {
+            playSound(soundVictory);
+
+            // El pregón de turno ya no tiene sentido: la partida terminó.
+            document.title = ORIGINAL_TITLE;
 
             // Eliminamos carteles anteriores si existieran
             const oldBanner = document.getElementById("victoryBanner");
@@ -1971,17 +2292,46 @@
             banner.style.border = "5px solid gold";
             banner.style.borderRadius = "20px";
             banner.style.textAlign = "center";
-            banner.style.zIndex = "3000"; // Por encima de todo
+            banner.style.zIndex = "3000"; // Por encima de todo (menos un desafío entrante, que va a 3100)
 
-            // El mensaje ahora es dinámico y el botón nos saca al lobby
+            // El botón de Revancha solo tiene sentido si hay a quién desafiar:
+            // nunca para espectadores, y nunca cuando el motivo del cartel es
+            // que el rival directamente se fue (opponent-left no manda allowRematch).
+            const rematchButtonHtml = (allowRematch && myColor !== 'spectator')
+                ? `<button id="rematchBtn" onclick="requestRematch()" style="padding:15px 25px; font-size: 18px; cursor:pointer; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold;">⚔️ Revancha</button>`
+                : '';
+
+            // El mensaje ahora es dinámico y los botones nos dan la opción de revancha o de salir
             banner.innerHTML = `
         <h1 style="font-size: 40px; color: gold; border: none;">¡FIN DEL DUELO!</h1>
         <p style="margin-bottom: 20px;">${message}</p>
-        <button onclick="location.reload()" style="padding:15px 30px; font-size: 20px; cursor:pointer; background: #f1c40f; border: none; border-radius: 10px; font-weight: bold;">
-            SALIR AL LOBBY
-        </button>
+        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+            ${rematchButtonHtml}
+            <button onclick="location.reload()" style="padding:15px 30px; font-size: 20px; cursor:pointer; background: #f1c40f; border: none; border-radius: 10px; font-weight: bold;">
+                SALIR AL LOBBY
+            </button>
+        </div>
         `;
             document.body.appendChild(banner);
+        }
+
+        // --- LA REVANCHA DE GODOFREDO ---
+        // Reutiliza toda la infraestructura de desafíos existente: le manda un
+        // send-challenge directo al mismo rival de la partida que acaba de
+        // terminar. El servidor ya no requiere que estén en un estado
+        // particular para poder desafiarse (ver el fix en player-surrendered
+        // y game-over que los devuelve a "lobby" al concluir la partida).
+        function requestRematch() {
+            const opponentName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
+            socket.emit('send-challenge', opponentName);
+
+            const btn = document.getElementById('rematchBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = "0.6";
+                btn.style.cursor = "default";
+                btn.textContent = `Esperando a ${opponentName}...`;
+            }
         }
 
         function surrender() {
@@ -1995,7 +2345,7 @@
 
             // 3. Mostrar el mensaje localmente
             const winnerName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
-            announceWinner(`TE HAS RENDIDO.<br>VICTORIA PARA ${winnerName}`);
+            announceWinner(`TE HAS RENDIDO.<br>VICTORIA PARA ${winnerName}`, { allowRematch: true });
         }
 
         // Escuchar movimientos que vienen del servidor
@@ -2048,6 +2398,33 @@
                 const spectatorDisplay = document.getElementById("spectatorListDisplay");
                 if (spectatorDisplay) spectatorDisplay.textContent = "Espectadores: -";
 
+                // Si esta partida arrancó porque nosotros mismos disparamos un
+                // desafío (por ejemplo, una Revancha), soltamos cualquier rastro
+                // de "esperando respuesta" que hubiera quedado pendiente.
+                if (pendingChallengeTimeout) {
+                    clearTimeout(pendingChallengeTimeout);
+                    pendingChallengeTimeout = null;
+                }
+                pendingChallengeTarget = null;
+                const cancelBtn = document.getElementById("cancelChallengeBtn");
+                if (cancelBtn) cancelBtn.style.display = "none";
+
+                // El cartel de victoria de una partida anterior (si quedó
+                // abierto, por ejemplo detrás de un desafío entrante) ya no
+                // corresponde una vez que arrancó una partida nueva.
+                const oldBanner = document.getElementById("victoryBanner");
+                if (oldBanner) oldBanner.remove();
+                document.title = ORIGINAL_TITLE;
+
+                // --- LA CRÓNICA DEL MENSAJERO ---
+                // Si el servidor nos manda una crónica ya en curso (típicamente
+                // porque somos un espectador que se une a mitad de partida), la
+                // adoptamos tal cual. Si no (partida recién arrancada), arranca vacía.
+                moveHistory = (data.moveHistory && data.moveHistory.length > 0)
+                    ? JSON.parse(JSON.stringify(data.moveHistory))
+                    : [];
+                renderMoveHistory();
+
                 // --- LOS ESTANDARTES DE GODOFREDO ---
                 const topLabel = document.getElementById("topPlayerName");
                 const bottomLabel = document.getElementById("bottomPlayerName");
@@ -2070,13 +2447,25 @@
         });
 
         // Si el rival o los jugadores se desconectan
-        socket.on('opponent-left', () => {
+        socket.on('opponent-left', (data) => {
+            const leaverName = data?.leaverName;
+            const winnerName = data?.winnerName;
+
             if (myColor !== 'spectator') {
                 // Si soy jugador, aviso que el rival huyó y doy opción de salir
-                announceWinner("¡TU RIVAL HA HUIDO!<br>La partida ha terminado por abandono.");
+                const msg = leaverName
+                    ? `¡${leaverName} ha huido de la contienda!<br>Ganás por abandono.`
+                    : "¡TU RIVAL HA HUIDO!<br>La partida ha terminado por abandono.";
+                announceWinner(msg);
             } else {
-                // Si soy espectador, aviso que la partida terminó
-                announceWinner("LOS CONTENDIENTES SE HAN IDO.<br>La partida ha finalizado.");
+                // --- EL PREGÓN DEL MENSAJERO ---
+                // Antes el espectador solo veía "los contendientes se han
+                // ido", sin poder distinguir quién abandonó. Ahora el
+                // servidor le manda ambos nombres.
+                const msg = (leaverName && winnerName)
+                    ? `${leaverName} se ha retirado de la partida.<br>${winnerName} gana por abandono.`
+                    : "LOS CONTENDIENTES SE HAN IDO.<br>La partida ha finalizado.";
+                announceWinner(msg);
             }
         });
 
@@ -2278,7 +2667,7 @@
             // y no por nuestros propios mensajes.
             const myUsername = document.getElementById("usernameInput").value;
             if (msg.type === 'user' && msg.username !== myUsername) {
-                soundChatAlert.play().catch(e => { });
+                playSound(soundChatAlert);
             }
         });
 
@@ -2306,8 +2695,7 @@
                     item.textContent = `🛡️ ${u.username}${etiqueta} (Desafiar)`;
                     item.onclick = () => {
                         if (confirm(`¿Deseas enviar un desafío a ${u.username}?`)) {
-                            socket.emit('send-challenge', u.username);
-                            document.getElementById("waitingStatus").textContent = `Esperando respuesta de ${u.username}...`;
+                            sendChallengeTo(u.username);
                         }
                     };
                     listElement.appendChild(item);
@@ -2335,6 +2723,40 @@
             }
         });
 
+        // --- EL DESAFÍO QUE PUEDE ARREPENTIRSE ---
+        // Un solo desafío pendiente a la vez (igual que el resto del lobby, que
+        // ya asumía eso implícitamente con un solo texto de "waitingStatus").
+        // Se cancela por lo que pase primero: el botón, o 30 segundos sin
+        // respuesta. cancelPendingChallenge() se usa para ambos casos.
+        function sendChallengeTo(username) {
+            socket.emit('send-challenge', username);
+            pendingChallengeTarget = username;
+
+            document.getElementById("waitingStatus").textContent = `Esperando respuesta de ${username}... (se cancela a los 30s si no responde)`;
+            document.getElementById("cancelChallengeBtn").style.display = "inline-block";
+
+            if (pendingChallengeTimeout) clearTimeout(pendingChallengeTimeout);
+            pendingChallengeTimeout = setTimeout(() => {
+                cancelPendingChallenge();
+            }, 30000);
+        }
+
+        function cancelPendingChallenge() {
+            if (pendingChallengeTimeout) {
+                clearTimeout(pendingChallengeTimeout);
+                pendingChallengeTimeout = null;
+            }
+            if (pendingChallengeTarget) {
+                socket.emit('cancel-challenge', pendingChallengeTarget);
+            }
+            pendingChallengeTarget = null;
+
+            const status = document.getElementById("waitingStatus");
+            const cancelBtn = document.getElementById("cancelChallengeBtn");
+            if (status) status.textContent = "Buscando oponentes en la red...";
+            if (cancelBtn) cancelBtn.style.display = "none";
+        }
+
         let currentChallengerId = null;
 
         // Recibir una invitación
@@ -2342,7 +2764,16 @@
             currentChallengerId = data.fromId;
             document.getElementById("challengeText").textContent = `¡${data.fromName} te desafía a un duelo!`;
             document.getElementById("challengeModal").style.display = "block";
-            soundChallenge.play().catch(e => { });
+            playSound(soundChallenge);
+        });
+
+        // El desafiante cambió de opinión (botón de Cancelar o timeout de 30s
+        // de su lado) mientras nosotros todavía teníamos el modal abierto.
+        socket.on('challenge-canceled', (data) => {
+            if (currentChallengerId && data.fromId === currentChallengerId) {
+                document.getElementById("challengeModal").style.display = "none";
+                currentChallengerId = null;
+            }
         });
 
         // Botones del Modal
@@ -2356,8 +2787,27 @@
             document.getElementById("challengeModal").style.display = "none";
         };
 
-        // Si nos rechazan
+        // Si nos rechazan (o si el que desafiamos ya no está), soltamos el
+        // desafío pendiente igual que si lo hubiéramos cancelado nosotros.
         socket.on('challenge-declined', (name) => {
+            if (pendingChallengeTimeout) {
+                clearTimeout(pendingChallengeTimeout);
+                pendingChallengeTimeout = null;
+            }
+            pendingChallengeTarget = null;
+            document.getElementById("cancelChallengeBtn").style.display = "none";
+
+            // Si el desafío rechazado era en realidad una Revancha (el botón
+            // sigue visible en el cartel de fin de partida), lo reactivamos
+            // para que se pueda reintentar en vez de quedar colgado.
+            const rematchBtn = document.getElementById("rematchBtn");
+            if (rematchBtn) {
+                rematchBtn.disabled = false;
+                rematchBtn.style.opacity = "1";
+                rematchBtn.style.cursor = "pointer";
+                rematchBtn.textContent = "⚔️ Revancha";
+            }
+
             alert(`${name} ha declinado el duelo. ¡Quizás en otra ocasión!`);
             document.getElementById("waitingStatus").textContent = "Buscando oponentes en la red...";
         });
@@ -2365,7 +2815,7 @@
         socket.on('opponent-surrendered', () => {
             const winnerName = (myColor === 'w') ? whitePlayerName : blackPlayerName;
             const loserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
-            announceWinner(`¡${loserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`);
+            announceWinner(`¡${loserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`, { allowRematch: true });
         });
 
         // --- AUTO-LOGIN DE GODOFREDO ---

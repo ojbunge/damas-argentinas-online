@@ -17,6 +17,7 @@ app.get('/terminos', (req, res) => {
 
 let connectedUsers = {}; // { socketId: { username, status, room } }
 let activeGames = {};    // { roomName: { w: id, b: id, name, board, turn } }
+let botRoomCounter = 0;  // contador incremental para nombres de sala de partidas vs. bot (más robusto que Date.now(), que puede repetirse si dos arrancan en el mismo milisegundo)
 
 // La posición inicial, igual a la que arranca en el cliente.
 // La usamos para que el servidor tenga SIEMPRE una foto válida del tablero,
@@ -50,6 +51,37 @@ function leaveSpectatingIfAny(userId, connectedUsers, activeGames, io) {
         const userSocket = io.sockets.sockets.get(userId);
         if (userSocket) userSocket.leave(user.room);
     }
+}
+
+// Si el usuario indicado ya estaba JUGANDO una partida (contra un bot, o
+// contra otro humano) y está a punto de arrancar una nueva, cierra
+// prolijamente la vieja antes de pisarla: avisa a quien la estuviera
+// espectando (y al rival humano, si lo había, devolviéndolo al lobby) y la
+// borra de activeGames. Sin esto, la sala vieja queda huérfana para
+// siempre en "Torneos en Curso", y quien la estuviera espectando se queda
+// mirando fijo un tablero que ya nadie va a volver a mover.
+function abandonCurrentGameIfAny(userId, connectedUsers, activeGames, io) {
+    const user = connectedUsers[userId];
+    if (!user || !user.room) return;
+    if (user.status !== "playing" && user.status !== "vsbot") return;
+
+    const oldRoom = user.room;
+    const game = activeGames[oldRoom];
+    if (!game) return;
+
+    if (!game.vsBot) {
+        // Era una partida contra otro humano: a ese rival también hay que
+        // devolverlo al lobby — no puede quedar "jugando" contra alguien
+        // que se fue a aceptar otro desafío.
+        const otherId = (game.w === userId) ? game.b : game.w;
+        if (connectedUsers[otherId]) {
+            connectedUsers[otherId].status = "lobby";
+            connectedUsers[otherId].room = null;
+        }
+    }
+
+    io.to(oldRoom).emit('opponent-left', { leaverName: user.username });
+    delete activeGames[oldRoom];
 }
 
 // --- EL CUERVO MENSAJERO DE GODOFREDO (Chat del Salón) ---
@@ -111,8 +143,13 @@ io.on('connection', (socket) => {
 
             // Si alguna de las dos partes venía espectando otra partida, la
             // sacamos prolijamente de ahí antes de meterla en la sala nueva.
+            // Y si alguna ya estaba JUGANDO otra partida (vs. bot o vs. otro
+            // humano) que dejó a medias para aceptar este desafío, cerramos
+            // esa vieja prolijamente también.
             leaveSpectatingIfAny(challengerId, connectedUsers, activeGames, io);
             leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
+            abandonCurrentGameIfAny(challengerId, connectedUsers, activeGames, io);
+            abandonCurrentGameIfAny(socket.id, connectedUsers, activeGames, io);
 
             // Crear la sala (con su propia foto de tablero, arrancando en posición inicial)
             activeGames[roomName] = {
@@ -180,11 +217,15 @@ io.on('connection', (socket) => {
             }
 
             const gameInfo = {
-                white: connectedUsers[game.w].username,
-                black: connectedUsers[game.b].username,
+                white: connectedUsers[game.w]?.username,
+                // Contra un bot no hay un segundo socket real (game.b es null):
+                // el nombre viene directo del propio registro de la partida.
+                black: game.vsBot ? game.botName : connectedUsers[game.b]?.username,
                 board: game.board,
                 turn: game.turn,
-                moveHistory: game.moveHistory || [] // <--- EL MENSAJERO LE CUENTA LO YA JUGADO
+                moveHistory: game.moveHistory || [], // <--- EL MENSAJERO LE CUENTA LO YA JUGADO
+                vsBot: game.vsBot || false,
+                botId: game.botId || null
             };
 
             socket.emit('assign-role', 'spectator');
@@ -197,6 +238,71 @@ io.on('connection', (socket) => {
 
             broadcastStatus();
         }
+    });
+
+    // --- LA ARENA CONTRA UN BOT ---
+    // El "cerebro" del bot vive 100% en el cliente (ver bots.js) — acá el
+    // servidor solo necesita saber que la partida existe, para poder
+    // listarla en "Torneos en Curso" y dejar que alguien la espectee.
+    // Reutilizamos activeGames y toda la maquinaria existente
+    // (player-surrendered, disconnect, sync-board-state...) tratando al
+    // bot como un "segundo jugador" sin socket real: game.b queda en
+    // null, marcado con vsBot:true. No se anuncia en el chat global (a
+    // diferencia de un desafío entre humanos) para no llenarlo de ruido.
+    socket.on('start-bot-game', (data) => {
+        const user = connectedUsers[socket.id];
+        if (!user) return;
+
+        const botId = data?.botId;
+        const botName = data?.botName;
+        const botLevel = data?.botLevel;
+        if (!botId || !botName) return;
+
+        // Si venía espectando otra partida, lo sacamos prolijamente de ahí primero.
+        leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
+        // Y si ya estaba jugando otra (vs. bot o vs. humano) sin cerrar, la cerramos.
+        abandonCurrentGameIfAny(socket.id, connectedUsers, activeGames, io);
+
+        // Contador incremental en el nombre de sala: acá solo hay UN socket
+        // real involucrado (a diferencia de un desafío entre dos ids
+        // distintos), así que sin esto una revancha inmediata contra el
+        // mismo bot podría generar el mismo nombre de sala que la partida
+        // recién borrada (Date.now() puede repetirse si pasa poco tiempo).
+        const roomName = `botroom_${socket.id}_${++botRoomCounter}`;
+
+        activeGames[roomName] = {
+            w: socket.id,
+            b: null,
+            vsBot: true,
+            botId: botId,
+            botName: botName,
+            botLevel: botLevel,
+            name: `${user.username} vs ${botName}`,
+            board: createInitialBoard(),
+            turn: "w",
+            spectators: [],
+            moveHistory: []
+        };
+
+        connectedUsers[socket.id].status = "vsbot";
+        connectedUsers[socket.id].room = roomName;
+        connectedUsers[socket.id].role = "w";
+        connectedUsers[socket.id].botName = botName;
+
+        socket.join(roomName);
+
+        socket.emit('assign-role', 'w');
+        socket.emit('start-game', {
+            roomName: roomName,
+            white: user.username,
+            black: botName,
+            board: activeGames[roomName].board,
+            turn: "w",
+            vsBot: true,
+            botId: botId
+        });
+
+        broadcastStatus();
     });
 
     socket.on('make-move', (data) => {
@@ -267,8 +373,12 @@ io.on('connection', (socket) => {
             const room = user.room;
 
             console.log(`El caballero ${user.username} ha tirado la toalla.`);
-            // Avisamos al otro jugador en la sala
-            socket.to(room).emit('opponent-surrendered');
+            // Avisamos al otro jugador (y a espectadores) en la sala,
+            // mandando quién se rindió: así el que lo recibe arma el
+            // mensaje correcto sin tener que adivinarlo a partir de su
+            // propio color, que es lo que hacía el cliente antes y le daba
+            // vuelta los nombres a los espectadores cuando se rendían las Negras.
+            socket.to(room).emit('opponent-surrendered', { loserName: user.username });
 
             // Anunciamos la victoria en el chat (una sola vez por partida)
             const game = activeGames[room];
@@ -286,8 +396,8 @@ io.on('connection', (socket) => {
                 // porque el único botón post-partida recargaba la página; ahora
                 // que existe el botón de Revancha, hace falta que el lobby los
                 // vuelva a mostrar como disponibles de verdad).
-                if (connectedUsers[game.w]) { connectedUsers[game.w].status = "lobby"; connectedUsers[game.w].room = null; }
-                if (connectedUsers[game.b]) { connectedUsers[game.b].status = "lobby"; connectedUsers[game.b].room = null; }
+                if (connectedUsers[game.w]) { connectedUsers[game.w].status = "lobby"; connectedUsers[game.w].room = null; connectedUsers[game.w].botName = null; }
+                if (connectedUsers[game.b]) { connectedUsers[game.b].status = "lobby"; connectedUsers[game.b].room = null; connectedUsers[game.b].botName = null; }
             }
 
             // La partida terminó: la sacamos de "Torneos en Curso"
@@ -317,8 +427,8 @@ io.on('connection', (socket) => {
             }
 
             // --- GODOFREDO LOS DEVUELVE AL SALÓN --- (ver mismo comentario en player-surrendered)
-            if (connectedUsers[game.w]) { connectedUsers[game.w].status = "lobby"; connectedUsers[game.w].room = null; }
-            if (connectedUsers[game.b]) { connectedUsers[game.b].status = "lobby"; connectedUsers[game.b].room = null; }
+            if (connectedUsers[game.w]) { connectedUsers[game.w].status = "lobby"; connectedUsers[game.w].room = null; connectedUsers[game.w].botName = null; }
+            if (connectedUsers[game.b]) { connectedUsers[game.b].status = "lobby"; connectedUsers[game.b].room = null; connectedUsers[game.b].botName = null; }
 
             // La partida terminó: la sacamos de "Torneos en Curso"
             delete activeGames[room];
@@ -344,17 +454,26 @@ io.on('connection', (socket) => {
 
     function broadcastStatus() {
         // Mandamos a TODOS los conectados con su status (lobby / spectating /
-        // playing). El cliente decide qué mostrar como "desafiable" en el
-        // Salón (todos menos los que están jugando), pero necesita conocer
-        // también a los que están jugando para poder resaltar @menciones
-        // a ellos en el chat.
+        // playing / vsbot). El cliente decide qué mostrar como "desafiable"
+        // en el Salón (todos menos los que están jugando contra un humano),
+        // pero necesita conocer también a los que están jugando para poder
+        // resaltar @menciones a ellos en el chat. botName y room solo
+        // importan para los que están en 'vsbot' (etiqueta "(vs. Nombre)" y
+        // el modal de desafiar-o-espectar), pero no cuesta nada mandarlos
+        // siempre.
         const allUsers = Object.values(connectedUsers)
-            .map(u => ({ username: u.username, status: u.status }));
+            .map(u => ({ username: u.username, status: u.status, botName: u.botName, room: u.room }));
 
-        const games = Object.keys(activeGames).map(id => ({
-            id: id,
-            name: activeGames[id].name
-        }));
+        // Las partidas contra un bot NO entran acá: ya son accesibles
+        // clickeando el nombre del jugador (desafiar/espectar), así que
+        // listarlas también acá sería mostrar lo mismo dos veces. "Torneos
+        // en Curso" queda reservado a los duelos humano contra humano.
+        const games = Object.keys(activeGames)
+            .filter(id => !activeGames[id].vsBot)
+            .map(id => ({
+                id: id,
+                name: activeGames[id].name
+            }));
 
         io.emit('update-lobby', { users: allUsers, games: games });
     }

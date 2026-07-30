@@ -316,11 +316,6 @@
             box-sizing: border-box;
         }
 
-        /* Quitamos el box-shadow viejo del .king original para que no haya conflictos */
-        .king {
-            /* Ya no necesita nada aquí, la corona vive en el ::after */
-        }
-
         .selected {
             outline: 4px solid red;
         }
@@ -514,7 +509,15 @@
             margin: 20px 0;
             width: min(300px, 85vw);
             box-sizing: border-box;
-            max-height: 200px;
+            /* Antes era un techo fijo de 200px, que con muy poca gente
+               conectada ya forzaba scroll. Ahora la lista crece con su
+               contenido (el cuadro solo es tan alto como lo que hay adentro)
+               hasta un techo mucho más generoso, ligado al alto real de la
+               ventana — recién ahí aparece el scroll. Como #waitingOverlay
+               centra todo verticalmente, al crecer la lista todo el bloque
+               se re-centra solo, comiéndose el espacio vacío de arriba y
+               abajo sin necesidad de tocar ningún otro elemento a mano. */
+            max-height: min(60vh, 600px);
             overflow-y: auto;
             background: rgba(255, 255, 255, 0.1);
             padding: 10px;
@@ -950,6 +953,269 @@
         #siteFooter a:hover {
             color: #ffe28a;
         }
+
+        /* ================================================== */
+        /*  LA SALA DE ARMAS (selección de bots)                */
+        /* ================================================== */
+
+        /* Botón en el Salón, para entrar a elegir un bot. Paleta de acero
+           (a diferencia del dorado de Reglas) para diferenciarlo visualmente
+           como "otra cosa" — un atajo a un cuarto distinto del castillo. */
+        .bots-lobby-btn {
+            padding: 11px 20px;
+            background: linear-gradient(180deg, #9aa7b3, #5c6773);
+            color: #1a1f24;
+            border: 2px solid #3d454d;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            margin: 6px 0 14px 0;
+        }
+
+        .bots-lobby-btn:hover {
+            filter: brightness(1.12);
+        }
+
+        /* Mismo mecanismo que #rulesModal: overlay fijo, marco con imagen
+           de fondo, cierre por X / click afuera / Escape. */
+        #armsRoomModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 4000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        #armsRoomFrame {
+            position: relative;
+            width: min(920px, 94vw);
+            height: min(760px, 88vh);
+            background-image: url('assets/saladearmas.jpg');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 2px solid rgba(241, 196, 15, 0.35);
+        }
+
+        #armsRoomHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        #armsRoomHeader h2 {
+            margin: 0;
+            color: #f1c40f;
+            font-family: 'Garamond', 'Georgia', serif;
+            font-size: 1.5em;
+            text-shadow: 1px 1px 3px black;
+            letter-spacing: 1px;
+        }
+
+        #closeArmsRoomBtn {
+            background: rgba(58, 42, 21, 0.85);
+            color: #f1c40f;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            flex-shrink: 0;
+        }
+
+        #closeArmsRoomBtn:hover {
+            background: rgba(58, 42, 21, 1);
+        }
+
+        #armsRoomScrollArea {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+            /* Salvavidas en pantallas angostas: si la tabla no entra, scrollea */
+            padding: 8px 14px;
+        }
+
+        .bots-table {
+            width: 100%;
+            min-width: 700px;
+            table-layout: fixed;
+            /* Junto con el <colgroup>: los anchos de columna quedan fijos
+               de antemano, sin depender del contenido — necesario para que
+               la medición de altura de fila (resizeBotThumbnailsToFitRow)
+               sea estable. */
+            /* Por debajo de esto ya conviene el scroll horizontal antes que aplastar */
+            border-collapse: collapse;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        .bots-table th {
+            color: #f1c40f;
+            text-align: center;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 10px;
+            border-bottom: 2px solid rgba(241, 196, 15, 0.4);
+            position: sticky;
+            top: 0;
+            background: rgba(20, 14, 8, 0.92);
+        }
+
+        .bot-row {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .bot-row:hover {
+            background: rgba(241, 196, 15, 0.12);
+        }
+
+        .bot-row.bot-row-selected {
+            background: rgba(241, 196, 15, 0.28);
+        }
+
+        .bots-table td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: #ecf0f1;
+            vertical-align: middle;
+        }
+
+        .bot-name-cell {
+            font-weight: 700;
+            color: #f6e2a0;
+            font-size: 14px;
+            max-width: 150px;
+            /* Ya no nowrap: un nombre largo como "Princesa María Eugenia de
+               China" puede pasar a un segundo renglón — ese ancho recuperado
+               es justamente lo que le da más lugar a la imagen. */
+        }
+
+        .bot-level-cell {
+            text-align: center;
+            font-weight: 700;
+            color: #f1c40f;
+            width: 40px;
+        }
+
+        .bots-table td.bot-image-cell {
+            width: 150px;
+            text-align: center;
+            /* Sin padding vertical (a diferencia de las demás celdas, que
+               tienen 9px arriba/abajo): así la imagen puede aprovechar casi
+               toda la altura real de la fila, no solo lo que le queda tras
+               restarle el padding estándar.
+               El selector lleva ".bots-table td" adelante a propósito: sin
+               eso, ".bot-image-cell" sola pierde por especificidad contra
+               la regla general ".bots-table td" (que también trae un
+               selector de tipo), y el padding:9px de esa regla general
+               termina ganando pese a estar declarado antes en el archivo. */
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        /* El tamaño real de .bot-thumb / .bot-thumb-fallback lo terminan de
+           definir en línea, por JS (ver resizeBotThumbnailsToFitRow): crece
+           hasta ocupar casi toda la altura de la fila MÁS BAJA de la tabla
+           (la de menos líneas de descripción), y ese mismo tamaño se aplica
+           por igual a las diez filas, para que los retratos queden parejos
+           entre sí en vez de variar de fila en fila. Acá solo dejamos un
+           tamaño de arranque razonable, por si algo llegara a pintarse
+           antes de que corra ese cálculo.
+           display:inline-block permite que el text-align:center de la
+           celda los centre horizontalmente. */
+        .bot-thumb,
+        .bot-thumb-fallback {
+            width: 90px;
+            height: 90px;
+            border-radius: 8px;
+            border: 2px solid rgba(241, 196, 15, 0.5);
+            box-sizing: border-box;
+            display: block;
+            margin: 0 auto;
+            /* display:block (no inline-block) evita el espacio "fantasma"
+               que los navegadores agregan debajo de elementos inline
+               dentro de un contexto de línea, basado en la métrica de la
+               fuente heredada — con inline-block esto inflaba la altura de
+               la fila varios px por encima del tamaño real de la imagen.
+               margin:0 auto centra horizontalmente en su lugar (ya que
+               text-align:center, pensado para contenido inline, no
+               centra un elemento bloque). */
+        }
+
+        .bot-thumb {
+            object-fit: cover;
+        }
+
+        .bot-thumb-fallback {
+            display: none;
+            /* Solo aparece si la imagen real todavía no fue subida */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            font-size: 28px;
+        }
+
+        .bot-desc-cell {
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: #d8dee5;
+            min-width: 240px;
+        }
+
+        #armsRoomFooter {
+            flex-shrink: 0;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            justify-content: center;
+        }
+
+        #startBotGameBtn {
+            padding: 12px 26px;
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1c0a;
+            border: 2px solid #7a5a24;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #startBotGameBtn:hover {
+            filter: brightness(1.1);
+        }
+
+        /* El retrato circular del bot, al lado de su nombre en la arena —
+           mismo lugar donde un rival humano tiene su circulito de color. */
+        .name-indicator-bot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid gold;
+            flex-shrink: 0;
+        }
     </style>
 
 </head>
@@ -1022,6 +1288,7 @@
         <div id="lobbySection" style="display: none;">
             <h2>Salón de los Caballeros</h2>
             <p>Seleccione un oponente o espere un desafío...</p>
+            <button class="bots-lobby-btn" onclick="openArmsRoom()">🗡️ Jugar contra un Bot</button>
             <div id="userList">
                 <!-- Aquí aparecerán los nombres -->
             </div>
@@ -1047,6 +1314,69 @@
                 style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">Aceptar</button>
             <button id="declineBtn"
                 style="padding: 10px 20px; background: #c0392b; color: white; border: none; border-radius: 5px; cursor: pointer;">Rechazar</button>
+        </div>
+    </div>
+
+    <!-- El Cartel de la Doble Puerta: aparece cuando clickeás a alguien que
+         está jugando contra un bot. Dos caminos posibles: desafiarlo a un
+         duelo de verdad, o sentarte a espectar su partida contra el bot. -->
+    <div id="challengeOrSpectateModal"
+        style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100; max-width: min(420px, 90vw); text-align: center;">
+        <h3 id="challengeOrSpectateText" style="margin-top: 0;">¿Desea desafiar a Fulano o espectar su partida contra el Bot?</h3>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+            <button id="challengeInsteadBtn"
+                style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">⚔️ Desafiar</button>
+            <button id="spectateInsteadBtn"
+                style="padding: 10px 20px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer;">👀 Espectar</button>
+            <button id="cancelChallengeOrSpectateBtn"
+                style="padding: 10px 20px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- La Sala de Armas: acá se elige contra qué bot jugar. Mismo mecanismo
+         que el Pergamino de Reglas (overlay, marco con imagen de fondo,
+         cierre por X / click afuera / Escape), aplicado a un cuarto distinto
+         del castillo. -->
+    <div id="armsRoomModal">
+        <div id="armsRoomFrame">
+            <div id="armsRoomHeader">
+                <h2>🗡️ La Sala de Armas</h2>
+                <button id="closeArmsRoomBtn" onclick="closeArmsRoom()">✕</button>
+            </div>
+            <div id="armsRoomScrollArea">
+                <table class="bots-table">
+                    <colgroup>
+                        <!-- Anchos fijos por columna: así el ancho de la
+                             columna de imagen (y por lo tanto cuánto le
+                             queda a la de descripción) es SIEMPRE el mismo,
+                             tanto durante la medición de altura de fila como
+                             en el resultado final. Sin esto, el layout
+                             automático de la tabla achica la columna de
+                             imagen mientras está en tamaño 0 (midiendo) y la
+                             agranda después (resultado), haciendo que el
+                             texto de la descripción envuelva distinto en
+                             cada momento y arruinando la medición. -->
+                        <col style="width: 150px;">
+                        <col style="width: 40px;">
+                        <col style="width: 150px;">
+                        <col>
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Nivel</th>
+                            <th>Imagen</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="botsTableBody">
+                        <!-- Se llena dinámicamente desde BOT_CHARACTERS (bots.js) -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="armsRoomFooter">
+                <button id="startBotGameBtn" onclick="startBotGame()">⚔️ Jugar contra este Bot</button>
+            </div>
         </div>
     </div>
 
@@ -1367,6 +1697,8 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="rules-engine.js"></script>
+    <script src="bots.js"></script>
 
     <script>
 
@@ -1450,15 +1782,10 @@
             highlightedSquares = [];
         }
 
-        function isEnemyPiece(piece, currentPiece) {
-
-            if (!piece) {
-                return false;
-            }
-
-            return piece.toLowerCase() !==
-                currentPiece.toLowerCase();
-        }
+        // isEnemyPiece, getLegalMoves, getBestCaptureSequences y
+        // getGlobalBestMoves ahora viven en rules-engine.js (compartido
+        // con el Web Worker del bot) — se cargan antes que este script,
+        // ver <script src="rules-engine.js"> en el <head>.
 
         function playerHasCapture(player) {
 
@@ -1506,210 +1833,8 @@
 
         }
 
-        // Acepta un tablero opcional (por defecto, el global "board" — así
-        // todos los call sites existentes que llaman getLegalMoves(row, col)
-        // sin tercer argumento siguen funcionando exactamente igual). Esto
-        // es lo que permite que getBestCaptureSequences() le pase el
-        // tablero de SU simulación en vez de depender del global.
-        function getLegalMoves(row, col, boardToUse = board) {
+        // getLegalMoves ahora vive en rules-engine.js (compartido con el Web Worker)
 
-            const piece = boardToUse[row][col];
-
-            if (!piece) {
-                return [];
-            }
-
-            const moves = [];
-
-            if (piece === "w") {
-
-                const moveTargets = [
-                    [row - 1, col - 1],
-                    [row - 1, col + 1]
-                ];
-
-                moveTargets.forEach(([r, c]) => {
-
-                    if (
-                        r >= 0 &&
-                        r < 10 &&
-                        c >= 0 &&
-                        c < 10 &&
-                        boardToUse[r][c] === null
-                    ) {
-                        moves.push({
-                            type: "move",
-                            row: r,
-                            col: c
-                        });
-                    }
-
-                });
-
-                const captureTargets = [
-                    {
-                        enemyRow: row - 1,
-                        enemyCol: col - 1,
-                        landingRow: row - 2,
-                        landingCol: col - 2
-                    },
-                    {
-                        enemyRow: row - 1,
-                        enemyCol: col + 1,
-                        landingRow: row - 2,
-                        landingCol: col + 2
-                    }
-                ];
-
-                captureTargets.forEach(target => {
-
-                    const enemyPiece =
-                        boardToUse[target.enemyRow]?.[target.enemyCol];
-
-                    if (
-                        isEnemyPiece(enemyPiece, piece) &&
-                        target.landingRow >= 0 &&
-                        target.landingRow < 10 &&
-                        target.landingCol >= 0 &&
-                        target.landingCol < 10 &&
-                        boardToUse[target.landingRow][target.landingCol] === null
-                    ) {
-                        moves.push({
-                            type: "capture",
-                            row: target.landingRow,
-                            col: target.landingCol,
-                            capturedRow: target.enemyRow,
-                            capturedCol: target.enemyCol
-                        });
-                    }
-
-                });
-
-            }
-
-            if (piece === "b") {
-
-                const moveTargets = [
-                    [row + 1, col - 1],
-                    [row + 1, col + 1]
-                ];
-
-                moveTargets.forEach(([r, c]) => {
-
-                    if (
-                        r >= 0 &&
-                        r < 10 &&
-                        c >= 0 &&
-                        c < 10 &&
-                        boardToUse[r][c] === null
-                    ) {
-                        moves.push({
-                            type: "move",
-                            row: r,
-                            col: c
-                        });
-                    }
-
-                });
-
-                const captureTargets = [
-                    {
-                        enemyRow: row + 1,
-                        enemyCol: col - 1,
-                        landingRow: row + 2,
-                        landingCol: col - 2
-                    },
-                    {
-                        enemyRow: row + 1,
-                        enemyCol: col + 1,
-                        landingRow: row + 2,
-                        landingCol: col + 2
-                    }
-                ];
-
-                captureTargets.forEach(target => {
-
-                    const enemyPiece =
-                        boardToUse[target.enemyRow]?.[target.enemyCol];
-
-                    if (
-                        isEnemyPiece(enemyPiece, piece) &&
-                        target.landingRow >= 0 &&
-                        target.landingRow < 10 &&
-                        target.landingCol >= 0 &&
-                        target.landingCol < 10 &&
-                        boardToUse[target.landingRow][target.landingCol] === null
-                    ) {
-                        moves.push({
-                            type: "capture",
-                            row: target.landingRow,
-                            col: target.landingCol,
-                            capturedRow: target.enemyRow,
-                            capturedCol: target.enemyCol
-                        });
-                    }
-
-                });
-
-            }
-
-            // --- LÓGICA DE LAS DAMAS (W y B) ---
-            if (piece === "W" || piece === "B") {
-                // Las 4 direcciones diagonales
-                const directions = [
-                    { dr: -1, dc: -1 }, // Arriba-Izquierda
-                    { dr: -1, dc: 1 },  // Arriba-Derecha
-                    { dr: 1, dc: -1 },  // Abajo-Izquierda
-                    { dr: 1, dc: 1 }   // Abajo-Derecha
-                ];
-
-                directions.forEach(dir => {
-                    let r = row + dir.dr;
-                    let c = col + dir.dc;
-
-                    // Mientras estemos dentro del tablero...
-                    while (r >= 0 && r < 10 && c >= 0 && c < 10) {
-                        if (boardToUse[r][c] === null) {
-                            // CASILLA VACÍA: La dama puede moverse aquí (Vuelo)
-                            moves.push({
-                                type: "move",
-                                row: r,
-                                col: c
-                            });
-                            // Seguimos explorando en la misma dirección
-                            r += dir.dr;
-                            c += dir.dc;
-                        } else {
-                            // CHOCAMOS CON UNA PIEZA: ¿Es enemiga?
-                            if (isEnemyPiece(boardToUse[r][c], piece)) {
-                                const nextR = r + dir.dr;
-                                const nextC = c + dir.dc;
-
-                                // ¿La casilla de atrás está libre? (Art. 7)
-                                if (
-                                    nextR >= 0 && nextR < 10 &&
-                                    nextC >= 0 && nextC < 10 &&
-                                    boardToUse[nextR][nextC] === null
-                                ) {
-                                    moves.push({
-                                        type: "capture",
-                                        row: nextR,
-                                        col: nextC,
-                                        capturedRow: r,
-                                        capturedCol: c
-                                    });
-                                }
-                            }
-                            // Después de chocar con cualquier pieza (amiga o enemiga), 
-                            // la dama no puede seguir volando en esa dirección.
-                            break;
-                        }
-                    }
-                });
-            }
-
-            return moves;
-        }
 
         const boardElement = document.getElementById("board");
 
@@ -2096,7 +2221,14 @@
 
             updateTurnIndicator();
             updateTurnTitle();
-            checkGameOver();
+            const gameEnded = checkGameOver();
+
+            // Si la partida sigue y ahora es el turno del bot, que "piense"
+            // y mueva — mismo lugar donde, en un duelo humano, no hace
+            // falta hacer nada más (el rival mueve desde SU propio cliente).
+            if (!gameEnded) {
+                maybeTriggerBotMove();
+            }
         }
 
         renderBoard();
@@ -2113,104 +2245,7 @@
             playerHasCapture("b")
         );
 
-        function getBestCaptureSequences(row, col, currentBoard, isKing) {
-            const piece = currentBoard[row][col];
-            // Le pasamos currentBoard explícitamente: durante la simulación
-            // de una secuencia de capturas, getLegalMoves ahora opera sobre
-            // ESTE tablero (el de la simulación en curso), no sobre el board
-            // global. Antes funcionaba solo porque currentBoard y board eran
-            // siempre la misma referencia en la práctica — ya no depende de esa
-            // coincidencia.
-            const moves = getLegalMoves(row, col, currentBoard);
-            const captures = moves.filter(m => m.type === "capture");
-
-            if (captures.length === 0) {
-                return { max: 0, sequences: [] };
-            }
-
-            let globalMax = 0;
-            let allPaths = [];
-
-            captures.forEach(c => {
-                // --- SIMULACIÓN ---
-                const originalEnemy = currentBoard[c.capturedRow][c.capturedCol];
-                const originalPiece = currentBoard[row][col];
-
-                // Ejecutamos salto
-                currentBoard[c.row][c.col] = originalPiece;
-                currentBoard[row][col] = null;
-                currentBoard[c.capturedRow][c.capturedCol] = null;
-
-                // Regla Art 5: Coronación detiene secuencia
-                const isWhiteCoronation = originalPiece === "w" && c.row === 0;
-                const isBlackCoronation = originalPiece === "b" && c.row === 9;
-
-                let resultMax = 0;
-                if (!(isWhiteCoronation || isBlackCoronation)) {
-                    const nextResult = getBestCaptureSequences(c.row, c.col, currentBoard, isKing);
-                    resultMax = nextResult.max;
-                }
-
-                const totalCaptures = 1 + resultMax;
-
-                if (totalCaptures > globalMax) {
-                    globalMax = totalCaptures;
-                    allPaths = [c];
-                } else if (totalCaptures === globalMax) {
-                    allPaths.push(c);
-                }
-
-                // --- DESHACER (Crucial que sea exacto) ---
-                currentBoard[row][col] = originalPiece;
-                currentBoard[c.row][c.col] = null;
-                currentBoard[c.capturedRow][c.capturedCol] = originalEnemy;
-            });
-
-            return { max: globalMax, sequences: allPaths };
-        }
-
-        function getGlobalBestMoves(player) {
-            let kingCaptures = [];
-            let pawnCaptures = [];
-            let maxKingCaptures = 0;
-            let maxPawnCaptures = 0;
-
-            // Recorremos todo el tablero buscando piezas del jugador
-            for (let r = 0; r < 10; r++) {
-                for (let c = 0; c < 10; c++) {
-                    const piece = board[r][c];
-                    if (piece && piece.toLowerCase() === player) {
-                        const isKing = (piece === "W" || piece === "B");
-                        const result = getBestCaptureSequences(r, c, board, isKing);
-
-                        if (result.max > 0) {
-                            if (isKing) {
-                                if (result.max > maxKingCaptures) {
-                                    maxKingCaptures = result.max;
-                                    kingCaptures = [{ row: r, col: c, moves: result.sequences }];
-                                } else if (result.max === maxKingCaptures) {
-                                    kingCaptures.push({ row: r, col: c, moves: result.sequences });
-                                }
-                            } else {
-                                if (result.max > maxPawnCaptures) {
-                                    maxPawnCaptures = result.max;
-                                    pawnCaptures = [{ row: r, col: c, moves: result.sequences }];
-                                } else if (result.max === maxPawnCaptures) {
-                                    pawnCaptures.push({ row: r, col: c, moves: result.sequences });
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // APLICAMOS PRIORIDAD (Art. 11): Si hay damas que pueden capturar, ignoramos peones
-            if (kingCaptures.length > 0) {
-                return kingCaptures;
-            }
-            // Si no hay damas, devolvemos las mejores capturas de peones (Art. 10)
-            return pawnCaptures;
-        }
+        // getBestCaptureSequences y getGlobalBestMoves ahora viven en rules-engine.js (compartido con el Web Worker)
 
         function checkGameOver() {
             let whitePieces = 0;
@@ -2297,8 +2332,11 @@
             // El botón de Revancha solo tiene sentido si hay a quién desafiar:
             // nunca para espectadores, y nunca cuando el motivo del cartel es
             // que el rival directamente se fue (opponent-left no manda allowRematch).
+            // Contra un bot la etiqueta cambia: no hay "revancha" real posible
+            // contra algo sin ego, así que decimos simplemente "jugar de nuevo".
+            const rematchLabel = currentBotId ? "🔁 Jugar de nuevo" : "⚔️ Revancha";
             const rematchButtonHtml = (allowRematch && myColor !== 'spectator')
-                ? `<button id="rematchBtn" onclick="requestRematch()" style="padding:15px 25px; font-size: 18px; cursor:pointer; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold;">⚔️ Revancha</button>`
+                ? `<button id="rematchBtn" onclick="requestRematch()" style="padding:15px 25px; font-size: 18px; cursor:pointer; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold;">${rematchLabel}</button>`
                 : '';
 
             // El mensaje ahora es dinámico y los botones nos dan la opción de revancha o de salir
@@ -2316,12 +2354,20 @@
         }
 
         // --- LA REVANCHA DE GODOFREDO ---
-        // Reutiliza toda la infraestructura de desafíos existente: le manda un
-        // send-challenge directo al mismo rival de la partida que acaba de
-        // terminar. El servidor ya no requiere que estén en un estado
-        // particular para poder desafiarse (ver el fix en player-surrendered
-        // y game-over que los devuelve a "lobby" al concluir la partida).
+        // Contra un humano: reutiliza toda la infraestructura de desafíos
+        // existente (send-challenge directo al mismo rival). El servidor ya
+        // no requiere que estén en un estado particular para desafiarse (ver
+        // el fix en player-surrendered y game-over que los devuelve a
+        // "lobby" al concluir la partida).
+        // Contra un bot: no hace falta desafío ni aceptación de nadie —
+        // arranca directo una partida nueva contra el mismo personaje.
         function requestRematch() {
+            if (currentBotId) {
+                const bot = getBotById(currentBotId);
+                if (bot) startBotGame(bot);
+                return;
+            }
+
             const opponentName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
             socket.emit('send-challenge', opponentName);
 
@@ -2429,14 +2475,26 @@
                 const topLabel = document.getElementById("topPlayerName");
                 const bottomLabel = document.getElementById("bottomPlayerName");
 
+                // Contra qué bot estamos jugando (o espectando) ahora mismo,
+                // si es que hay uno — null si es un duelo entre humanos. Lo
+                // usa requestRematch() para saltearse el trámite de desafío,
+                // y acá abajo para mostrar el retrato del bot en el estandarte.
+                currentBotId = data.vsBot ? data.botId : null;
+
                 // Lógica de posición según el color
                 if (myColor === 'b') {
                     // Si soy NEGRAS: yo abajo, Blancas arriba
                     topLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
                     bottomLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}`;
                 } else {
-                    // Si soy BLANCAS o ESPECTADOR: Blancas abajo, Negras arriba
-                    topLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}`;
+                    // Si soy BLANCAS o ESPECTADOR: Blancas abajo, Negras arriba.
+                    // Contra un bot, el "Negras" de arriba es el bot: mostramos
+                    // su retrato en vez del simple circulito de color.
+                    const bot = currentBotId ? getBotById(currentBotId) : null;
+                    const blackIndicator = bot
+                        ? `<img class="name-indicator-bot" src="${bot.image}" alt="${blackPlayerName}" onerror="this.style.display='none';">`
+                        : `<div class="name-indicator" style="background:black"></div>`;
+                    topLabel.innerHTML = `${blackIndicator} ${blackPlayerName}`;
                     bottomLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
                 }
             }
@@ -2459,12 +2517,20 @@
                 announceWinner(msg);
             } else {
                 // --- EL PREGÓN DEL MENSAJERO ---
-                // Antes el espectador solo veía "los contendientes se han
-                // ido", sin poder distinguir quién abandonó. Ahora el
-                // servidor le manda ambos nombres.
-                const msg = (leaverName && winnerName)
-                    ? `${leaverName} se ha retirado de la partida.<br>${winnerName} gana por abandono.`
-                    : "LOS CONTENDIENTES SE HAN IDO.<br>La partida ha finalizado.";
+                let msg;
+                if (currentBotId && leaverName) {
+                    // Espectando una partida contra un bot, y el humano se
+                    // fue (por desconexión, o porque aceptó jugar otra cosa).
+                    // No hay "ganador por abandono" en el sentido de puntaje
+                    // acá — simplemente la partida quedó sin nadie del lado
+                    // humano. blackPlayerName es el nombre del bot: en toda
+                    // partida vs. bot, el bot siempre figura como "Negras".
+                    msg = `${leaverName} se ha retirado de su partida contra ${blackPlayerName}.`;
+                } else if (leaverName && winnerName) {
+                    msg = `${leaverName} se ha retirado de la partida.<br>${winnerName} gana por abandono.`;
+                } else {
+                    msg = "LOS CONTENDIENTES SE HAN IDO.<br>La partida ha finalizado.";
+                }
                 announceWinner(msg);
             }
         });
@@ -2538,10 +2604,364 @@
             if (e.target.id === "rulesModal") closeRules();
         });
 
-        // Cerrar con la tecla Escape
+        // Cerrar con la tecla Escape (Reglas y Sala de Armas)
         document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape") closeRules();
+            if (e.key === "Escape") {
+                closeRules();
+                closeArmsRoom();
+            }
         });
+
+        // ============================================================
+        //  LA SALA DE ARMAS (selección de bots)
+        // ============================================================
+        // El "cerebro" que decide las jugadas del bot todavía no existe
+        // (ver bots.js) — esto es solo la estructura conductora: elegir un
+        // bot, arrancar la partida, y que el resto del Salón se entere.
+
+        let selectedBotId = null; // bot resaltado dentro de la Sala de Armas
+        let currentBotId = null;  // bot contra el que jugamos AHORA MISMO (null si es duelo humano)
+
+        function renderBotsTable() {
+            const tbody = document.getElementById("botsTableBody");
+            tbody.innerHTML = "";
+
+            // Precargamos el último bot elegido, si lo hay, como selección por defecto.
+            if (!selectedBotId) {
+                const savedBotId = sessionStorage.getItem('damas_selected_bot');
+                selectedBotId = (savedBotId && getBotById(savedBotId)) ? savedBotId : BOT_CHARACTERS[0].id;
+            }
+
+            BOT_CHARACTERS.forEach(bot => {
+                const row = document.createElement("tr");
+                row.className = "bot-row" + (bot.id === selectedBotId ? " bot-row-selected" : "");
+                row.dataset.botId = bot.id;
+                row.onclick = () => selectBot(bot.id);
+
+                const nameCell = document.createElement("td");
+                nameCell.className = "bot-name-cell";
+                nameCell.textContent = bot.name;
+
+                const levelCell = document.createElement("td");
+                levelCell.className = "bot-level-cell";
+                levelCell.textContent = bot.level;
+
+                const imageCell = document.createElement("td");
+                imageCell.className = "bot-image-cell";
+                // Arrancan en tamaño 0 (por eso el style inline) para que NO
+                // influyan en la altura de la fila mientras medimos abajo —
+                // la altura de referencia tiene que salir pura del texto,
+                // como el resto de las celdas. resizeBotThumbnailsToFitRow()
+                // les da su tamaño real un instante después, todavía dentro
+                // del mismo pintado (sin parpadeo visible).
+                // Si la imagen todavía no fue subida, el onerror la esconde y
+                // muestra el escudo de reemplazo — sin depender de que exista
+                // ningún archivo "placeholder" aparte.
+                imageCell.innerHTML =
+                    `<img class="bot-thumb" src="${bot.image}" alt="${bot.name}" style="width:0;height:0;border:0;" ` +
+                    `onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` +
+                    `<div class="bot-thumb-fallback" style="width:0;height:0;border:0;">🛡️</div>`;
+
+                const descCell = document.createElement("td");
+                descCell.className = "bot-desc-cell";
+                descCell.textContent = bot.description;
+
+                row.appendChild(nameCell);
+                row.appendChild(levelCell);
+                row.appendChild(imageCell);
+                row.appendChild(descCell);
+                tbody.appendChild(row);
+            });
+
+            updateStartBotGameBtnLabel();
+            resizeBotThumbnailsToFitRow();
+        }
+
+        // --- EL RETRATO A MEDIDA DE GODOFREDO ---
+        // Mide la altura real (ya renderizada) de la fila MÁS BAJA de la
+        // tabla — la de menos líneas de descripción — y agranda todos los
+        // retratos por igual hasta ocupar casi toda esa altura, para que
+        // queden grandes mirando bien, pero parejos entre sí en vez de
+        // variar fila por fila. Se recalcula cada vez que se abre la Sala
+        // de Armas, así que si el ancho de ventana cambió entre una vista y
+        // la otra, el resultado sigue siendo el correcto.
+        function resizeBotThumbnailsToFitRow() {
+            const rows = document.querySelectorAll('#botsTableBody .bot-row');
+            if (rows.length === 0) return;
+
+            let minRowHeight = Infinity;
+            rows.forEach(row => {
+                const h = row.getBoundingClientRect().height;
+                if (h > 0 && h < minRowHeight) minRowHeight = h;
+            });
+            if (!isFinite(minRowHeight)) return;
+
+            // La celda de imagen ya no tiene padding vertical propio (ver
+            // .bot-image-cell), así que el 96% se calcula directo sobre la
+            // altura real de la fila, sin tener que restarle nada.
+            let targetSize = Math.floor(minRowHeight * 0.96);
+
+            // Cinturón de seguridad: nunca demasiado chica ni
+            // desproporcionadamente grande, pase lo que pase con el
+            // contenido real (por ejemplo, si algún día hay un solo bot
+            // con una descripción muy corta).
+            targetSize = Math.max(50, Math.min(targetSize, 150));
+
+            document.querySelectorAll('#botsTableBody .bot-thumb, #botsTableBody .bot-thumb-fallback')
+                .forEach(el => {
+                    el.style.width = targetSize + 'px';
+                    el.style.height = targetSize + 'px';
+                    el.style.border = '2px solid rgba(241, 196, 15, 0.5)';
+                });
+        }
+
+        function selectBot(botId) {
+            selectedBotId = botId;
+            sessionStorage.setItem('damas_selected_bot', botId);
+            document.querySelectorAll('.bot-row').forEach(r => {
+                r.classList.toggle('bot-row-selected', r.dataset.botId === botId);
+            });
+            updateStartBotGameBtnLabel();
+        }
+
+        function updateStartBotGameBtnLabel() {
+            const bot = getBotById(selectedBotId);
+            const btn = document.getElementById("startBotGameBtn");
+            if (btn && bot) btn.textContent = `⚔️ Jugar contra ${bot.name}`;
+        }
+
+        function openArmsRoom() {
+            // El modal tiene que estar visible ANTES de renderizar la tabla:
+            // si mostráramos el modal después, resizeBotThumbnailsToFitRow()
+            // mediría filas que todavía están dentro de un display:none, que
+            // siempre da altura 0 (nada de lo que hay adentro cuenta para el
+            // layout hasta que el propio contenedor sea visible).
+            document.getElementById("armsRoomModal").style.display = "flex";
+            renderBotsTable();
+        }
+
+        function closeArmsRoom() {
+            document.getElementById("armsRoomModal").style.display = "none";
+        }
+
+        document.getElementById("armsRoomModal").addEventListener('click', (e) => {
+            if (e.target.id === "armsRoomModal") closeArmsRoom();
+        });
+
+        function startBotGame(botOverride) {
+            const bot = botOverride || getBotById(selectedBotId);
+            if (!bot) return;
+            closeArmsRoom();
+            socket.emit('start-bot-game', { botId: bot.id, botName: bot.name, botLevel: bot.level });
+        }
+
+        // ============================================================
+        //  GODOFREDO LE DA VIDA AL BOT
+        // ============================================================
+        // El "cerebro" (getBotMove, en bots.js) es puro: recibe un tablero
+        // y devuelve una decisión. Corre en su propio Web Worker (ver
+        // bot-worker.js), en un hilo aparte del de la página — así, sin
+        // importar cuánto tarde una búsqueda profunda, la interfaz sigue
+        // respondiendo con normalidad mientras el bot "piensa". Acá abajo
+        // es donde esa decisión se vuelve real: se pide en el momento
+        // justo, y se ejecuta con el MISMO mecanismo (executeMove) que usa
+        // un click humano — así el bot no es un camino paralelo con su
+        // propia lógica de tablero, sonido, historial o sincronización: es
+        // exactamente el mismo camino, solo que disparado por código en
+        // vez de por un dedo.
+
+        // --- EL HILO APARTE DE GODOFREDO ---
+        // Un solo Worker persistente, reusado en todas las jugadas del
+        // bot (crearlo de cero en cada jugada sería un desperdicio). Cada
+        // pedido lleva un ID propio: si por algún motivo llegara una
+        // respuesta que ya no es la que estamos esperando (no debería
+        // pasar en el flujo normal, pero es un cinturón de seguridad
+        // barato), la ignoramos en vez de actuar sobre ella.
+        let botWorker = null;
+        let botWorkerRequestId = 0;
+        let botWorkerPendingId = null;
+        let botWorkerPendingResolve = null;
+
+        function ensureBotWorker() {
+            if (!botWorker) {
+                botWorker = new Worker('bot-worker.js');
+                botWorker.onmessage = (e) => {
+                    if (e.data.requestId !== botWorkerPendingId) return; // respuesta vieja, ignorar
+                    const resolve = botWorkerPendingResolve;
+                    botWorkerPendingId = null;
+                    botWorkerPendingResolve = null;
+                    if (resolve) resolve(e.data);
+                };
+                botWorker.onerror = (err) => {
+                    console.error('Godofredo tropieza: el Worker del bot tiró un error.', err.message);
+                    const resolve = botWorkerPendingResolve;
+                    botWorkerPendingId = null;
+                    botWorkerPendingResolve = null;
+                    if (resolve) resolve({ move: null, error: err.message });
+                };
+            }
+            return botWorker;
+        }
+
+        // Le pide al Worker una jugada — asíncrono, no traba nada mientras
+        // calcula. boardSnapshot va COPIADO (no el array real): postMessage
+        // ya hace su propia copia estructurada al mandarlo, pero pasar una
+        // copia propia deja explícito que el Worker nunca comparte
+        // referencia con el tablero real de la partida.
+        function requestBotMove(boardSnapshot, level, player) {
+            return new Promise((resolve) => {
+                const worker = ensureBotWorker();
+                const id = ++botWorkerRequestId;
+                botWorkerPendingId = id;
+                botWorkerPendingResolve = resolve;
+                worker.postMessage({ requestId: id, board: boardSnapshot, level, player });
+            });
+        }
+
+        // Se llama desde changeTurn() cada vez que la partida sigue en
+        // pie. Si no corresponde (no es una partida vs bot, no soy yo el
+        // jugador humano real, o no es el turno de Negras), no hace nada.
+        function maybeTriggerBotMove() {
+            if (!currentBotId || myColor !== 'w' || currentPlayer !== 'b') return;
+
+            const bot = getBotById(currentBotId);
+            if (!bot) return;
+
+            // Una pausa mínima antes de arrancar a pensar, solo para que la
+            // interfaz termine de asentarse tras el movimiento anterior —
+            // el "retraso pensativo" de verdad vive DENTRO de playBotTurn,
+            // superpuesto con el cálculo real (no sumado aparte).
+            setTimeout(() => {
+                if (!currentBotId || myColor !== 'w' || currentPlayer !== 'b') return;
+                if (document.getElementById('victoryBanner')) return;
+
+                playBotTurn(bot.level);
+            }, 80);
+        }
+
+        // Le pide al Worker una jugada completa para el nivel dado, y la
+        // ejecuta. Antes de tocar el tablero real, valida que el primer
+        // paso de esa jugada sea efectivamente legal ahora mismo — un
+        // cinturón de seguridad: si por algún bug la decisión del motor no
+        // correspondiera de verdad al tablero real, preferimos que el bot
+        // se quede quieto antes que corromper la partida.
+        async function playBotTurn(level) {
+            if (!currentBotId || myColor !== 'w' || currentPlayer !== 'b') return;
+            if (document.getElementById('victoryBanner')) return;
+
+            const startTime = Date.now();
+            const boardSnapshot = board.map(row => row.slice());
+            const { move: fullMove, error } = await requestBotMove(boardSnapshot, level, 'b');
+
+            // El "retraso pensativo": un piso mínimo (con algo de
+            // variación), del cual restamos lo que el cálculo real ya
+            // tardó — así una jugada rápida (niveles bajos) igual se
+            // siente "pensada", y una jugada lenta de verdad (niveles
+            // profundos) no le suma ADEMÁS un piso encima, ya tardó lo
+            // suyo pensando de verdad.
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, getBotThinkFloor() - elapsed);
+            if (remaining > 0) {
+                await new Promise(r => setTimeout(r, remaining));
+            }
+
+            // Revalidamos TODO de nuevo acá: puede haber pasado cualquier
+            // cosa mientras esperábamos al Worker (el humano se rindió, la
+            // partida terminó, volvimos al lobby...).
+            if (!currentBotId || myColor !== 'w' || currentPlayer !== 'b') return;
+            if (document.getElementById('victoryBanner')) return;
+
+            if (error) {
+                console.error('Godofredo frunce el ceño: el Worker del bot tiró un error al calcular.', error);
+                return;
+            }
+            if (!fullMove) {
+                console.error('Godofredo frunce el ceño: el bot no encontró ninguna jugada. No debería pasar, checkGameOver ya debería haber terminado la partida antes de esto.');
+                return;
+            }
+
+            const firstStep = (fullMove.type === 'simple')
+                ? { type: 'move', row: fullMove.to.row, col: fullMove.to.col }
+                : { type: 'capture', row: fullMove.hops[0].row, col: fullMove.hops[0].col, capturedRow: fullMove.hops[0].capturedRow, capturedCol: fullMove.hops[0].capturedCol };
+
+            const realOptions = getLegalMoves(fullMove.from.row, fullMove.from.col);
+            const isValid = realOptions.some(m => m.type === firstStep.type && m.row === firstStep.row && m.col === firstStep.col);
+            if (!isValid) {
+                console.error('Godofredo se persigna: el bot eligió una jugada que no es legal sobre el tablero real. Se aborta por seguridad, sin tocar nada.', fullMove);
+                return;
+            }
+
+            selectedPosition = { row: fullMove.from.row, col: fullMove.from.col };
+
+            if (fullMove.type === 'simple') {
+                executeMove(firstStep, false);
+            } else {
+                playBotHopsSequentially(fullMove.hops, 0);
+            }
+        }
+
+        // Ejecuta una cadena de captura del bot salto por salto, con una
+        // pequeña pausa visual entre cada uno — igual que si un humano
+        // clickeara cada escalón, pero automatizado. No hace falta volver
+        // a fijar selectedPosition entre saltos: executeMove() ya lo deja
+        // apuntando a la casilla de aterrizaje cuando detecta que la
+        // captura tiene que seguir (mismo mecanismo que usa un humano).
+        function playBotHopsSequentially(hops, index) {
+            if (index >= hops.length) return;
+            if (!currentBotId || myColor !== 'w' || document.getElementById('victoryBanner')) return;
+
+            const hop = hops[index];
+
+            // Mismo cinturón de seguridad que en el primer salto: confirmamos
+            // que ESTE salto puntual es legal sobre el tablero real antes de aplicarlo.
+            const realOptions = getLegalMoves(selectedPosition.row, selectedPosition.col);
+            const isValid = realOptions.some(m => m.type === 'capture' && m.row === hop.row && m.col === hop.col
+                && m.capturedRow === hop.capturedRow && m.capturedCol === hop.capturedCol);
+            if (!isValid) {
+                console.error('Godofredo se persigna otra vez: un salto intermedio de la cadena del bot no es legal sobre el tablero real. Se aborta la cadena acá, sin tocar más nada.', hop);
+                return;
+            }
+
+            executeMove({ type: 'capture', row: hop.row, col: hop.col, capturedRow: hop.capturedRow, capturedCol: hop.capturedCol }, false);
+
+            if (index + 1 < hops.length) {
+                setTimeout(() => playBotHopsSequentially(hops, index + 1), BOT_HOP_DELAY_MS);
+            }
+        }
+
+        // --- EL CARTEL DE LA DOBLE PUERTA (desafiar o espectar) ---
+        let challengeOrSpectateTargetUsername = null;
+        let challengeOrSpectateTargetRoom = null;
+
+        function openChallengeOrSpectateModal(username, botName, room) {
+            challengeOrSpectateTargetUsername = username;
+            challengeOrSpectateTargetRoom = room;
+            document.getElementById("challengeOrSpectateText").textContent =
+                `¿Desea desafiar a ${username} o espectar su partida contra ${botName}?`;
+            document.getElementById("challengeOrSpectateModal").style.display = "block";
+        }
+
+        function closeChallengeOrSpectateModal() {
+            document.getElementById("challengeOrSpectateModal").style.display = "none";
+            challengeOrSpectateTargetUsername = null;
+            challengeOrSpectateTargetRoom = null;
+        }
+
+        document.getElementById("challengeInsteadBtn").onclick = () => {
+            const target = challengeOrSpectateTargetUsername;
+            closeChallengeOrSpectateModal();
+            if (target) sendChallengeTo(target);
+        };
+
+        document.getElementById("spectateInsteadBtn").onclick = () => {
+            const room = challengeOrSpectateTargetRoom;
+            closeChallengeOrSpectateModal();
+            if (room) socket.emit('join-as-spectator', room);
+        };
+
+        document.getElementById("cancelChallengeOrSpectateBtn").onclick = () => {
+            closeChallengeOrSpectateModal();
+        };
 
         // --- EL CUERVO MENSAJERO DE GODOFREDO (Chat del Salón) ---
 
@@ -2691,13 +3111,19 @@
                     if (u.username === document.getElementById("usernameInput").value) return;
                     const item = document.createElement("div");
                     item.className = "user-item";
-                    const etiqueta = (u.status === "spectating") ? " (espectando)" : "";
-                    item.textContent = `🛡️ ${u.username}${etiqueta} (Desafiar)`;
-                    item.onclick = () => {
-                        if (confirm(`¿Deseas enviar un desafío a ${u.username}?`)) {
-                            sendChallengeTo(u.username);
-                        }
-                    };
+
+                    if (u.status === "vsbot") {
+                        item.textContent = `🛡️ ${u.username} (vs. ${u.botName})`;
+                        item.onclick = () => openChallengeOrSpectateModal(u.username, u.botName, u.room);
+                    } else {
+                        const etiqueta = (u.status === "spectating") ? " (espectando)" : "";
+                        item.textContent = `🛡️ ${u.username}${etiqueta} (Desafiar)`;
+                        item.onclick = () => {
+                            if (confirm(`¿Deseas enviar un desafío a ${u.username}?`)) {
+                                sendChallengeTo(u.username);
+                            }
+                        };
+                    }
                     listElement.appendChild(item);
                 });
             }
@@ -2812,10 +3238,22 @@
             document.getElementById("waitingStatus").textContent = "Buscando oponentes en la red...";
         });
 
-        socket.on('opponent-surrendered', () => {
-            const winnerName = (myColor === 'w') ? whitePlayerName : blackPlayerName;
-            const loserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
-            announceWinner(`¡${loserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`, { allowRematch: true });
+        socket.on('opponent-surrendered', (data) => {
+            const loserName = data?.loserName;
+            let winnerName, finalLoserName;
+            if (loserName) {
+                // El servidor nos dice quién se rindió: funciona sin importar
+                // si somos el rival real o un espectador (antes se adivinaba
+                // a partir de myColor, y le quedaba invertido a los
+                // espectadores cuando se rendían las Negras).
+                finalLoserName = loserName;
+                winnerName = (loserName === whitePlayerName) ? blackPlayerName : whitePlayerName;
+            } else {
+                // Fallback defensivo (no debería pasar nunca en la práctica)
+                winnerName = (myColor === 'w') ? whitePlayerName : blackPlayerName;
+                finalLoserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
+            }
+            announceWinner(`¡${finalLoserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`, { allowRematch: true });
         });
 
         // --- AUTO-LOGIN DE GODOFREDO ---

@@ -800,6 +800,85 @@ function pickBestFullMovesIterativeDeepening(boardForSearch, player, evalMode, t
 // que preocuparse por trabar la página, así que el límite de 8
 // segundos es puro margen de comodidad para la persona esperando, no
 // una restricción técnica.
+// ============================================================
+//  LA ZONA DE AZAR DE GODOFREDO (funciones de apoyo)
+// ============================================================
+// Todo lo que sigue es NUEVO, agregado aparte de lo de arriba (que es
+// el motor tal como funcionaba, sin ningún cambio) — a propósito, para
+// no repetir el problema real que tuvimos la vez pasada: ahí,
+// compartir una misma función entre "la zona de azar" y "el resto de
+// la partida" terminó afectando, sin que lo notáramos a tiempo, al
+// juego de fuera de esa zona también. Esta vez, cero código compartido
+// entre ambos caminos — la zona de azar es una rama aparte, con su
+// propia función, que ni siquiera se llama durante el resto de la
+// partida.
+
+// Cuenta el total de piezas (de cualquier color) que quedan sobre el
+// tablero. Como cada captura saca exactamente una ficha, comparar esto
+// contra STARTING_PIECE_COUNT es la forma más simple de saber si
+// todavía no hubo NINGUNA captura en la partida — sin necesitar que
+// nadie le pase historial ni contador aparte, con solo mirar el
+// tablero actual.
+function countTotalPieces(boardForSearch) {
+    let count = 0;
+    for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 10; c++) {
+            if (boardForSearch[r][c]) count++;
+        }
+    }
+    return count;
+}
+
+// Evalúa TODAS las jugadas candidatas a la profundidad dada, y devuelve
+// el RANKING COMPLETO (jugada + puntaje), ordenado de mejor a peor —
+// necesario para poder sortear entre las que están "cerca" de la mejor
+// (dentro de un margen), no solo quedarse con la ganadora.
+//
+// A diferencia de pickBestFullMoves (de arriba, sin tocar), acá CADA
+// jugada candidata se explora con una ventana de cálculo COMPLETA
+// (-Infinity, +Infinity) propia, sin heredar nada de sus hermanas.
+// Hace falta así, y no alcanza con simplemente "podar menos": la poda
+// alfa-beta normal puede devolver una COTA optimista en vez del valor
+// real en cualquier punto profundo del árbol de una jugada candidata,
+// no solo en el nivel superior — confirmado con un caso real durante
+// las pruebas, donde una jugada marcada con -25 (aparentando estar
+// dentro del margen) resultó valer -31 de verdad (afuera) al
+// recalcularla sin ninguna poda. La única forma de garantizar
+// precisión real es esta: ventana completa para cada candidata. Es más
+// lento que el camino de siempre (por eso NO se usa fuera de la zona
+// de azar, donde no hace falta), pero a la profundidad fija y modesta
+// que usamos acá (ver OPENING_ZONE_DEPTH) el costo es bajo.
+function pickScoredFullMoves(boardForSearch, player, depth, evalMode) {
+    const moves = enumerateFullMoves(boardForSearch, player);
+    if (moves.length === 0) return [];
+
+    const opponent = (player === "w") ? "b" : "w";
+    const scored = moves.map(move => {
+        const nextBoard = applyFullMove(boardForSearch, move);
+        const score = minimaxSearch(nextBoard, opponent, depth - 1, -Infinity, Infinity, player, evalMode, QUIESCENCE_MAX_EXTRA_PLIES);
+        return { move, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored;
+}
+
+// La profundidad de la zona de azar es FIJA y MODESTA a propósito — no
+// compite por la misma profundidad que alcanza el resto de la partida
+// (con su búsqueda por tiempo, mucho más profunda). No hace falta que
+// compita: como discutimos, en la apertura, antes de cualquier
+// contacto, el costo de no jugar la jugada absolutamente óptima es
+// mínimo — así que preferimos una búsqueda barata y rápida acá, en vez
+// de intentar igualar la fuerza máxima del resto de la partida (que es
+// justamente lo que, al intentarlo la vez pasada, terminó costando
+// hasta una jugada entera de profundidad en CADA jugada de la zona de
+// azar, y esa pérdida se repetía varias veces antes de la primera
+// captura). Medido: a esta profundidad, con ventana completa, cada
+// jugada tarda bien por debajo de 1 segundo.
+const OPENING_ZONE_DEPTH = 5;
+const STARTING_PIECE_COUNT = 30; // 15 fichas por lado en el tablero de 10x10
+const OPENING_ZONE_SCORE_MARGIN = 20; // referencia: una ficha vale 100 en esta escala
+
 const BOT_LEVEL_CONFIG = {
     1: { depth: 1, noise: 0.85, evalMode: "material" },
     2: { depth: 1, noise: 0.68, evalMode: "material" },   // provisorio, sin calibrar todavía
@@ -832,12 +911,36 @@ function getBotMove(boardForSearch, level, player = "b") {
     if (legalMoves.length === 0) return null;
 
     const useRandom = Math.random() < config.noise;
+    if (useRandom) {
+        return legalMoves[Math.floor(Math.random() * legalMoves.length)];
+    }
 
+    // --- LA ZONA DE AZAR DE GODOFREDO ---
+    // Mientras nadie perdió ninguna ficha todavía (tablero completo,
+    // sin ninguna captura de por medio), en vez de la única mejor
+    // jugada, sorteamos entre todas las que estén dentro de un margen
+    // de puntaje chico respecto de la mejor — así el bot no reacciona
+    // siempre igual ante una apertura humana que se repite. Camino
+    // COMPLETAMENTE APARTE del resto de la función (ver comentario en
+    // pickScoredFullMoves): en cuanto cae la primera ficha de
+    // cualquier lado, esta rama ni se toca, y el resto de la partida
+    // sigue el camino de abajo, sin cambios.
+    if (countTotalPieces(boardForSearch) === STARTING_PIECE_COUNT) {
+        const scored = pickScoredFullMoves(boardForSearch, player, OPENING_ZONE_DEPTH, config.evalMode);
+        if (scored.length > 0) {
+            const bestScore = scored[0].score;
+            const withinMargin = scored.filter(s => s.score >= bestScore - OPENING_ZONE_SCORE_MARGIN).map(s => s.move);
+            return withinMargin[Math.floor(Math.random() * withinMargin.length)];
+        }
+        // Si por algún motivo no hubiera resultado (no debería pasar
+        // nunca, ya descartamos arriba el caso de "sin jugadas
+        // legales"), cae al camino de siempre de abajo.
+    }
+
+    // --- A PARTIR DE ACÁ: EXACTAMENTE EL CAMINO DE SIEMPRE, SIN NINGÚN CAMBIO ---
     let candidates;
     let preferred = null;
-    if (useRandom) {
-        candidates = legalMoves;
-    } else if (config.timeLimitMs) {
+    if (config.timeLimitMs) {
         const result = pickBestFullMovesIterativeDeepening(boardForSearch, player, config.evalMode, config.timeLimitMs, config.maxDepth);
         candidates = result.moves;
         preferred = result.preferred;
@@ -859,3 +962,4 @@ function getBotMove(boardForSearch, level, player = "b") {
 
     return candidates[Math.floor(Math.random() * candidates.length)];
 }
+

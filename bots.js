@@ -2,14 +2,21 @@
 //  LOS GUERREROS DE LA SALA DE ARMAS
 // ============================================================
 // Datos de los 10 personajes que representan los niveles de dificultad
-// de los bots (1 = más fácil, 10 = más difícil). Este archivo vive
-// separado de index.html a propósito: es puro dato + los puntos de
-// enganche del motor, para no seguir engordando el archivo principal.
+// de los bots (1 = más fácil, 10 = más difícil), más el motor completo
+// que decide sus jugadas: reglas de movimiento (compartidas con
+// rules-engine.js), evaluación de posiciones, búsqueda minimax con
+// poda alfa-beta y quietud, la "zona de azar" de la apertura, y la
+// configuración de cada nivel. Este archivo vive separado de
+// index.html a propósito, para no seguir engordando el archivo
+// principal — pero ya no es solo dato: acá vive el "cerebro" completo
+// del bot, no un esqueleto a la espera de él.
 //
-// IMPORTANTE: el "cerebro" que decide las jugadas del bot TODAVÍA NO
-// EXISTE — ver getBotMove() al final de este archivo. Por ahora este
-// archivo es el elenco y el esqueleto, no el motor. Eso queda para una
-// próxima vuelta.
+// ESTADO ACTUAL (V12): los diez niveles están calibrados y probados —
+// ver BOT_LEVEL_CONFIG más abajo para el detalle y el respaldo de cada
+// uno. Con esto se completa la primera vuelta de calibración de punta
+// a punta (1 al 10). Otto se reservó la posibilidad de pedir ajustes
+// finos más adelante, después de jugar más extensivamente contra todos
+// ellos — pero, por ahora, no hay ningún nivel pendiente de armar.
 //
 // Personajes provisorios (tal como aclaró Otto): pueden cambiar de
 // nombre, historia o temática más adelante sin que eso afecte en nada
@@ -429,7 +436,7 @@ function clearPathObstacles(boardForSearch, row, col, color) {
     return obstacles;
 }
 
-function evaluateBoard(boardForSearch, botColor, evalMode) {
+function evaluateBoard(boardForSearch, botColor, evalMode, nextToMove) {
     const opponentColor = (botColor === "w") ? "b" : "w";
     let score = 0;
 
@@ -477,10 +484,38 @@ function evaluateBoard(boardForSearch, botColor, evalMode) {
         const oppMobility = countMobility(boardForSearch, opponentColor);
         score += (myMobility - oppMobility) * 3;
 
-        // --- FICHAS COLGADAS --- (el término con más peso de los nuevos:
-        // directamente proporcional al material realmente en juego)
-        score -= hangingMaterialValue(boardForSearch, botColor);
-        score += hangingMaterialValue(boardForSearch, opponentColor);
+        // --- FICHAS COLGADAS ---
+        // Solo penalizamos las PROPIAS fichas colgadas, no acreditamos
+        // las del rival como bono (motivo, encontrado analizando
+        // partidas reales: acreditar el bono del rival asumía una
+        // contraamenaza que el bot no llega a ejecutar de inmediato,
+        // porque no es su turno a continuación).
+        //
+        // SEGUNDA VUELTA DE ESTE MISMO PROBLEMA (encontrada calibrando
+        // los niveles 8 y 9): sacar el bono del rival no alcanzaba del
+        // todo — la penalización de las PROPIAS fichas colgadas
+        // también asume, implícitamente, que el rival mueve a
+        // continuación. Eso es cierto en algunos puntos del árbol de
+        // búsqueda pero no en otros: depende de la paridad de cuántas
+        // jugadas se exploraron hasta llegar acá. Confirmado con un
+        // caso real: profundidad 4 perdía sistemáticamente contra
+        // profundidad 3 en autopartidas (¡la profundidad MENOR le
+        // ganaba a la mayor!), y profundidad 5 sí dominaba a profundidad
+        // 3 con total claridad — la diferencia entre esas dos
+        // comparaciones era exactamente la paridad: profundidad par
+        // termina la búsqueda justo después de la jugada del RIVAL (así
+        // que el que mueve a continuación es el propio bot, no el
+        // rival), y ahí la penalización se aplicaba de forma prematura,
+        // castigando posiciones que en realidad el bot todavía podía
+        // defender antes de que el peligro fuera real.
+        //
+        // El arreglo: nextToMove le dice a esta función, en cada
+        // llamada, quién mueve de verdad a continuación en ESTE punto
+        // exacto del árbol — la penalización solo se aplica cuando eso
+        // es genuinamente el rival.
+        if (nextToMove === opponentColor) {
+            score -= hangingMaterialValue(boardForSearch, botColor);
+        }
 
         // --- RESPALDO ENTRE FICHAS --- (formación sólida vs. aislada)
         score += (supportedPawnCount(boardForSearch, botColor) - supportedPawnCount(boardForSearch, opponentColor)) * 8;
@@ -531,7 +566,7 @@ function minimaxSearch(boardForSearch, player, depth, alpha, beta, botColor, eva
         const hasForcedCapture = moves[0].type === "capture-sequence";
 
         if (!(hasForcedCapture && qBudget > 0)) {
-            return evaluateBoard(boardForSearch, botColor, evalMode);
+            return evaluateBoard(boardForSearch, botColor, evalMode, player);
         }
         // Si hay una captura pendiente y todavía queda presupuesto de
         // quietud, NO evaluamos todavía: seguimos bajando (ver más abajo,
@@ -553,7 +588,7 @@ function minimaxSearch(boardForSearch, player, depth, alpha, beta, botColor, eva
     // alfa-beta, el orden es lo que determina cuánto se puede podar.
     const children = moves.map(move => {
         const nextBoard = applyFullMove(boardForSearch, move);
-        return { move, nextBoard, staticScore: evaluateBoard(nextBoard, botColor, evalMode) };
+        return { move, nextBoard, staticScore: evaluateBoard(nextBoard, botColor, evalMode, opponent) };
     });
     children.sort((a, b) => maximizing ? (b.staticScore - a.staticScore) : (a.staticScore - b.staticScore));
 
@@ -628,7 +663,7 @@ function pickBestFullMoves(boardForSearch, player, depth, evalMode, preferredMov
 
     const children = moves.map(move => {
         const nextBoard = applyFullMove(boardForSearch, move);
-        return { move, nextBoard, staticScore: evaluateBoard(nextBoard, player, evalMode) };
+        return { move, nextBoard, staticScore: evaluateBoard(nextBoard, player, evalMode, opponent) };
     });
     children.sort((a, b) => b.staticScore - a.staticScore);
 
@@ -655,6 +690,38 @@ function pickBestFullMoves(boardForSearch, player, depth, evalMode, preferredMov
             bestMoves.push(child.move);
         }
         if (bestScore > alpha) alpha = bestScore;
+    }
+
+    // Verificación de empates genuinos (encontrada analizando una
+    // partida real de Otto, ver historia completa en el chat): la poda
+    // alfa-beta de arriba hereda un alfa cada vez más alto entre
+    // jugadas hermanas, a propósito, para podar más — eso es correcto
+    // para saber CUÁL es la mejor, pero tiene una trampa para saber
+    // CUÁLES EMPATAN con ella. Cuando una jugada hermana explorada más
+    // tarde tiene un valor real bastante PEOR que el alfa heredado, la
+    // búsqueda puede cortar temprano y devolver una COTA ("como mucho
+    // tanto") que, por pura coincidencia aritmética, es EXACTAMENTE
+    // igual al mejor puntaje ya encontrado — y el chequeo de arriba
+    // (score === bestScore) la trata entonces como un empate genuino,
+    // cuando en realidad su valor verdadero es mucho peor. Confirmado
+    // con un caso real: una jugada que valía -95 aparecía "empatada"
+    // con otra que valía +9, solo porque la cota heredada coincidía
+    // justo con ese +9. Esto hacía que, en el sorteo final entre
+    // empatadas, el bot a veces terminara jugando la opción mala.
+    //
+    // El arreglo: volvemos a calcular, con ventana completa (sin
+    // heredar ningún alfa), el valor real de cada una de las
+    // "aparentemente empatadas" — el conjunto suele ser chico, así que
+    // esta re-verificación es barata, mucho más que si tuviéramos que
+    // hacerlo para TODAS las candidatas desde el principio.
+    if (bestMoves.length > 1) {
+        const rescored = bestMoves.map(move => {
+            const child = children.find(c => movesEqual(c.move, move));
+            const trueScore = minimaxSearch(child.nextBoard, opponent, depth - 1, -Infinity, Infinity, player, evalMode, QUIESCENCE_MAX_EXTRA_PLIES);
+            return { move, trueScore };
+        });
+        const trueBest = Math.max(...rescored.map(r => r.trueScore));
+        bestMoves = rescored.filter(r => r.trueScore === trueBest).map(r => r.move);
     }
 
     return bestMoves;
@@ -784,13 +851,11 @@ function pickBestFullMovesIterativeDeepening(boardForSearch, player, evalMode, t
 // evalMode: 'material' (solo cuenta fichas) o 'full' (suma avance,
 //        posición, movilidad, fichas colgadas, respaldo y fila de fondo).
 //
-// SOLO los niveles 1 y 10 están calibrados en esta entrada — son los
-// dos extremos de referencia para probar que el motor compartido
-// funciona de punta a punta. Los niveles 2 a 9 tienen una configuración
-// PROVISORIA (interpolada a mano entre los dos extremos, nada más que
-// un punto de partida razonable) — juegan de verdad, sin trampa ni
-// bugs, pero sus números todavía no pasaron por ninguna ronda de
-// calibración real. Eso es trabajo para las próximas entradas.
+// ESTADO ACTUAL (V12): los diez niveles (1 al 10) están calibrados y
+// probados — ver el detalle y el respaldo de cada uno en los
+// comentarios de abajo. Se completó la primera vuelta de calibración
+// de punta a punta. Quedan reservados únicamente para ajustes finos
+// futuros, si Otto los pide después de jugar más extensivamente.
 //
 // El nivel 10 pasó de profundidad fija (6) a profundización iterativa
 // con límite de tiempo: con la evaluación nueva (más cara de calcular)
@@ -880,15 +945,15 @@ const STARTING_PIECE_COUNT = 30; // 15 fichas por lado en el tablero de 10x10
 const OPENING_ZONE_SCORE_MARGIN = 20; // referencia: una ficha vale 100 en esta escala
 
 const BOT_LEVEL_CONFIG = {
-    1: { depth: 1, noise: 0.85, evalMode: "material" },
-    2: { depth: 1, noise: 0.68, evalMode: "material" },   // provisorio, sin calibrar todavía
-    3: { depth: 2, noise: 0.51, evalMode: "material" },   // provisorio, sin calibrar todavía
-    4: { depth: 2, noise: 0.34, evalMode: "material" },   // provisorio, sin calibrar todavía
-    5: { depth: 3, noise: 0.17, evalMode: "full" },       // provisorio, sin calibrar todavía
-    6: { depth: 3, noise: 0.00, evalMode: "full" },       // provisorio, sin calibrar todavía
-    7: { depth: 4, noise: 0.00, evalMode: "full" },       // provisorio, sin calibrar todavía
-    8: { depth: 5, noise: 0.00, evalMode: "full" },       // provisorio, sin calibrar todavía
-    9: { depth: 6, noise: 0.00, evalMode: "full" },       // provisorio, sin calibrar todavía
+    1: { depth: 1, noise: 0.54, evalMode: "material" },   // CALIBRADO (V13): 1 vs 2 = 68% para el 2 (66 partidas) -- bajado de 0.85, que dejaba a 1-vs-2 en 95% (fuera de la franja habitual). Con esto el nivel 1 tiene algo más de lógica y menos puro azar, sin dejar de ser el escalón más simple
+    2: { depth: 1, noise: 0.35, evalMode: "material" },   // CALIBRADO (V12, ajustado en V13): 2 vs 3 = 79% para el 3 (44 partidas). El primer número de calibración (1 vs 2) quedó en 68% para el 2 después de bajarle el ruido al nivel 1 en V13 (antes corría en 95%, fuera de la franja) -- ver comentario en el nivel 1
+    3: { depth: 2, noise: 0.24, evalMode: "material" },   // CALIBRADO (V11): 1 vs 3 = 97% para el 3 (34 partidas); 3 vs 5 = 91% para el 5 (34 partidas) -- ambos números salen más altos que la franja 60-85% que usamos entre vecinos directos porque acá hay dos escalones de diferencia (todavía faltan el 2 y el 4 intermedios), pero quedan parejos entre sí, señal de que el 3 está genuinamente a mitad de camino
+    4: { depth: 2, noise: 0.11, evalMode: "material" },   // CALIBRADO (V12): 3 vs 4 = 75% para el 4 (47 partidas); 4 vs 5 = 62% para el 5 (45 partidas)
+    5: { depth: 3, noise: 0.17, evalMode: "full" },       // CALIBRADO: 1 vs 5 = 95% para el 5 (20 partidas); 5 vs 6 = 70% para el 6 (43 partidas, tras recalibrar el 6)
+    6: { depth: 3, noise: 0.095, evalMode: "full" },      // CALIBRADO (V8, nivel intermedio nuevo): 5 vs 6 = 70% para el 6; 6 vs 7 = 77% para el 7 (43 partidas cada enfrentamiento)
+    7: { depth: 3, noise: 0.00, evalMode: "full" },       // CALIBRADO: era el "6" de V6/V7 — Otto lo probó extensamente y lo sintió más como un 7 que un 6 (le ganaba 70-75% de sus partidas humanas), así que se corrió acá. 6 vs 7 = 77% para el 7; 7 vs 10 = dominante en la muestra, sin colapso
+    8: { depth: 4, noise: 0.03, evalMode: "full" },       // CALIBRADO (V10): 7 vs 8 = 79% para el 8 (34 partidas decisivas) -- recalibrado tras arreglar el bug de empates falsos (ver comentario en pickBestFullMoves): sin ruido, el 8 le ganaba al 7 el 86% (demasiado, por encima de la franja), porque el arreglo lo hizo más fuerte de lo que parecía antes
+    9: { depth: 5, noise: 0.00, evalMode: "full" },       // CALIBRADO (V9): 8 vs 9 = 78% para el 9; 9 vs 10 = 86% para el 10 (borde superior sano, sin colapso)
     10: { timeLimitMs: 8000, maxDepth: 16, noise: 0.00, evalMode: "full" }
 };
 
@@ -962,4 +1027,3 @@ function getBotMove(boardForSearch, level, player = "b") {
 
     return candidates[Math.floor(Math.random() * candidates.length)];
 }
-

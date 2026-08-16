@@ -54,6 +54,11 @@
             flex-direction: column;
             align-items: center;
             padding-top: 20px;
+            /* Espacio de respiro al final: el aviso legal (#siteFooter) es
+               "position: fixed" y flota por encima del contenido, así que
+               sin este padding, lo último de la página (el nombre del
+               jugador) queda tapado al scrollear del todo hacia abajo. */
+            padding-bottom: 40px;
             color: white;
             margin: 0;
             min-height: 100vh;
@@ -64,13 +69,22 @@
             /* En vez de un salto brusco a los 700px, el tamaño de casilla
                escala de forma continua con el ancho de la ventana: nunca
                baja de 26px (jugable hasta en un celular chico) ni sube de
-               60px (el tamaño de escritorio de siempre). El marco y el
-               relleno del tablero escalan con la misma lógica, y son la
-               única fuente de verdad tanto para el propio #board como para
-               las referencias de coordenadas (ver más abajo). */
-            --sq-size: clamp(26px, 7vw, 60px);
-            --board-border: clamp(13px, 3vw, 20px);
-            --board-padding: clamp(3px, 0.6vw, 5px);
+               51px (el tamaño de escritorio, reducido a un 85% del
+               original -- 60px -- porque el tablero completo se comía
+               demasiada pantalla). El marco y el relleno del tablero
+               escalan con la misma lógica, y son la única fuente de
+               verdad tanto para el propio #board como para las
+               referencias de coordenadas (ver más abajo). El mínimo de
+               móvil queda EXACTAMENTE igual que antes -- este cambio es
+               solo para la versión de escritorio.
+               El coeficiente vw de cada uno también se redujo al 85% en
+               conjunto con su máximo, para que el punto donde la curva
+               deja de crecer y se aplana en el máximo quede en el mismo
+               ancho de ventana que antes (~857px) -- una curva más chica,
+               pero con la misma forma. */
+            --sq-size: clamp(26px, 5.95vw, 51px);
+            --board-border: clamp(13px, 2.55vw, 17px);
+            --board-padding: clamp(3px, 0.51vw, 4.25px);
         }
 
         #board {
@@ -142,11 +156,15 @@
             align-items: center;
         }
 
-        #boardColumn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        /* Ya no existe #boardColumn como wrapper aparte: topPlayerName,
+           board, bottomPlayerName y moveHistoryPanel son todos hijos
+           directos de #boardAndHistoryWrapper -- necesario para que, en
+           el layout de escritorio de más abajo, el tablero y el
+           historial puedan compartir la MISMA fila de una grilla (así
+           el historial iguala la altura real del tablero automáticamente,
+           sin tener que adivinar cuánto mide la fila del nombre). En
+           móvil (sin la media query) esto sigue apilando los cuatro en
+           una sola columna centrada, exactamente como antes. */
 
         #moveHistoryPanel {
             width: min(90vw, 480px);
@@ -210,22 +228,35 @@
            se saliera del viewport en anchos cercanos al viejo umbral de 950px.) */
         @media (min-width: 1100px) {
             #boardAndHistoryWrapper {
-                display: block;
-                position: relative;
+                display: grid;
+                grid-template-columns: auto 190px;
+                grid-template-rows: auto auto auto;
+                /* fila 1: nombre de arriba -- fila 2: tablero -- fila 3: nombre de abajo */
+                column-gap: 18px;
+                justify-items: center;
+                /* centra topPlayerName/board/bottomPlayerName dentro de
+                   su columna (por si alguno es más angosto que otro),
+                   igual que hacía #boardColumn antes de sacarlo */
                 width: fit-content;
             }
 
+            #topPlayerName { grid-column: 1; grid-row: 1; }
+            #board { grid-column: 1; grid-row: 2; }
+            #bottomPlayerName { grid-column: 1; grid-row: 3; }
+
             #moveHistoryPanel {
-                position: absolute;
-                top: 0;
-                left: 100%;
-                margin-left: 18px;
-                margin-top: 0;
+                grid-column: 2;
+                grid-row: 2;
                 width: 190px;
-                max-height: 715px;
-                /* El top:0 alinea el techo del panel con el techo de
-                   #boardAndHistoryWrapper, que es el mismo techo que el
-                   estandarte superior (nombre del rival) — quedan a la par. */
+                /* Al compartir la fila 2 con #board, y con el "stretch"
+                   por defecto de CSS Grid en el eje vertical, el panel
+                   queda EXACTAMENTE tan alto como el tablero, sea cual
+                   sea su tamaño real -- no hace falta un número fijo
+                   (como el viejo max-height:608px) que se desactualiza
+                   cada vez que el tablero cambia de tamaño. */
+                height: 100%;
+                max-height: none;
+                margin: 0;
             }
         }
 
@@ -331,7 +362,7 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 8px 14px;
-            width: min(600px, 92vw);
+            width: min(510px, 92vw); /* 85% de los 600px originales, a la par del tablero */
             box-sizing: border-box;
             margin-bottom: 10px;
             background: #2c3e50;
@@ -539,7 +570,7 @@
         }
 
         #spectatorsBox {
-            width: min(630px, 92vw);
+            width: min(536px, 92vw); /* 85% de los 630px originales, a la par del tablero */
             box-sizing: border-box;
             margin: 0 auto 10px auto;
             text-align: left;
@@ -1207,14 +1238,88 @@
         }
 
         /* El retrato circular del bot, al lado de su nombre en la arena —
-           mismo lugar donde un rival humano tiene su circulito de color. */
+           mismo lugar donde un rival humano tiene su circulito de color.
+           3x el tamaño original (22px), para que se le vea bien la cara. */
         .name-indicator-bot {
-            width: 22px;
-            height: 22px;
+            width: 66px;
+            height: 66px;
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid gold;
             flex-shrink: 0;
+        }
+
+        /* --- EL PREGONERO HABLA (globo de diálogo) --- */
+        /* Envuelve al círculo de la cara para que sirva de ancla del
+           globo -- así el globo queda centrado en el CÍRCULO puntual,
+           no en toda la fila (que cambia de ancho según el largo del
+           nombre del personaje). */
+        .bot-avatar-wrap {
+            position: relative;
+            display: inline-flex;
+            flex-shrink: 0;
+        }
+
+        .bot-speech-bubble {
+            --tail-offset: 0px;
+            position: absolute;
+            bottom: 100%;
+            margin-bottom: 12px;
+            /* deja lugar para la colita */
+            min-width: 140px;
+            max-width: min(280px, 85vw);
+            width: max-content;
+            background: rgba(20, 14, 8, 0.94);
+            color: #fdf6e3;
+            border: 1px solid rgba(241, 196, 15, 0.65);
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 13px;
+            line-height: 1.4;
+            text-align: left;
+            text-transform: none;
+            /* el nombre de arriba está en mayúsculas; el globo no */
+            letter-spacing: normal;
+            font-weight: normal;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(6px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 60;
+        }
+
+        .bot-speech-bubble.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* La colita: dos triángulos apilados -- uno un poco más grande
+           (hace de "borde"), y uno más chico encima (el relleno real)
+           con el mismo color de fondo del globo, para que el borde del
+           globo y el borde de la colita se sientan como una sola forma
+           continua de dos lados, no un triángulo aparte flotando. */
+        .bot-speech-bubble::before,
+        .bot-speech-bubble::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: calc(50% + var(--tail-offset));
+            border-style: solid;
+            border-color: transparent;
+        }
+
+        .bot-speech-bubble::before {
+            transform: translateX(-50%);
+            border-width: 9px;
+            border-top-color: rgba(241, 196, 15, 0.65);
+        }
+
+        .bot-speech-bubble::after {
+            transform: translateX(-50%) translateY(-1.5px);
+            border-width: 7.5px;
+            border-top-color: rgba(20, 14, 8, 0.94);
         }
     </style>
 
@@ -1257,13 +1362,11 @@
 
     <!-- La Crónica y la Arena, lado a lado -->
     <div id="boardAndHistoryWrapper">
-        <div id="boardColumn">
-            <!-- Estandarte del oponente (Arriba) -->
-            <div id="topPlayerName" class="player-name-label"></div>
-            <div id="board"></div>
-            <!-- Estandarte propio (Abajo) -->
-            <div id="bottomPlayerName" class="player-name-label"></div>
-        </div>
+        <!-- Estandarte del oponente (Arriba) -->
+        <div id="topPlayerName" class="player-name-label"></div>
+        <div id="board"></div>
+        <!-- Estandarte propio (Abajo) -->
+        <div id="bottomPlayerName" class="player-name-label"></div>
 
         <!-- El Mensajero de Godofredo: crónica de jugadas de la partida -->
         <div id="moveHistoryPanel">
@@ -1411,7 +1514,11 @@
                         <li>captura todas las piezas del rival; o</li>
                         <li>deja al rival sin movimientos legales.</li>
                     </ul>
-                    <p>Los jugadores pueden acordar un empate en cualquier momento de la partida.</p>
+                    <p><strong>Empate:</strong> si ambos jugadores quedan con una dama como única pieza propia, y en
+                        las dos jugadas siguientes (una de cada bando) no se produce ninguna captura, la partida
+                        finaliza en empate.</p>
+                    <p>Independientemente de esto, los jugadores pueden acordar un empate en cualquier momento de la
+                        partida.</p>
 
                     <h3>3. Movimiento del peón</h3>
                     <ul>
@@ -1554,6 +1661,9 @@
                         <li>They capture all of the opponent's pieces; or</li>
                         <li>They leave the opponent with no legal moves (blocking).</li>
                     </ul>
+                    <p><strong>Draw:</strong> if both players are left with a single king as their only remaining
+                        piece, and no capture occurs over the next two moves (one from each side), the game ends in
+                        a draw.</p>
                     <p>Players may agree to a draw at any point during the match.</p>
 
                     <h3>3. Pawn Movement</h3>
@@ -1699,6 +1809,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="rules-engine.js"></script>
     <script src="bots.js"></script>
+    <script src="bot-dialogue.js"></script>
 
     <script>
 
@@ -1903,7 +2014,15 @@
             if (!list) return;
             list.innerHTML = "";
 
-            moveHistory.forEach((m, index) => {
+            // La jugada más RECIENTE va siempre primera en la lista (arriba
+            // de todo, visible sin necesidad de scrollear) -- las más
+            // viejas se van agregando hacia abajo. Para verlas hay que
+            // scrollear hacia abajo, no hacia arriba. Recorremos el
+            // historial de atrás para adelante, pero cada jugada conserva
+            // su número real de jugada (su posición verdadera en la
+            // partida), no un número basado en el orden de aparición acá.
+            for (let index = moveHistory.length - 1; index >= 0; index--) {
+                const m = moveHistory[index];
                 const row = document.createElement('div');
                 row.className = 'move-entry';
 
@@ -1929,9 +2048,7 @@
                 row.appendChild(dot);
                 row.appendChild(txt);
                 list.appendChild(row);
-            });
-
-            list.scrollTop = list.scrollHeight;
+            }
         }
 
         function renderBoard() {
@@ -2221,14 +2338,114 @@
 
             updateTurnIndicator();
             updateTurnTitle();
-            const gameEnded = checkGameOver();
+            const gameOverResult = checkGameOver();
+
+            // --- EL PREGONERO ---
+            // Solo tiene sentido en partidas contra un bot (botCommentaryState
+            // es null en duelos humanos). "justMovedColor" es quien acaba de
+            // jugar -- currentPlayer ya se dio vuelta arriba, así que es el
+            // color CONTRARIO al que le toca ahora. Si esta jugada terminó la
+            // partida, le pasamos quién ganó (o 'draw') para que
+            // detectCommentaryEvent devuelva VICTORIA/DERROTA/EMPATE con
+            // prioridad absoluta, sin competir con los eventos de mitad de
+            // partido.
+            if (botCommentaryState) {
+                const justMovedColor = (currentPlayer === "w") ? "b" : "w";
+                const turnHops = getLastTurnHops(justMovedColor);
+                const gameEndedWinner = gameOverResult.ended ? gameOverResult.winner : null;
+                const { event, state } = detectCommentaryEvent(
+                    board, turnHops, justMovedColor, "b", moveHistory.length, botCommentaryState, gameEndedWinner
+                );
+                botCommentaryState = state;
+                if (event) {
+                    const line = pickBotDialogueLine(currentBotId, event);
+                    console.log(`[Pregonero] Evento: ${event}${line ? ' -> "' + line + '"' : ' (sin frase cargada todavía)'}`);
+                    if (line) showBotSpeechBubble(line);
+                }
+            }
 
             // Si la partida sigue y ahora es el turno del bot, que "piense"
             // y mueva — mismo lugar donde, en un duelo humano, no hace
             // falta hacer nada más (el rival mueve desde SU propio cliente).
-            if (!gameEnded) {
+            if (!gameOverResult.ended) {
                 maybeTriggerBotMove();
             }
+        }
+
+
+        // Junta los saltos del turno que ACABA de terminar (uno solo para
+        // un movimiento simple, varios para una cadena de capturas) --
+        // recorre moveHistory desde el final mientras el color coincida,
+        // y para en cuanto encuentra uno de otro color (o se acaba el
+        // historial). Vive acá afuera de changeTurn porque no depende de
+        // nada de ese scope, y así queda testeable/reusable por separado.
+        function getLastTurnHops(color) {
+            const hops = [];
+            for (let i = moveHistory.length - 1; i >= 0; i--) {
+                if (moveHistory[i].color !== color) break;
+                hops.unshift(moveHistory[i]);
+            }
+            return hops;
+        }
+
+        // Recordamos el temporizador activo del globo para poder cancelarlo
+        // si dispara un evento nuevo mientras el anterior todavía está
+        // visible -- si no, el globo viejo se escondería a mitad de la
+        // frase nueva, cortándola de golpe.
+        let botSpeechBubbleTimeout = null;
+
+        // Le pone el texto al globo de diálogo y lo hace aparecer con una
+        // transición suave, dejándolo visible un tiempo proporcional al
+        // largo del texto (las frases cortas de Neanderthalius no
+        // necesitan tanto tiempo en pantalla como las más largas de
+        // personajes como Aquitapia) antes de desvanecerse solo.
+        function showBotSpeechBubble(text) {
+            const bubble = document.getElementById("botSpeechBubble");
+            const wrap = bubble ? bubble.closest(".bot-avatar-wrap") : null;
+            if (!bubble || !wrap) return; // no estamos en partida contra un bot, o el DOM todavía no se armó
+
+            if (botSpeechBubbleTimeout) clearTimeout(botSpeechBubbleTimeout);
+
+            bubble.textContent = text;
+            bubble.style.left = "0px"; // posición neutra, solo para que el navegador calcule el ancho real con este texto
+            bubble.style.setProperty("--tail-offset", "0px");
+            bubble.classList.add("visible");
+
+            // Recién acá, con el texto ya puesto, el navegador conoce el
+            // ancho real del globo (min-width/max-width + el largo del
+            // texto deciden cuánto ocupa). Con ese dato calculamos dónde
+            // tendría que ir para quedar centrado sobre el círculo, y lo
+            // recortamos si eso se saldría de la pantalla -- y movemos
+            // la colita en sentido contrario esa misma distancia, para
+            // que siga apuntando al círculo real, no al centro del
+            // globo ya movido.
+            requestAnimationFrame(() => {
+                const bubbleRect = bubble.getBoundingClientRect();
+                const wrapRect = wrap.getBoundingClientRect();
+                const margin = 8;
+                const circleCenterX = wrapRect.left + wrapRect.width / 2; // coordenadas de viewport
+                const idealLeft = circleCenterX - bubbleRect.width / 2;
+                const clampedLeft = Math.min(
+                    Math.max(idealLeft, margin),
+                    window.innerWidth - bubbleRect.width - margin
+                );
+                // "left" en CSS es relativo al ancla (.bot-avatar-wrap),
+                // no al viewport -- convertimos restando su propio borde.
+                bubble.style.left = (clampedLeft - wrapRect.left) + "px";
+
+                const bubbleCenterX = clampedLeft + bubbleRect.width / 2;
+                bubble.style.setProperty("--tail-offset", (circleCenterX - bubbleCenterX) + "px");
+            });
+
+            // ~16 caracteres por segundo de lectura, con un piso de 4s
+            // (para que hasta la frase más cortita quede un rato visible)
+            // y sin techo -- una frase de 180 caracteres queda arriba
+            // unos 11 segundos, tiempo de sobra para leerla con calma.
+            const durationMs = Math.max(4000, text.length * 60);
+            botSpeechBubbleTimeout = setTimeout(() => {
+                bubble.classList.remove("visible");
+                botSpeechBubbleTimeout = null;
+            }, durationMs);
         }
 
         renderBoard();
@@ -2247,9 +2464,26 @@
 
         // getBestCaptureSequences y getGlobalBestMoves ahora viven en rules-engine.js (compartido con el Web Worker)
 
+        // Cuántas veces seguidas tiene que confirmarse "ambos bandos con
+        // una sola dama, sin captura" antes de decretar el empate. La
+        // jugada que RECIÉN establece esa situación (1) siempre es, por
+        // definición, una captura -- es la que redujo el material hasta
+        // llegar exactamente a una dama por bando -- así que no cuenta
+        // como una jugada "limpia" de verdad. Con el valor 3 acá abajo,
+        // se espera a que, DESPUÉS de esa jugada que establece la
+        // situación, pase una jugada de cada bando (dos en total) sin
+        // que ninguna sea captura, antes de decretar el empate -- así
+        // los dos jugadores tienen la chance de demostrar que no les
+        // queda ninguna captura posible, no solo el que mueve primero.
+        // Bajarlo a 2 alcanzaría con una sola jugada limpia (la del
+        // primero que mueve después de llegar a la situación).
+        const EMPATE_DAMAS_SOLITARIAS_JUGADAS_ESPERA = 3;
+
         function checkGameOver() {
             let whitePieces = 0;
             let blackPieces = 0;
+            let whiteIsLoneKing = false;
+            let blackIsLoneKing = false;
 
             // Contamos las piezas
             for (let r = 0; r < 10; r++) {
@@ -2258,20 +2492,22 @@
                     if (p) {
                         if (p.toLowerCase() === 'w') whitePieces++;
                         if (p.toLowerCase() === 'b') blackPieces++;
+                        if (p === 'W') whiteIsLoneKing = true;
+                        if (p === 'B') blackIsLoneKing = true;
                     }
                 }
             }
 
             // 1. Victoria por aniquilación
             if (whitePieces === 0) {
-                announceWinner(`¡${blackPlayerName} ha aniquilado a ${whitePlayerName}!`, { allowRematch: true });
+                announceGameEnd(`¡${blackPlayerName} ha aniquilado a ${whitePlayerName}!`, { allowRematch: true });
                 socket.emit('game-over', { winner: 'b' });
-                return true;
+                return { ended: true, winner: 'b' };
             }
             if (blackPieces === 0) {
-                announceWinner(`¡${whitePlayerName} ha aniquilado a ${blackPlayerName}!`, { allowRematch: true });
+                announceGameEnd(`¡${whitePlayerName} ha aniquilado a ${blackPlayerName}!`, { allowRematch: true });
                 socket.emit('game-over', { winner: 'w' });
-                return true;
+                return { ended: true, winner: 'w' };
             }
 
             // 2. Victoria por bloqueo
@@ -2294,17 +2530,32 @@
             }
 
             if (!canMove) {
+                const winnerColor = (currentPlayer === 'w') ? 'b' : 'w';
                 const winnerName = (currentPlayer === 'w') ? blackPlayerName : whitePlayerName;
                 const loserName = (currentPlayer === 'w') ? whitePlayerName : blackPlayerName;
-                announceWinner(`¡${winnerName} ha bloqueado a ${loserName}!`, { allowRematch: true });
-                socket.emit('game-over', { winner: (currentPlayer === 'w') ? 'b' : 'w' });
-                return true;
+                announceGameEnd(`¡${winnerName} ha bloqueado a ${loserName}!`, { allowRematch: true });
+                socket.emit('game-over', { winner: winnerColor });
+                return { ended: true, winner: winnerColor };
             }
 
-            return false;
+            // 3. Empate: ambos bandos reducidos a una sola dama (ver
+            // EMPATE_DAMAS_SOLITARIAS_JUGADAS_ESPERA más arriba para el
+            // razonamiento completo del umbral).
+            if (whitePieces === 1 && blackPieces === 1 && whiteIsLoneKing && blackIsLoneKing) {
+                oneKingEachStreak++;
+                if (oneKingEachStreak >= EMPATE_DAMAS_SOLITARIAS_JUGADAS_ESPERA) {
+                    announceGameEnd(`${whitePlayerName} y ${blackPlayerName} han empatado.`, { allowRematch: true });
+                    socket.emit('game-over', { winner: 'draw' });
+                    return { ended: true, winner: 'draw' };
+                }
+            } else {
+                oneKingEachStreak = 0;
+            }
+
+            return { ended: false, winner: null };
         }
 
-        function announceWinner(message, { allowRematch = false } = {}) {
+        function announceGameEnd(message, { allowRematch = false } = {}) {
             playSound(soundVictory);
 
             // El pregón de turno ya no tiene sentido: la partida terminó.
@@ -2391,7 +2642,7 @@
 
             // 3. Mostrar el mensaje localmente
             const winnerName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
-            announceWinner(`TE HAS RENDIDO.<br>VICTORIA PARA ${winnerName}`, { allowRematch: true });
+            announceGameEnd(`TE HAS RENDIDO.<br>VICTORIA PARA ${winnerName}`, { allowRematch: true });
         }
 
         // Escuchar movimientos que vienen del servidor
@@ -2480,6 +2731,13 @@
                 // usa requestRematch() para saltearse el trámite de desafío,
                 // y acá abajo para mostrar el retrato del bot en el estandarte.
                 currentBotId = data.vsBot ? data.botId : null;
+                // El pregonero arranca de cero en cada partida nueva contra
+                // un bot -- nunca se recicla el estado de una partida
+                // anterior (si veníamos de espectar o de una revancha).
+                botCommentaryState = currentBotId ? createInitialCommentaryState() : null;
+                // El contador del empate de las dos damas solitarias también
+                // arranca de cero, y en CUALQUIER partida (no solo con bot).
+                oneKingEachStreak = 0;
 
                 // Lógica de posición según el color
                 if (myColor === 'b') {
@@ -2491,11 +2749,37 @@
                     // Contra un bot, el "Negras" de arriba es el bot: mostramos
                     // su retrato en vez del simple circulito de color.
                     const bot = currentBotId ? getBotById(currentBotId) : null;
+                    // Foto de CARA (más cerca, se le ve bien la expresión),
+                    // no la foto principal de cuerpo/retrato de la Sala de
+                    // Armas -- vive en su propia subcarpeta, con el mismo
+                    // patrón de nombre que el id de cada bot + "cara".
+                    // El globo de diálogo (#botSpeechBubble) queda anclado
+                    // acá mismo, adentro de bot-avatar-wrap, para que
+                    // apunte siempre al CÍRCULO puntual y no a toda la
+                    // fila (que cambia de ancho según el nombre) -- se
+                    // crea vacío y oculto; showBotSpeechBubble() se
+                    // encarga de llenarlo y mostrarlo cuando haga falta,
+                    // sin tener que volver a tocar este innerHTML.
                     const blackIndicator = bot
-                        ? `<img class="name-indicator-bot" src="${bot.image}" alt="${blackPlayerName}" onerror="this.style.display='none';">`
+                        ? `<span class="bot-avatar-wrap"><img class="name-indicator-bot" src="assets/bots/caras/${bot.id}cara.jpg" alt="${blackPlayerName}" onerror="this.style.display='none';"><div id="botSpeechBubble" class="bot-speech-bubble"></div></span>`
                         : `<div class="name-indicator" style="background:black"></div>`;
                     topLabel.innerHTML = `${blackIndicator} ${blackPlayerName}`;
                     bottomLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
+                }
+
+                // INICIO_PARTIDA es distinto a los demás eventos: no pasa por
+                // detectCommentaryEvent (no hay ningún turno del que hablar
+                // todavía), así que se dispara acá mismo, directo. Corre
+                // DESPUÉS de armar topLabel.innerHTML (arriba), porque recién
+                // ahí existe el globo (#botSpeechBubble) al que mostrarle el
+                // texto. Solo tiene sentido si esto es una partida
+                // GENUINAMENTE NUEVA (moveHistory recién quedó vacío arriba)
+                // -- si nos estamos uniendo a una ya en curso como
+                // espectadores, no correspondería.
+                if (currentBotId && moveHistory.length === 0) {
+                    const line = pickBotDialogueLine(currentBotId, "INICIO_PARTIDA");
+                    console.log(`[Pregonero] Evento: INICIO_PARTIDA${line ? ' -> "' + line + '"' : ' (sin frase cargada todavía)'}`);
+                    if (line) showBotSpeechBubble(line);
                 }
             }
 
@@ -2514,7 +2798,7 @@
                 const msg = leaverName
                     ? `¡${leaverName} ha huido de la contienda!<br>Ganás por abandono.`
                     : "¡TU RIVAL HA HUIDO!<br>La partida ha terminado por abandono.";
-                announceWinner(msg);
+                announceGameEnd(msg);
             } else {
                 // --- EL PREGÓN DEL MENSAJERO ---
                 let msg;
@@ -2531,7 +2815,7 @@
                 } else {
                     msg = "LOS CONTENDIENTES SE HAN IDO.<br>La partida ha finalizado.";
                 }
-                announceWinner(msg);
+                announceGameEnd(msg);
             }
         });
 
@@ -2615,12 +2899,33 @@
         // ============================================================
         //  LA SALA DE ARMAS (selección de bots)
         // ============================================================
-        // El "cerebro" que decide las jugadas del bot todavía no existe
-        // (ver bots.js) — esto es solo la estructura conductora: elegir un
-        // bot, arrancar la partida, y que el resto del Salón se entere.
+        // El motor que decide las jugadas del bot vive en bots.js (junto
+        // con rules-engine.js y bot-worker.js) — acá abajo es la
+        // estructura conductora: elegir un bot, arrancar la partida, y
+        // que el resto del Salón se entere.
 
         let selectedBotId = null; // bot resaltado dentro de la Sala de Armas
         let currentBotId = null;  // bot contra el que jugamos AHORA MISMO (null si es duelo humano)
+
+        // --- EL PREGONERO ---
+        // Estado del motor de detección de eventos "dignos de comentario"
+        // (ver detectCommentaryEvent en bots.js) para la partida actual
+        // contra un bot — null si no estamos jugando contra ninguno. Se
+        // reinicia cada vez que arranca una partida nueva contra un bot
+        // (ver 'start-game' más arriba). Por ahora, cuando dispara un
+        // evento, solo lo mostramos por consola — todavía no existe el
+        // cartel visual en pantalla, eso viene en una vuelta aparte.
+        let botCommentaryState = null;
+
+        // --- EL EMPATE DE LAS DOS DAMAS SOLITARIAS ---
+        // Cuenta cuántas jugadas CONSECUTIVAS pasaron desde que ambos
+        // bandos quedaron con una sola dama como única pieza (ver
+        // checkGameOver) sin que ninguna de esas jugadas fuera una
+        // captura. A diferencia de botCommentaryState, esto corre en
+        // CUALQUIER partida, sea contra un bot o entre dos humanos --
+        // así que se reinicia en TODO arranque de partida nueva, no
+        // solo en las que son contra un bot.
+        let oneKingEachStreak = 0;
 
         function renderBotsTable() {
             const tbody = document.getElementById("botsTableBody");
@@ -3253,7 +3558,7 @@
                 winnerName = (myColor === 'w') ? whitePlayerName : blackPlayerName;
                 finalLoserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
             }
-            announceWinner(`¡${finalLoserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`, { allowRematch: true });
+            announceGameEnd(`¡${finalLoserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`, { allowRematch: true });
         });
 
         // --- AUTO-LOGIN DE GODOFREDO ---

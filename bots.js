@@ -1027,3 +1027,244 @@ function getBotMove(boardForSearch, level, player = "b") {
 
     return candidates[Math.floor(Math.random() * candidates.length)];
 }
+
+// ============================================================
+//  EL PREGONERO — reacciones de los personajes durante la partida
+// ============================================================
+// Motor de DETECCIÓN de eventos "dignos de comentario" durante una
+// partida contra un bot (una captura múltiple, una coronación, un
+// marcador que se desnivela mucho y se sostiene, etc.) — para que cada
+// personaje pueda reaccionar con una frase propia (o, en el caso de la
+// Lora Prodigio, un sonido propio). Este archivo SOLO detecta qué pasó
+// y le pone una etiqueta — no sabe nada de qué dice cada personaje ni
+// de cómo se muestra en pantalla; eso vive aparte, en bot-dialogue.js
+// (el contenido) e index.html (la presentación visual, todavía sin
+// construir — por ahora, mientras se define cómo se va a ver, el
+// enganche en index.html se limita a mostrar el evento por consola,
+// para poder probar que el motor dispara bien).
+//
+// Mismo espíritu "sin memoria propia" que el resto de este archivo:
+// esta función no guarda nada entre llamadas — recibe el estado de la
+// vez anterior como parámetro, y devuelve el estado actualizado para
+// que el llamador (index.html) lo guarde y se lo vuelva a pasar en la
+// próxima jugada, tal como ya se hace con moveHistory y compañía.
+
+// Los doce eventos, con su prioridad (1 = se prioriza primero). Si en
+// una misma jugada calificara más de uno a la vez (por ejemplo, una
+// captura múltiple que además corona), se elige uno solo — nunca se
+// muestra más de un comentario por jugada.
+const COMMENTARY_EVENTS = {
+    // Los tres desenlaces de la partida tienen prioridad absoluta -- si
+    // la jugada que se acaba de jugar terminó el partido, ninguno de
+    // los doce eventos "de mitad de partida" de más abajo compite con
+    // ellos (ver el parámetro gameEndedWinner en detectCommentaryEvent,
+    // que directamente devuelve uno de estos tres sin llegar a mirar el
+    // resto). El orden entre ellos tres no importa, porque son
+    // mutuamente excluyentes -- un partido no puede terminar de dos
+    // formas distintas a la vez.
+    VICTORIA: { priority: 1 },
+    DERROTA: { priority: 2 },
+    EMPATE: { priority: 3 },
+
+    CORONACION_SUFRIDA: { priority: 4 },
+    CORONACION_PROPIA: { priority: 5 },
+    CAPTURA_MULTIPLE_SUFRIDA: { priority: 6 },
+    CAPTURA_MULTIPLE_PROPIA: { priority: 7 },
+    TODO_DAMAS: { priority: 8 },
+    POCAS_FICHAS_EN_DESVENTAJA: { priority: 9 },
+    DIFERENCIA_GRANDE_EN_CONTRA: { priority: 10 },
+    DIFERENCIA_GRANDE_A_FAVOR: { priority: 11 },
+    PARIDAD_POCAS_FICHAS: { priority: 12 },
+    PARTIDO_LARGO: { priority: 13 },
+    INICIO_HOSTILIDADES: { priority: 14 },
+    COMENTARIO_ALEATORIO: { priority: 15 },
+
+    // INICIO_PARTIDA no pasa nunca por el arbitraje de prioridad de acá
+    // abajo -- se dispara aparte, con su propio llamado directo a
+    // pickBotDialogueLine, justo al arrancar la partida (antes de que
+    // exista ningún turno del que hablar). Nunca puede coincidir con
+    // ningún otro evento, así que el número de prioridad es puramente
+    // decorativo/documentación.
+    INICIO_PARTIDA: { priority: 16 }
+};
+
+// Números ajustables a mano, todos juntos acá para que sea fácil
+// retocarlos sin tener que buscar entre la lógica de detección.
+const DIFERENCIA_GRANDE_UMBRAL = 3;              // fichas de diferencia para considerarla "grande"
+const DIFERENCIA_GRANDE_TURNOS_SOSTENIDOS = 2;   // cuántos turnos seguidos tiene que sostenerse para contar
+const POCAS_FICHAS_DESVENTAJA_MAX_FICHAS = 4;    // el bot tiene que tener esta cantidad o menos...
+const POCAS_FICHAS_DESVENTAJA_MIN_DIFERENCIA = 3; // ...Y estar perdiendo por al menos esta diferencia
+const PARIDAD_POCAS_FICHAS_CANTIDAD = 4;         // ambos lados con esta cantidad exacta
+const PARTIDO_LARGO_UMBRAL_JUGADAS = 110;
+const COMENTARIO_ALEATORIO_MIN_JUGADAS = 15;
+const COMENTARIO_ALEATORIO_MAX_JUGADAS = 25;
+
+// Estado inicial: se crea una vez al empezar una partida contra un bot,
+// y se le va pasando de ida y vuelta a detectCommentaryEvent en cada
+// jugada. Si el llamador arranca un partido nuevo, tiene que volver a
+// llamar a esta función — nunca reciclar el estado de un partido
+// anterior.
+function createInitialCommentaryState() {
+    return {
+        sustainedDiff: { direction: null, count: 0 },
+        allKingsFired: false,
+        hostilitiesFired: false,
+        longGameFired: false,
+        pocasFichasDesventajaPrev: false,
+        paridadPocasFichasPrev: false,
+        movesSinceRandomComment: 0,
+        nextRandomThreshold: COMENTARIO_ALEATORIO_MIN_JUGADAS + Math.floor(Math.random() * (COMENTARIO_ALEATORIO_MAX_JUGADAS - COMENTARIO_ALEATORIO_MIN_JUGADAS + 1))
+    };
+}
+
+function countPiecesByColor(boardForSearch, color) {
+    let count = 0;
+    for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 10; c++) {
+            const piece = boardForSearch[r][c];
+            if (piece && piece.toLowerCase() === color) count++;
+        }
+    }
+    return count;
+}
+
+// true si hay al menos una pieza en el tablero y NINGUNA es peón (de
+// cualquiera de los dos colores). Una vez que esto es verdad, se queda
+// siendo verdad el resto de la partida (las piezas solo se capturan,
+// nunca "descoronan"), así que alcanza con dispararlo una sola vez.
+function boardIsAllKings(boardForSearch) {
+    let hasAnyPiece = false;
+    for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 10; c++) {
+            const piece = boardForSearch[r][c];
+            if (!piece) continue;
+            hasAnyPiece = true;
+            if (piece === piece.toLowerCase()) return false; // es un peón
+        }
+    }
+    return hasAnyPiece;
+}
+
+// board: el tablero YA CON el turno completo aplicado (como queda justo
+//     antes de llamar a changeTurn() en index.html).
+// turnHops: los saltos de ESTE turno nada más (para un movimiento
+//     simple, un solo elemento; para una captura múltiple, uno por cada
+//     escalón de la cadena) — cada uno con AL MENOS {captured, crowned},
+//     que es exactamente la forma de las entradas que index.html ya
+//     agrega a moveHistory. El llamador arma este array tomando la cola
+//     de moveHistory (las últimas entradas consecutivas del mismo
+//     color que se acaba de mover).
+// moverColor: 'w' o 'b', quién jugó este turno.
+// botColor: el color que juega el bot (en una partida real, siempre 'b').
+// moveNumber: cuántas jugadas van en total en la partida hasta ahora
+//     (alcanza con pasar moveHistory.length).
+// state: el estado devuelto la vez anterior (o createInitialCommentaryState()
+//     si es la primera jugada del partido).
+// gameEndedWinner: undefined/null mientras la partida sigue en curso, o
+//     'w' | 'b' | 'draw' si la jugada que se acaba de jugar TERMINÓ la
+//     partida (index.html ya sabe esto por su propio checkGameOver, y
+//     nos lo pasa acá). Cuando viene informado, se devuelve VICTORIA,
+//     DERROTA o EMPATE directamente, sin ni siquiera calcular el resto
+//     de los doce eventos de mitad de partido — no hace falta, porque
+//     estos tres tienen prioridad absoluta y siempre le ganarían igual.
+//
+// Devuelve { event, state }: event es el código de UN evento (o null si
+// no pasó nada digno de comentario esta jugada), y state es el estado
+// actualizado para la próxima llamada.
+function detectCommentaryEvent(board, turnHops, moverColor, botColor, moveNumber, state, gameEndedWinner) {
+    const newState = {
+        ...state,
+        sustainedDiff: { ...state.sustainedDiff }
+    };
+
+    if (gameEndedWinner) {
+        let event;
+        if (gameEndedWinner === "draw") event = "EMPATE";
+        else if (gameEndedWinner === botColor) event = "VICTORIA";
+        else event = "DERROTA";
+        return { event, state: newState };
+    }
+
+    const opponentColor = (botColor === "w") ? "b" : "w";
+    const candidates = [];
+
+    // --- Eventos instantáneos, ligados a los saltos de este turno ---
+    const wasMultipleCapture = turnHops.length >= 2 && turnHops.every(h => h.captured);
+    const didCrown = turnHops.some(h => h.crowned);
+
+    if (moverColor === opponentColor) {
+        if (didCrown) candidates.push("CORONACION_SUFRIDA");
+        if (wasMultipleCapture) candidates.push("CAPTURA_MULTIPLE_SUFRIDA");
+    } else if (moverColor === botColor) {
+        if (didCrown) candidates.push("CORONACION_PROPIA");
+        if (wasMultipleCapture) candidates.push("CAPTURA_MULTIPLE_PROPIA");
+    }
+
+    // --- Eventos de estado del tablero ---
+    const botPieces = countPiecesByColor(board, botColor);
+    const oppPieces = countPiecesByColor(board, opponentColor);
+    const diff = botPieces - oppPieces; // positivo = a favor del bot
+
+    if (boardIsAllKings(board) && !newState.allKingsFired) {
+        candidates.push("TODO_DAMAS");
+        newState.allKingsFired = true;
+    }
+
+    const pocasFichasDesventajaNow =
+        botPieces <= POCAS_FICHAS_DESVENTAJA_MAX_FICHAS &&
+        (oppPieces - botPieces) >= POCAS_FICHAS_DESVENTAJA_MIN_DIFERENCIA;
+    if (pocasFichasDesventajaNow && !newState.pocasFichasDesventajaPrev) {
+        candidates.push("POCAS_FICHAS_EN_DESVENTAJA");
+    }
+    newState.pocasFichasDesventajaPrev = pocasFichasDesventajaNow;
+
+    // Diferencia grande sostenida: solo dispara EXACTAMENTE cuando el
+    // contador llega al umbral de turnos seguidos (no antes, y no se
+    // repite en los turnos posteriores mientras se mantenga la misma
+    // racha — para eso habría que perderla y que vuelva a aparecer).
+    let currentDirection = null;
+    if (diff >= DIFERENCIA_GRANDE_UMBRAL) currentDirection = "favor";
+    else if (diff <= -DIFERENCIA_GRANDE_UMBRAL) currentDirection = "contra";
+
+    if (currentDirection && currentDirection === newState.sustainedDiff.direction) {
+        newState.sustainedDiff.count += 1;
+    } else {
+        newState.sustainedDiff = { direction: currentDirection, count: currentDirection ? 1 : 0 };
+    }
+    if (newState.sustainedDiff.count === DIFERENCIA_GRANDE_TURNOS_SOSTENIDOS) {
+        if (newState.sustainedDiff.direction === "favor") candidates.push("DIFERENCIA_GRANDE_A_FAVOR");
+        else if (newState.sustainedDiff.direction === "contra") candidates.push("DIFERENCIA_GRANDE_EN_CONTRA");
+    }
+
+    const paridadPocasFichasNow = botPieces === PARIDAD_POCAS_FICHAS_CANTIDAD && oppPieces === PARIDAD_POCAS_FICHAS_CANTIDAD;
+    if (paridadPocasFichasNow && !newState.paridadPocasFichasPrev) {
+        candidates.push("PARIDAD_POCAS_FICHAS");
+    }
+    newState.paridadPocasFichasPrev = paridadPocasFichasNow;
+
+    if (moveNumber >= PARTIDO_LARGO_UMBRAL_JUGADAS && !newState.longGameFired) {
+        candidates.push("PARTIDO_LARGO");
+        newState.longGameFired = true;
+    }
+
+    if (countTotalPieces(board) < STARTING_PIECE_COUNT && !newState.hostilitiesFired) {
+        candidates.push("INICIO_HOSTILIDADES");
+        newState.hostilitiesFired = true;
+    }
+
+    // Comentario aleatorio: el contador avanza en TODAS las jugadas
+    // (propias y del rival por igual, ya que es puro "ambiente" y no
+    // depende de quién jugó), y dispara al llegar al umbral sorteado
+    // — que se vuelve a sortear para la próxima vez.
+    newState.movesSinceRandomComment += 1;
+    if (newState.movesSinceRandomComment >= newState.nextRandomThreshold) {
+        candidates.push("COMENTARIO_ALEATORIO");
+        newState.movesSinceRandomComment = 0;
+        newState.nextRandomThreshold = COMENTARIO_ALEATORIO_MIN_JUGADAS + Math.floor(Math.random() * (COMENTARIO_ALEATORIO_MAX_JUGADAS - COMENTARIO_ALEATORIO_MIN_JUGADAS + 1));
+    }
+
+    // --- Se elige UNA sola por prioridad ---
+    if (candidates.length === 0) return { event: null, state: newState };
+    candidates.sort((a, b) => COMMENTARY_EVENTS[a].priority - COMMENTARY_EVENTS[b].priority);
+    return { event: candidates[0], state: newState };
+}

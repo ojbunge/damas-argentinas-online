@@ -418,12 +418,21 @@ io.on('connection', (socket) => {
         const game = activeGames[room];
         if (game && !game.concluded) {
             game.concluded = true;
-            const winnerId = (data.winner === 'w') ? game.w : game.b;
-            const loserId = (data.winner === 'w') ? game.b : game.w;
-            const winnerName = connectedUsers[winnerId]?.username;
-            const loserName = connectedUsers[loserId]?.username;
-            if (winnerName && loserName) {
-                pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${loserName}`);
+
+            if (data.winner === 'draw') {
+                const whiteName = connectedUsers[game.w]?.username;
+                const blackName = connectedUsers[game.b]?.username;
+                if (whiteName && blackName) {
+                    pushSystemMessage(io, `🤝 ${whiteName} y ${blackName} han empatado`);
+                }
+            } else {
+                const winnerId = (data.winner === 'w') ? game.w : game.b;
+                const loserId = (data.winner === 'w') ? game.b : game.w;
+                const winnerName = connectedUsers[winnerId]?.username;
+                const loserName = connectedUsers[loserId]?.username;
+                if (winnerName && loserName) {
+                    pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${loserName}`);
+                }
             }
 
             // --- GODOFREDO LOS DEVUELVE AL SALÓN --- (ver mismo comentario en player-surrendered)

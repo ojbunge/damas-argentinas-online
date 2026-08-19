@@ -55,10 +55,11 @@
             align-items: center;
             padding-top: 20px;
             /* Espacio de respiro al final: el aviso legal (#siteFooter) es
-               "position: fixed" y flota por encima del contenido, así que
-               sin este padding, lo último de la página (el nombre del
-               jugador) queda tapado al scrollear del todo hacia abajo. */
-            padding-bottom: 40px;
+               "position: fixed" y flota por encima del contenido. Bajado
+               de 40px a 20px (a pedido de Otto) para que la separación
+               visible entre el nombre del jugador y el tope del aviso
+               quede en ~10px en vez de ~30px, ahorrando espacio vertical. */
+            padding-bottom: 20px;
             color: white;
             margin: 0;
             min-height: 100vh;
@@ -156,15 +157,11 @@
             align-items: center;
         }
 
-        /* Ya no existe #boardColumn como wrapper aparte: topPlayerName,
-           board, bottomPlayerName y moveHistoryPanel son todos hijos
-           directos de #boardAndHistoryWrapper -- necesario para que, en
-           el layout de escritorio de más abajo, el tablero y el
-           historial puedan compartir la MISMA fila de una grilla (así
-           el historial iguala la altura real del tablero automáticamente,
-           sin tener que adivinar cuánto mide la fila del nombre). En
-           móvil (sin la media query) esto sigue apilando los cuatro en
-           una sola columna centrada, exactamente como antes. */
+        #boardColumn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
         #moveHistoryPanel {
             width: min(90vw, 480px);
@@ -228,35 +225,38 @@
            se saliera del viewport en anchos cercanos al viejo umbral de 950px.) */
         @media (min-width: 1100px) {
             #boardAndHistoryWrapper {
-                display: grid;
-                grid-template-columns: auto 190px;
-                grid-template-rows: auto auto auto;
-                /* fila 1: nombre de arriba -- fila 2: tablero -- fila 3: nombre de abajo */
-                column-gap: 18px;
-                justify-items: center;
-                /* centra topPlayerName/board/bottomPlayerName dentro de
-                   su columna (por si alguno es más angosto que otro),
-                   igual que hacía #boardColumn antes de sacarlo */
+                display: block;
+                position: relative;
                 width: fit-content;
             }
 
-            #topPlayerName { grid-column: 1; grid-row: 1; }
-            #board { grid-column: 1; grid-row: 2; }
-            #bottomPlayerName { grid-column: 1; grid-row: 3; }
-
             #moveHistoryPanel {
-                grid-column: 2;
-                grid-row: 2;
+                position: absolute;
+                /* "top" ya NO es un valor fijo en CSS -- lo calcula JS
+                   (ver alignMoveHistoryTop) midiendo la altura real del
+                   banner de arriba (#topPlayerName), para que el TOPE
+                   del historial coincida con el TOPE DEL TABLERO
+                   específicamente, no con el tope de todo el conjunto de
+                   arriba. A propósito NO se comparte ninguna fila/altura
+                   con el tablero (ni grid ni nada parecido): esa
+                   fue la causa real de que, en el intento anterior, el
+                   tablero quedara "enganchado" y arrastrado hacia abajo
+                   a medida que crecía el historial. Acá quedan
+                   completamente desacoplados: el historial tiene su
+                   propio max-height fijo con scroll interno, y el
+                   tablero no sabe nada de él. */
+                left: 100%;
+                margin-left: 18px;
+                margin-top: 0;
                 width: 190px;
-                /* Al compartir la fila 2 con #board, y con el "stretch"
-                   por defecto de CSS Grid en el eje vertical, el panel
-                   queda EXACTAMENTE tan alto como el tablero, sea cual
-                   sea su tamaño real -- no hace falta un número fijo
-                   (como el viejo max-height:608px) que se desactualiza
-                   cada vez que el tablero cambia de tamaño. */
-                height: 100%;
-                max-height: none;
-                margin: 0;
+                max-height: 608px;
+            }
+
+            .bot-speech-bubble {
+                /* En escritorio sobra lugar a la derecha (el historial
+                   recién empieza más abajo, a la altura del tablero, no
+                   acá arriba) -- un ancho más generoso que en móvil. */
+                max-width: 340px;
             }
         }
 
@@ -283,6 +283,25 @@
             cursor: pointer;
             transition: 0.3s;
             margin-left: 5px;
+        }
+
+        /* Botón para silenciar los cuadros de diálogo de los bots -- solo
+           tiene sentido en partidas contra un bot, así que arranca oculto
+           y start-game lo muestra u oculta según corresponda. No hace
+           falta que recuerde la preferencia entre partidas (a diferencia
+           del de sonido), así que es más simple: solo una variable en
+           memoria. */
+        #muteDialogueBtn {
+            padding: 8px 10px;
+            background: #7f8c8d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-left: 5px;
+            font-size: 14px;
+            display: none;
         }
 
         #surrenderBtn:hover {
@@ -537,7 +556,17 @@
         }
 
         #userList {
-            margin: 20px 0;
+            /* margin horizontal "auto" (no 0): esto es lo que faltaba
+               para que quede centrado de verdad dentro de #lobbySection,
+               sin importar cuánto se ensanche ese contenedor -- antes,
+               con margin-izquierdo/derecho en 0, #userList quedaba
+               pegado contra la izquierda, y solo PARECÍA centrado
+               mientras #lobbySection era angosto. En cuanto aparece el
+               texto largo de "esperando respuesta de..." tras un
+               desafío, #lobbySection se ensancha para darle lugar a ese
+               texto, y ahí se notaba el corrimiento hacia la izquierda.
+               Con "auto" queda bien centrado en cualquier caso. */
+            margin: 20px auto;
             width: min(300px, 85vw);
             box-sizing: border-box;
             /* Antes era un techo fijo de 200px, que con muy poca gente
@@ -989,6 +1018,30 @@
         /*  LA SALA DE ARMAS (selección de bots)                */
         /* ================================================== */
 
+        /* Título + subtítulo del Salón, agrupados para poder separarlos
+           del resto (el botón de bots, la lista de rivales) con un
+           margen inferior extra, sin tocar la distancia que ya tenían
+           entre sí. Esa separación es puramente visual: ayuda a que se
+           lea como "encabezado" aparte de "opciones para jugar". */
+        .lobby-header-group {
+            /* 40px más que el espacio que había antes (medido: 16px),
+               a pedido de Otto -- separa visualmente el título del resto. */
+            margin-bottom: 54px;
+        }
+
+        /* La leyenda que invita a jugar contra un bot si no hay humanos
+           disponibles -- chica, amarilla, centrada, justo arriba del
+           botón correspondiente. */
+        .bots-hint-text {
+            color: #f1c40f;
+            /* mismo tamaño que "Seleccione un oponente..." (16px) */
+            font-size: 16px;
+            text-align: center;
+            max-width: 530px;
+            margin: 0 auto 4px auto;
+            line-height: 1.4;
+        }
+
         /* Botón en el Salón, para entrar a elegir un bot. Paleta de acero
            (a diferencia del dorado de Reglas) para diferenciarlo visualmente
            como "otra cosa" — un atajo a un cuarto distinto del castillo. */
@@ -999,7 +1052,7 @@
             border: 2px solid #3d454d;
             border-radius: 8px;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
             font-family: 'Segoe UI', Tahoma, sans-serif;
             cursor: pointer;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
@@ -1106,9 +1159,6 @@
             letter-spacing: 0.5px;
             padding: 8px 10px;
             border-bottom: 2px solid rgba(241, 196, 15, 0.4);
-            position: sticky;
-            top: 0;
-            background: rgba(20, 14, 8, 0.92);
         }
 
         .bot-row {
@@ -1218,7 +1268,17 @@
             padding: 12px 18px;
             background: rgba(0, 0, 0, 0.45);
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .arms-room-hint {
+            color: #f1c40f;
+            font-size: 12px;
+            text-align: center;
+            margin: 0;
+            white-space: nowrap;
         }
 
         #startBotGameBtn {
@@ -1249,26 +1309,120 @@
             flex-shrink: 0;
         }
 
-        /* --- EL PREGONERO HABLA (globo de diálogo) --- */
-        /* Envuelve al círculo de la cara para que sirva de ancla del
-           globo -- así el globo queda centrado en el CÍRCULO puntual,
-           no en toda la fila (que cambia de ancho según el largo del
-           nombre del personaje). */
-        .bot-avatar-wrap {
-            position: relative;
-            display: inline-flex;
-            flex-shrink: 0;
+        /* --- EL BANNER DEL BOT --- */
+        /* Reemplaza, SOLO cuando se juega contra un bot, el contenido de
+           #topPlayerName (que para un duelo humano sigue siendo la fila
+           simple círculo+nombre de siempre, sin cambios). Ocupa el mismo
+           alto total que medimos en la fila simple original (98px, entre
+           el borde inferior de la barra de espectadores y el borde
+           superior del tablero) para no correr el tablero de lugar --
+           .player-name-label.has-bot-banner le saca a #topPlayerName su
+           propio margen, porque acá esos 98px ya son el total, no hace
+           falta sumarle nada más. */
+        .player-name-label.has-bot-banner {
+            margin: 0;
+            display: block;
         }
 
-        .bot-speech-bubble {
-            --tail-offset: 0px;
+        .bot-banner {
+            position: relative;
+            height: 98px;
+            width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
+            /* el mismo ancho exacto del tablero, calculado con las mismas
+               variables que usa #board -- así quedan siempre alineados,
+               sea cual sea el tamaño real de pantalla */
+            margin: 0 auto;
+        }
+
+        .bot-avatar-wrap {
             position: absolute;
-            bottom: 100%;
-            margin-bottom: 12px;
-            /* deja lugar para la colita */
-            min-width: 140px;
-            max-width: min(280px, 85vw);
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            /* a mitad de camino entre la barra de espectadores y el tablero */
+            z-index: 2;
+        }
+
+        .bot-name-text {
+            position: absolute;
+            left: 84px;
+            /* círculo (66px) + un respiro chico */
+            right: 0;
+            bottom: 0;
+            font-family: 'Garamond', 'Georgia', serif;
+            /* 1em, NO 1.5em: este elemento ya vive adentro de
+               #topPlayerName, que tiene la clase .player-name-label con
+               font-size:1.5em -- poniendo acá OTRO 1.5em se multiplica en
+               cascada (1.5 × 1.5 = 2.25x el tamaño base), que es
+               justamente el bug que hacía que el nombre del bot saliera
+               mucho más grande que el del humano (que solo tiene un nivel
+               de anidamiento, no dos). Con 1em hereda el 1.5x ya aplicado
+               una sola vez, igual que el nombre humano. */
+            font-size: 1em;
+            color: white;
+            text-shadow: 1px 1px 3px black;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            /* Centrado DENTRO de su propio contenedor (que va del borde
+               derecho del círculo hasta el borde derecho del tablero) --
+               a pedido de Otto. No es el centro exacto del tablero (el
+               círculo se come una porción de la izquierda), pero se ve
+               mucho mejor que pegado contra la izquierda. */
+            text-align: center;
+            white-space: nowrap;
+            /* A propósito, SIN overflow:hidden acá -- eso recortaría el
+               texto con puntos suspensivos calculando sobre el ancho SIN
+               comprimir, antes de que checkBotNameOverflow() aplique la
+               compresión horizontal (ver más abajo), arruinando el
+               propósito de comprimir para que entre completo. El recorte
+               queda reservado para .truncate-fallback, el último recurso
+               si ni comprimiendo al máximo razonable alcanza. */
+        }
+
+        /* Último recurso: si ni comprimiendo el nombre hasta el piso de
+           legibilidad (ver el 0.6 en checkBotNameOverflow) alcanza para
+           que entre completo, ahí sí recortamos con puntos suspensivos
+           -- mejor eso que dejar que el nombre se salga de su lugar. */
+        .bot-name-text.truncate-fallback {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Para los nombres tan largos que ni siquiera entran ya con el
+           tamaño corregido (candidato principal: "Princesa María Eugenia
+           de China", el más largo del elenco) -- en vez de cambiar de
+           fuente (arriesgando que no combine bien con 'Garamond'),
+           comprimimos horizontalmente el mismo texto, con la misma
+           tipografía, vía transform:scaleX. Mantiene la estética
+           original tal como pidió Otto, solo que más angosta.
+           La cantidad de compresión se calcula en JS (ver
+           checkBotNameOverflow), no es un valor fijo acá: comprobamos
+           que hace falta comprimir MUY distinto según el ancho de
+           pantalla (con "Princesa María Eugenia de China", apenas un 5%
+           en escritorio ancho, pero mucho más en un celular angosto) --
+           un valor fijo funcionaría mal para alguno de los dos casos.
+           style.transform se aplica directo por JS, no una clase. */
+
+        /* --- EL PREGONERO HABLA (globo de diálogo) --- */
+        .bot-speech-bubble {
+            position: absolute;
+            left: 84px;
+            bottom: 44px;
+            /* valor de arranque -- showBotSpeechBubble lo ajusta con la
+               altura real del nombre en cuanto se muestra, así queda
+               bien sin importar cuánto mida el texto */
+            box-sizing: border-box;
+            /* así max-width incluye el padding y el borde -- si no, el
+               ancho visual real termina siendo mayor al calculado */
+            /* Por defecto (pantalla angosta, el mismo punto de quiebre en
+               el que el historial baja debajo del tablero): el globo no
+               puede ser más ancho que el tablero mismo, para que su
+               borde derecho nunca lo sobrepase. En escritorio (ver media
+               query de 1100px más abajo) se permite un ancho más
+               generoso, porque ahí sobra lugar a la derecha. */
+            max-width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding) - 84px);
             width: max-content;
+            min-width: 140px;
             background: rgba(20, 14, 8, 0.94);
             color: #fdf6e3;
             border: 1px solid rgba(241, 196, 15, 0.65);
@@ -1279,47 +1433,45 @@
             line-height: 1.4;
             text-align: left;
             text-transform: none;
-            /* el nombre de arriba está en mayúsculas; el globo no */
             letter-spacing: normal;
             font-weight: normal;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
             opacity: 0;
             pointer-events: none;
-            transform: translateY(6px);
+            transform: translateX(-6px);
             transition: opacity 0.3s ease, transform 0.3s ease;
             z-index: 60;
         }
 
         .bot-speech-bubble.visible {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
         }
 
-        /* La colita: dos triángulos apilados -- uno un poco más grande
-           (hace de "borde"), y uno más chico encima (el relleno real)
-           con el mismo color de fondo del globo, para que el borde del
-           globo y el borde de la colita se sientan como una sola forma
-           continua de dos lados, no un triángulo aparte flotando. */
+        /* La colita: dos triángulos apilados, apuntando hacia la
+           IZQUIERDA esta vez (el globo queda al costado del círculo, no
+           arriba) -- mismo truco de siempre (una capa de "borde" un poco
+           más grande, y el relleno real encima) para que se sienta como
+           una sola forma continua de dos lados, no un triángulo aparte. */
         .bot-speech-bubble::before,
         .bot-speech-bubble::after {
             content: '';
             position: absolute;
-            top: 100%;
-            left: calc(50% + var(--tail-offset));
+            right: 100%;
+            top: var(--tail-top, 20px);
             border-style: solid;
             border-color: transparent;
         }
 
         .bot-speech-bubble::before {
-            transform: translateX(-50%);
             border-width: 9px;
-            border-top-color: rgba(241, 196, 15, 0.65);
+            border-right-color: rgba(241, 196, 15, 0.65);
         }
 
         .bot-speech-bubble::after {
-            transform: translateX(-50%) translateY(-1.5px);
+            transform: translateX(1.5px);
             border-width: 7.5px;
-            border-top-color: rgba(20, 14, 8, 0.94);
+            border-right-color: rgba(20, 14, 8, 0.94);
         }
     </style>
 
@@ -1350,6 +1502,7 @@
         </div>
         <!-- Solo queda el botón de Rendición -->
         <button id="surrenderBtn" onclick="surrender()">Rendirse</button>
+        <button id="muteDialogueBtn" onclick="toggleDialogueMute()" title="Silenciar diálogos de los personajes">🗣️</button>
         <button id="leaveLobbyBtn" onclick="location.reload()"
             style="display: none; padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Salir
             al Lobby</button>
@@ -1362,11 +1515,13 @@
 
     <!-- La Crónica y la Arena, lado a lado -->
     <div id="boardAndHistoryWrapper">
-        <!-- Estandarte del oponente (Arriba) -->
-        <div id="topPlayerName" class="player-name-label"></div>
-        <div id="board"></div>
-        <!-- Estandarte propio (Abajo) -->
-        <div id="bottomPlayerName" class="player-name-label"></div>
+        <div id="boardColumn">
+            <!-- Estandarte del oponente (Arriba) -->
+            <div id="topPlayerName" class="player-name-label"></div>
+            <div id="board"></div>
+            <!-- Estandarte propio (Abajo) -->
+            <div id="bottomPlayerName" class="player-name-label"></div>
+        </div>
 
         <!-- El Mensajero de Godofredo: crónica de jugadas de la partida -->
         <div id="moveHistoryPanel">
@@ -1389,8 +1544,12 @@
         </div>
 
         <div id="lobbySection" style="display: none;">
-            <h2>Salón de los Caballeros</h2>
-            <p>Seleccione un oponente o espere un desafío...</p>
+            <div class="lobby-header-group">
+                <h2>Salón de los Caballeros</h2>
+                <p>Seleccione un oponente o espere un desafío...</p>
+            </div>
+            <p class="bots-hint-text">¿No hay otros humanos para jugar? Entrá a la Sala de Armas y jugá
+                contra uno de nuestros bots ¡Tenemos para todos los niveles!</p>
             <button class="bots-lobby-btn" onclick="openArmsRoom()">🗡️ Jugar contra un Bot</button>
             <div id="userList">
                 <!-- Aquí aparecerán los nombres -->
@@ -1460,7 +1619,7 @@
                              texto de la descripción envuelva distinto en
                              cada momento y arruinando la medición. -->
                         <col style="width: 150px;">
-                        <col style="width: 40px;">
+                        <col style="width: 60px;">
                         <col style="width: 150px;">
                         <col>
                     </colgroup>
@@ -1478,6 +1637,8 @@
                 </table>
             </div>
             <div id="armsRoomFooter">
+                <p class="arms-room-hint">Si querés observar mejor a tus potenciales oponentes hacé click derecho
+                    sobre la foto + "abrir imagen en una pestaña nueva".</p>
                 <button id="startBotGameBtn" onclick="startBotGame()">⚔️ Jugar contra este Bot</button>
             </div>
         </div>
@@ -1841,6 +2002,30 @@
             isMuted = !isMuted;
             sessionStorage.setItem('damas_muted', isMuted ? 'true' : 'false');
             updateMuteButton();
+        }
+
+        // Silenciar los DIÁLOGOS de los bots es un interruptor aparte del
+        // de sonido -- no hace falta que recuerde la preferencia entre
+        // partidas (a diferencia del de sonido), así que alcanza con una
+        // variable en memoria, sin sessionStorage.
+        let dialoguesMuted = false;
+
+        function updateMuteDialogueButton() {
+            const btn = document.getElementById('muteDialogueBtn');
+            if (btn) btn.style.opacity = dialoguesMuted ? "0.5" : "1";
+        }
+
+        function toggleDialogueMute() {
+            dialoguesMuted = !dialoguesMuted;
+            updateMuteDialogueButton();
+            if (dialoguesMuted) {
+                // Si había un globo visible al momento de silenciar, lo
+                // escondemos ya mismo -- no tiene sentido dejarlo
+                // terminando su tiempo en pantalla.
+                const bubble = document.getElementById('botSpeechBubble');
+                if (bubble) bubble.classList.remove('visible');
+                if (botSpeechBubbleTimeout) { clearTimeout(botSpeechBubbleTimeout); botSpeechBubbleTimeout = null; }
+            }
         }
 
         let whitePlayerName = "Blancas";
@@ -2394,59 +2579,130 @@
         // frase nueva, cortándola de golpe.
         let botSpeechBubbleTimeout = null;
 
-        // Le pone el texto al globo de diálogo y lo hace aparecer con una
-        // transición suave, dejándolo visible un tiempo proporcional al
-        // largo del texto (las frases cortas de Neanderthalius no
-        // necesitan tanto tiempo en pantalla como las más largas de
-        // personajes como Aquitapia) antes de desvanecerse solo.
+        // Le pone el texto al globo de diálogo y lo hace aparecer. El
+        // globo nace anclado por su borde INFERIOR (justo arriba del
+        // nombre) y crece hacia arriba a medida que el texto necesita
+        // más líneas -- nunca empuja nada de lugar, solo tapa
+        // visualmente lo que haga falta (el nombre, la barra de
+        // espectadores) si el texto es largo. Como el círculo queda a
+        // una altura FIJA (centrado en todo el banner), y el globo
+        // puede terminar más alto o más bajo según cuánto texto tenga,
+        // la colita se reposiciona cada vez para seguir apuntando bien
+        // al círculo real, sin importar cuán alto haya crecido el globo.
         function showBotSpeechBubble(text) {
+            if (dialoguesMuted) return;
             const bubble = document.getElementById("botSpeechBubble");
-            const wrap = bubble ? bubble.closest(".bot-avatar-wrap") : null;
-            if (!bubble || !wrap) return; // no estamos en partida contra un bot, o el DOM todavía no se armó
+            const banner = document.querySelector(".bot-banner");
+            if (!bubble || !banner) return; // no estamos en partida contra un bot, o el DOM todavía no se armó
+
+            const nameText = banner.querySelector(".bot-name-text");
+            const circle = banner.querySelector(".bot-avatar-wrap");
 
             if (botSpeechBubbleTimeout) clearTimeout(botSpeechBubbleTimeout);
 
             bubble.textContent = text;
-            bubble.style.left = "0px"; // posición neutra, solo para que el navegador calcule el ancho real con este texto
-            bubble.style.setProperty("--tail-offset", "0px");
+            // Apoyamos el globo justo arriba del nombre, midiendo su alto
+            // REAL en vez de asumir un número fijo (el nombre puede medir
+            // distinto según el personaje, o si el texto llega a
+            // envolver en dos líneas en una pantalla angosta).
+            if (nameText) bubble.style.bottom = (nameText.offsetHeight + 4) + "px";
             bubble.classList.add("visible");
 
-            // Recién acá, con el texto ya puesto, el navegador conoce el
-            // ancho real del globo (min-width/max-width + el largo del
-            // texto deciden cuánto ocupa). Con ese dato calculamos dónde
-            // tendría que ir para quedar centrado sobre el círculo, y lo
-            // recortamos si eso se saldría de la pantalla -- y movemos
-            // la colita en sentido contrario esa misma distancia, para
-            // que siga apuntando al círculo real, no al centro del
-            // globo ya movido.
+            // La colita tiene que apuntar al CÍRCULO real -- medimos su
+            // posición real en pantalla y la del globo ya mostrado, y
+            // calculamos la diferencia directamente (más robusto que
+            // adivinar con una fórmula, funciona sin importar cuánto
+            // termine midiendo el nombre o el globo en cada caso).
             requestAnimationFrame(() => {
-                const bubbleRect = bubble.getBoundingClientRect();
-                const wrapRect = wrap.getBoundingClientRect();
-                const margin = 8;
-                const circleCenterX = wrapRect.left + wrapRect.width / 2; // coordenadas de viewport
-                const idealLeft = circleCenterX - bubbleRect.width / 2;
-                const clampedLeft = Math.min(
-                    Math.max(idealLeft, margin),
-                    window.innerWidth - bubbleRect.width - margin
-                );
-                // "left" en CSS es relativo al ancla (.bot-avatar-wrap),
-                // no al viewport -- convertimos restando su propio borde.
-                bubble.style.left = (clampedLeft - wrapRect.left) + "px";
-
-                const bubbleCenterX = clampedLeft + bubbleRect.width / 2;
-                bubble.style.setProperty("--tail-offset", (circleCenterX - bubbleCenterX) + "px");
+                if (circle) {
+                    const circleRect = circle.getBoundingClientRect();
+                    const bubbleRect = bubble.getBoundingClientRect();
+                    const circleCenterY = circleRect.top + circleRect.height / 2;
+                    // Los 15px de menos son a pedido de Otto: apuntando
+                    // justo al centro del círculo, la colita quedaba muy
+                    // abajo (casi en la boca/mentón) y con mensajes cortos
+                    // no llegaba a engancharse bien con el globo. Subida,
+                    // sigue apuntando a la cara (apenas un poco más
+                    // arriba del centro), pero ahora sí conecta siempre.
+                    const tailTop = Math.max(10, circleCenterY - bubbleRect.top - 15);
+                    bubble.style.setProperty("--tail-top", tailTop + "px");
+                }
             });
 
-            // ~16 caracteres por segundo de lectura, con un piso de 4s
-            // (para que hasta la frase más cortita quede un rato visible)
-            // y sin techo -- una frase de 180 caracteres queda arriba
-            // unos 11 segundos, tiempo de sobra para leerla con calma.
-            const durationMs = Math.max(4000, text.length * 60);
+            // ~16 caracteres por segundo de lectura, con un piso de 4s,
+            // más 3 segundos extra (a pedido de Otto, que sintió corto el
+            // tiempo original) -- una frase de 180 caracteres queda
+            // arriba unos 14 segundos, tiempo de sobra para leerla con calma.
+            const durationMs = Math.max(4000, text.length * 60) + 3000;
             botSpeechBubbleTimeout = setTimeout(() => {
                 bubble.classList.remove("visible");
                 botSpeechBubbleTimeout = null;
             }, durationMs);
         }
+
+        // El tope del historial de jugadas tiene que coincidir con el
+        // tope del TABLERO -- no con el tope de todo el banner de arriba
+        // (círculo+nombre+globo, o la fila simple de un duelo humano),
+        // que puede medir un poco distinto según el caso. A propósito
+        // esto NO comparte ninguna fila/altura con el tablero mismo (ni
+        // grid ni ninguna otra forma de acoplamiento): mide la altura
+        // real del banner con JavaScript y la usa como desplazamiento
+        // del historial, dejando a ambos completamente independientes
+        // uno del otro en cuanto a su propio tamaño (el historial sigue
+        // teniendo su max-height fijo con scroll interno, ajeno a
+        // cualquier cosa que pase con el tablero).
+        function alignMoveHistoryTop() {
+            const banner = document.getElementById("topPlayerName");
+            const boardEl = document.getElementById("board");
+            const historyPanel = document.getElementById("moveHistoryPanel");
+            if (!banner || !boardEl || !historyPanel) return;
+            if (window.innerWidth >= 1100) {
+                // El propio #board tiene un margin-top (10px) que hay que
+                // sumar -- si no, el historial queda 10px más arriba de
+                // lo que corresponde (el tablero empieza un poco más
+                // abajo que el borde inferior del banner, no justo ahí).
+                const boardMarginTop = parseFloat(getComputedStyle(boardEl).marginTop) || 0;
+                historyPanel.style.top = (banner.offsetHeight + boardMarginTop) + "px";
+            } else {
+                historyPanel.style.top = ""; // no aplica en el layout apilado (móvil)
+            }
+        }
+
+        // Si el nombre del bot (ya con el tamaño de letra correcto, igual
+        // al del humano) todavía no entra en el espacio disponible --
+        // candidato principal: "Princesa María Eugenia de China", el más
+        // largo del elenco -- lo comprimimos horizontalmente lo justo y
+        // necesario para que entre entero, sin cambiar de fuente ni de
+        // tamaño de letra. La cantidad de compresión se recalcula cada
+        // vez (no es un valor fijo): medimos cuánto se pasa el texto de
+        // su espacio real, y comprimimos esa proporción exacta -- nunca
+        // más allá de un piso de legibilidad (0.6), por debajo del cual
+        // preferimos que trunque con puntos suspensivos antes que
+        // volverse ilegible.
+        function checkBotNameOverflow() {
+            const el = document.querySelector(".bot-name-text");
+            if (!el) return;
+            // Reseteamos todo antes de medir, para no arrastrar una
+            // compresión o un recorte de una medición anterior (por
+            // ejemplo, si veníamos de un bot con nombre largo y ahora es
+            // uno con nombre corto).
+            el.style.transform = "";
+            el.classList.remove("truncate-fallback");
+            if (el.scrollWidth > el.clientWidth + 1) {
+                const scale = Math.max(0.6, el.clientWidth / el.scrollWidth);
+                el.style.transform = `scaleX(${scale})`;
+                el.style.transformOrigin = "center";
+                // Si ni comprimiendo hasta el piso de legibilidad (0.6)
+                // alcanza para que el nombre entre completo, ahí sí
+                // recortamos con puntos suspensivos como último recurso
+                // -- mejor eso que dejar que el nombre se salga de su
+                // espacio.
+                if (scale <= 0.6 && el.scrollWidth * 0.6 > el.clientWidth + 1) {
+                    el.classList.add("truncate-fallback");
+                }
+            }
+        }
+        window.addEventListener("resize", () => { alignMoveHistoryTop(); checkBotNameOverflow(); });
 
         renderBoard();
         updateTurnIndicator();
@@ -2568,7 +2824,23 @@
             const banner = document.createElement("div");
             banner.id = "victoryBanner";
             banner.style.position = "absolute";
-            banner.style.top = "50%";
+            // Antes "top:50%" centraba el cartel en TODA la página. Ahora
+            // se centra específicamente sobre el TABLERO (a pedido de
+            // Otto, para que las frases de los personajes al pie del
+            // banner de arriba no queden tapadas) -- el tablero, al ser
+            // más alto que el cartel, va a sobresalir por arriba y abajo,
+            // y eso está bien así, tal como pidió. Si por algún motivo
+            // el tablero no estuviera en el DOM (no debería pasar nunca
+            // en este punto), cae de vuelta al centrado de toda la
+            // página, para no romper nada.
+            const boardEl = document.getElementById("board");
+            if (boardEl) {
+                const boardRect = boardEl.getBoundingClientRect();
+                const boardCenterY = boardRect.top + boardRect.height / 2 + window.scrollY;
+                banner.style.top = boardCenterY + "px";
+            } else {
+                banner.style.top = "50%";
+            }
             banner.style.left = "50%";
             banner.style.transform = "translate(-50%, -50%)";
             banner.style.backgroundColor = "rgba(0,0,0,0.9)";
@@ -2739,31 +3011,53 @@
                 // arranca de cero, y en CUALQUIER partida (no solo con bot).
                 oneKingEachStreak = 0;
 
+                // El botón de silenciar diálogos solo tiene sentido en
+                // partidas contra un bot -- se muestra u oculta acá, y la
+                // preferencia arranca de cero en cada partida nueva (no
+                // hace falta que se recuerde entre partidas).
+                dialoguesMuted = false;
+                const muteDialogueBtn = document.getElementById("muteDialogueBtn");
+                if (muteDialogueBtn) {
+                    muteDialogueBtn.style.display = currentBotId ? "inline-block" : "none";
+                    updateMuteDialogueButton();
+                }
+
                 // Lógica de posición según el color
                 if (myColor === 'b') {
                     // Si soy NEGRAS: yo abajo, Blancas arriba
+                    topLabel.classList.remove("has-bot-banner");
                     topLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
                     bottomLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}`;
                 } else {
                     // Si soy BLANCAS o ESPECTADOR: Blancas abajo, Negras arriba.
                     // Contra un bot, el "Negras" de arriba es el bot: mostramos
-                    // su retrato en vez del simple circulito de color.
+                    // su retrato (y su banner de tres partes) en vez del
+                    // simple circulito de color.
                     const bot = currentBotId ? getBotById(currentBotId) : null;
-                    // Foto de CARA (más cerca, se le ve bien la expresión),
-                    // no la foto principal de cuerpo/retrato de la Sala de
-                    // Armas -- vive en su propia subcarpeta, con el mismo
-                    // patrón de nombre que el id de cada bot + "cara".
-                    // El globo de diálogo (#botSpeechBubble) queda anclado
-                    // acá mismo, adentro de bot-avatar-wrap, para que
-                    // apunte siempre al CÍRCULO puntual y no a toda la
-                    // fila (que cambia de ancho según el nombre) -- se
-                    // crea vacío y oculto; showBotSpeechBubble() se
-                    // encarga de llenarlo y mostrarlo cuando haga falta,
-                    // sin tener que volver a tocar este innerHTML.
-                    const blackIndicator = bot
-                        ? `<span class="bot-avatar-wrap"><img class="name-indicator-bot" src="assets/bots/caras/${bot.id}cara.jpg" alt="${blackPlayerName}" onerror="this.style.display='none';"><div id="botSpeechBubble" class="bot-speech-bubble"></div></span>`
-                        : `<div class="name-indicator" style="background:black"></div>`;
-                    topLabel.innerHTML = `${blackIndicator} ${blackPlayerName}`;
+                    if (bot) {
+                        // Círculo arriba-izquierda, nombre abajo cerca del
+                        // tablero, y el globo (#botSpeechBubble) ocupando el
+                        // espacio entre ambos -- las tres partes conviven en
+                        // .bot-banner, que mide EXACTAMENTE lo mismo (98px)
+                        // que medía antes la fila simple círculo+nombre, para
+                        // no correr el tablero de lugar. Foto de CARA (más
+                        // cerca, se le ve bien la expresión), no la foto
+                        // principal de cuerpo/retrato de la Sala de Armas --
+                        // vive en su propia subcarpeta, con el mismo patrón
+                        // de nombre que el id de cada bot + "cara".
+                        topLabel.classList.add("has-bot-banner");
+                        topLabel.innerHTML = `
+                            <div class="bot-banner">
+                                <span class="bot-avatar-wrap">
+                                    <img class="name-indicator-bot" src="assets/bots/caras/${bot.id}cara.jpg" alt="${blackPlayerName}" onerror="this.style.display='none';">
+                                </span>
+                                <div class="bot-name-text">${blackPlayerName}</div>
+                                <div id="botSpeechBubble" class="bot-speech-bubble"></div>
+                            </div>`;
+                    } else {
+                        topLabel.classList.remove("has-bot-banner");
+                        topLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}`;
+                    }
                     bottomLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
                 }
 
@@ -2781,6 +3075,16 @@
                     console.log(`[Pregonero] Evento: INICIO_PARTIDA${line ? ' -> "' + line + '"' : ' (sin frase cargada todavía)'}`);
                     if (line) showBotSpeechBubble(line);
                 }
+
+                // El tope del historial tiene que coincidir con el tope del
+                // TABLERO, no con el tope de todo este banner de arriba (que
+                // ahora puede medir distinto según sea el círculo+globo del
+                // bot o la fila simple de un duelo humano) -- se recalcula
+                // acá porque el contenido de arriba recién se determinó.
+                alignMoveHistoryTop();
+                // Y comprobamos si el nombre del bot recién puesto entra
+                // en su espacio, comprimiéndolo si hace falta.
+                checkBotNameOverflow();
             }
 
             document.getElementById("waitingOverlay").style.display = "none";
@@ -2849,9 +3153,19 @@
             }
 
             // --- EL TRUCO DE GODOFREDO: Guardar nombre en la sesión ---
+            // Si TODAVÍA no había nada guardado, esta es la PRIMERA vez
+            // que este jugador entra en esta sesión de navegador -- se lo
+            // avisamos al servidor para que anuncie su llegada en el chat.
+            // Si ya había un nombre guardado (por ejemplo, estamos
+            // volviendo al lobby después de una partida, vía el
+            // auto-login de más abajo, que llama a esta misma función),
+            // NO es una llegada nueva, así que no corresponde anunciarla
+            // de nuevo -- por eso este chequeo va ANTES de sobreescribir
+            // el nombre guardado.
+            const isFirstArrival = !sessionStorage.getItem('damas_username');
             sessionStorage.setItem('damas_username', name);
 
-            socket.emit('set-username', name);
+            socket.emit('set-username', { username: name, isFirstArrival });
 
             document.getElementById("entranceSection").style.display = "none";
             document.getElementById("lobbySection").style.display = "block";

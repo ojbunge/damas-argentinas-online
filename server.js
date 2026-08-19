@@ -19,6 +19,19 @@ let connectedUsers = {}; // { socketId: { username, status, room } }
 let activeGames = {};    // { roomName: { w: id, b: id, name, board, turn } }
 let botRoomCounter = 0;  // contador incremental para nombres de sala de partidas vs. bot (más robusto que Date.now(), que puede repetirse si dos arrancan en el mismo milisegundo)
 
+// --- EL PERÍODO DE GRACIA DE GODOFREDO ---
+// Volver al lobby después de una partida recarga la página (ver el
+// "location.reload()" del botón "SALIR AL LOBBY"), lo que desconecta el
+// socket viejo y reconecta uno nuevo un instante después -- indistinguible,
+// desde el punto de vista del servidor, de que alguien realmente se fue del
+// sitio. Por eso el aviso de despedida no se manda al toque: se espera un
+// ratito (DEPARTURE_GRACE_MS) y, si el MISMO nombre de usuario se vuelve a
+// conectar en ese lapso, se cancela -- nunca se fue de verdad, fue un
+// reload. Guardado por nombre de usuario (no por socket.id, que cambia en
+// cada reconexión).
+const pendingDepartureTimers = {}; // { username: timeoutHandle }
+const DEPARTURE_GRACE_MS = 4000;
+
 // La posición inicial, igual a la que arranca en el cliente.
 // La usamos para que el servidor tenga SIEMPRE una foto válida del tablero,
 // aunque todavía no se haya jugado ningún movimiento.
@@ -105,15 +118,31 @@ function pushSystemMessage(io, text) {
 
 io.on('connection', (socket) => {
 
-    socket.on('set-username', (username) => {
+    socket.on('set-username', (data) => {
+        const username = data.username;
         connectedUsers[socket.id] = { username: username, status: "lobby", room: null };
+
+        // Si había un aviso de despedida pendiente para este mismo
+        // nombre, lo cancelamos: se acaba de reconectar a tiempo, así
+        // que nunca se fue de verdad (fue un reload al volver al lobby
+        // después de una partida, no un cierre de pestaña).
+        if (pendingDepartureTimers[username]) {
+            clearTimeout(pendingDepartureTimers[username]);
+            delete pendingDepartureTimers[username];
+        }
 
         // Le mandamos el historial reciente del chat antes que nada
         socket.emit('chat-history', chatHistory);
 
-        // Y anunciamos su llegada (esto sí lo va a recibir también él mismo,
-        // como mensaje en vivo, ya que io.emit llega a todos los conectados)
-        pushSystemMessage(io, `🛡️ ${username} se encuentra en el Salón de los Caballeros`);
+        // Y anunciamos su llegada -- pero SOLO la primera vez que este
+        // jugador entra en su sesión de navegador (isFirstArrival lo
+        // decide el cliente, mirando si ya tenía el nombre guardado de
+        // antes). Si está volviendo al lobby después de terminar una
+        // partida, no corresponde anunciarlo de nuevo -- eso pasaba
+        // todo el tiempo y llenaba el chat de avisos poco relevantes.
+        if (data.isFirstArrival) {
+            pushSystemMessage(io, `🛡️ ${username} ha llegado al Castillo`);
+        }
 
         broadcastStatus();
     });
@@ -354,6 +383,11 @@ io.on('connection', (socket) => {
                     io.to(user.room).emit('update-spectators-list', game.spectators);
                 }
             }
+            if (pendingDepartureTimers[user.username]) clearTimeout(pendingDepartureTimers[user.username]);
+            pendingDepartureTimers[user.username] = setTimeout(() => {
+                pushSystemMessage(io, `🚪 ${user.username} se ha ido del Castillo`);
+                delete pendingDepartureTimers[user.username];
+            }, DEPARTURE_GRACE_MS);
             delete connectedUsers[socket.id];
             broadcastStatus();
         }

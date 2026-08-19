@@ -346,43 +346,269 @@ const BOT_DIALOGUE = {
     },
 
     // ---- Nivel 4: Fray Marolio ----
+
     marolio: {
-        VICTORIA: [],
-        DERROTA: [],
-        EMPATE: [],
-        CORONACION_SUFRIDA: [],
-        CORONACION_PROPIA: [],
-        CAPTURA_MULTIPLE_SUFRIDA: [],
-        CAPTURA_MULTIPLE_PROPIA: [],
-        TODO_DAMAS: [],
-        POCAS_FICHAS_EN_DESVENTAJA: [],
-        DIFERENCIA_GRANDE_EN_CONTRA: [],
-        DIFERENCIA_GRANDE_A_FAVOR: [],
-        PARIDAD_POCAS_FICHAS: [],
-        PARTIDO_LARGO: [],
-        INICIO_HOSTILIDADES: [],
-        COMENTARIO_ALEATORIO: [],
-        INICIO_PARTIDA: []
+
+        VICTORIA: [
+            "¡Alabado sea el Señor! ¡Victoria para este humilde servidor de la despensa!",
+            "¡Por la Santísima Trinidad! ¡Hemos vencido! Hoy habrá que celebrar con una lata de arvejas Marolio.",
+            "¡Bendito sea Dios! ¡Quién iba a decir que este humilde fraile podía semejante hazaña!",
+            "¡Gloria al Señor! Y gloria también a las fichas Marolio, que se han comportado con dignidad.",
+            "¡Amén! ¡Victoria! Ahora sí puedo volver a la despensa con el corazón contento."
+        ],
+
+        DERROTA: [
+            "¡Dios y María Santísima! ¡He perdido! Mas no desesperaré: mañana habrá revancha.",
+            "¡Por las barbas de mi Señor! Me habéis derrotado. Tendré que meditar sobre mis errores... después de ordenar la despensa.",
+            "¡Ay, Señor! ¡Qué derrota tan dolorosa! Aunque, bien pensado, hay cosas peores: quedarse sin lentejas Marolio.",
+            "¡Habéis vencido, mi señor! Dios os bendiga... aunque espero que no os dé tanta suerte en la próxima partida.",
+            "¡Santo cielo! ¡Me habéis dado una buena paliza! Pero con fe, paciencia y unas buenas arvejas, todo se remonta."
+        ],
+
+        EMPATE: [
+            "¡Por la Santísima Trinidad! ¡Ni vos ni yo hemos conseguido imponernos!",
+            "Un empate... quizás el Señor haya querido que ninguno de los dos se vaya demasiado contento.",
+            "¡Bendito sea Dios! Ha sido una batalla pareja. Ahora podemos volver cada uno a sus asuntos.",
+            "Empate. Ni victoria ni derrota... como una lata de arvejas: humilde, pero cumplidora."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Dios y María Santísima! ¡Habéis coronado una ficha! ¡Mi defensa ha sido un colador!",
+            "¡Por las barbas de mi Señor! ¡Esa ficha acaba de convertirse en dama! Esto se está poniendo feo.",
+            "¡Santo cielo! ¡Esa ficha ha ascendido! Tendré que pedir ayuda divina para detenerla.",
+            "¡Ay, Señor! ¡Me habéis coronado una ficha delante de mis propias narices! Ni en la despensa me descuidan tanto."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Alabado sea el Señor! ¡Una de mis humildes fichas ha alcanzado la gloria!",
+            "¡Por la Santísima Trinidad! ¡Tenemos nueva dama! ¡Que Dios guíe sus pasos!",
+            "¡Bendito sea Dios! ¡Esta ficha acaba de ascender en la jerarquía del tablero!",
+            "¡Gloria al Señor! Una ficha pequeña, pero con grandes aspiraciones. Como una lata de arvejas que termina en la mesa de un noble."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Dios y María Santísima! ¡Me habéis comido varias fichas de un solo movimiento!",
+            "¡Por las barbas de mi Señor! ¡Eso ha sido una carnicería! ¡Me habéis dejado la despensa casi vacía!",
+            "¡Santo cielo! ¡Habéis arrasado con mis fichas como quien arrasa con una lata de porotos Marolio!",
+            "¡Ay, Señor! ¡Cuántas fichas perdidas de una sola vez! Esto empieza a parecer una mala administración de la despensa."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Alabado sea el Señor! ¡Mirad cuántas fichas hemos recogido de una sola vez!",
+            "¡Por la Santísima Trinidad! ¡Eso sí que ha sido una buena cosecha!",
+            "¡Bendito sea Dios! ¡He limpiado el tablero como quien limpia la despensa de latas vacías!",
+            "¡Gloria al Señor! ¡Una captura digna de un buen aprovisionamiento!",
+            "¡Santo cielo! ¡He recogido más fichas de las que esperaba! ¡Hoy la despensa está de fiesta!"
+        ],
+
+        TODO_DAMAS: [
+            "¡Por la Santísima Trinidad! ¡Ya no quedan fichas pequeñas, sólo damas!",
+            "¡Bendito sea Dios! ¡El tablero entero se ha llenado de damas! Esto parece una corte celestial.",
+            "¡Dios y María Santísima! ¡Ya sólo quedan damas! Tendremos que tratar el tablero con mucho respeto.",
+            "¡Todas damas! ¡Quién iba a pensar que aquellas humildes fichitas llegarían tan lejos!"
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "¡Ay, Señor! ¡Esto ya se está poniendo muy complicado! Necesitaré un milagro para salir de ésta.",
+            "¡Dios y María Santísima! ¡Me quedan muy pocas fichas y la derrota se acerca! ¡Pero aún tengo fe!",
+            "Mi señor, os lo digo con sinceridad: esto está más negro que una despensa sin presupuesto.",
+            "¡Por las barbas de mi Señor! ¡Estoy al borde del abismo! Aunque con fe, todavía puedo darlo vuelta.",
+            "Si el Señor quiere ayudarme, éste sería un momento excelente para hacerlo."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡Ay, Señor! ¡Me estáis dominando con claridad! Tendré que encomendarme a todos los santos.",
+            "¡Por la Santísima Trinidad! ¡El partido se me está yendo de las manos! Pero todavía no está todo perdido.",
+            "¡Dios mío! ¡Qué manera de tomar ventaja! Mas no abandonaré mientras me quede una ficha.",
+            "Esto está complicado, mi señor. Pero Dios ayuda a los que no se rinden... y a los que saben administrar bien sus recursos.",
+            "¡Santo cielo! ¡Me estáis dejando la despensa completamente vacía! Necesito una remontada urgente."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Alabado sea el Señor! ¡Estoy dominando el partido con bastante claridad!",
+            "¡Por las barbas de mi Señor! ¡La partida viene muy favorable para este humilde fraile!",
+            "¡Bendito sea Dios! ¡Mis fichas están marchando como buenos trabajadores hacia una jornada de abundancia!",
+            "¡Gloria al Señor! ¡Hoy parece que hasta las fichas Marolio han venido con buena fortuna!",
+            "¡Santo cielo! ¡Estoy tomando una ventaja que ni yo mismo esperaba!"
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "¡Por la Santísima Trinidad! ¡Quedan muy pocas fichas y todavía puede pasar cualquier cosa!",
+            "¡Dios y María Santísima! ¡Ahora sí que no hay lugar para cometer errores!",
+            "Estamos en la cornisa, mi señor. Una equivocación y el tablero puede cambiar por completo.",
+            "¡Santo cielo! ¡Qué tensión! Aquí una sola ficha puede valer más que toda una despensa.",
+            "Ahora sí comienza la verdadera prueba. Que el Señor tenga misericordia del que se equivoque primero."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡Por todos los santos! ¡Cuánto llevamos jugando! Ya me duele hasta el hábito.",
+            "¡Dios y María Santísima! ¡Esta partida parece no terminar nunca! Tengo una despensa que atender.",
+            "Mi señor, llevamos tanto tiempo con esto que ya podría haber ordenado tres veces toda la despensa.",
+            "¡Santo cielo! ¡Qué partida interminable! A este paso se me va a vencer hasta el arroz Marolio.",
+            "¡Por las barbas de mi Señor! Si seguimos así, voy a necesitar una silla para continuar jugando."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Dios y María Santísima! ¡Ahora sí ha comenzado el combate!",
+            "¡Por la Santísima Trinidad! ¡Primera sangre! Ahora las cosas se ponen serias.",
+            "¡Santo cielo! ¡Ya ha caído la primera ficha! Que Dios nos ayude a todos.",
+            "¡Comienza la batalla de verdad! Y que el Señor proteja mis humildes provisiones."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "Entre vos y yo: mi Señor Otto, Dios lo cuide, es muy amable pero también muy rata con el presupuesto para alimentos.",
+            "Hubiese preferido ser conocido como Fray Harrods, pero con el poco presupuesto que recibo no me queda otra que ser Fray Marolio.",
+            "El otro día dejaron que Neanderthalius llegara hasta la despensa y se comió casi la mitad de lo que había. ¡Dios tenga piedad!",
+            "Leonor de Aquitapia dice que sólo le gusta el asado, pero del guiso de lentejas no come menos de tres platos.",
+            "A veces pienso que la verdadera penitencia no es la vida monástica, sino tener que hacer las compras con el presupuesto de este castillo."
+        ],
+
+        INICIO_PARTIDA: [
+            "¿Qué tenemos aquí? ¡Una nueva partida! Dios y María Santísima, que el Señor guíe mis humildes fichas.",
+            "¡Por la Santísima Trinidad! ¡Comencemos! Aunque primero quisiera saber quién ha dejado estas fichas fuera de la despensa.",
+            "Bendito sea Dios... otra partida de damas. Que el Señor me dé sabiduría, paciencia y un presupuesto un poquito mayor.",
+            "¡Alabado sea el Señor! ¡Vamos a jugar! Si Dios quiere, hoy las fichas se comportarán mejor que los proveedores de la despensa.",
+            "¡Comencemos, pues! Y que la divina providencia acompañe a este humilde fraile en el tablero."
+        ]
+
     },
 
     // ---- Nivel 5: Icardio de Milán ----
+
     icardio: {
-        VICTORIA: [],
-        DERROTA: [],
-        EMPATE: [],
-        CORONACION_SUFRIDA: [],
-        CORONACION_PROPIA: [],
-        CAPTURA_MULTIPLE_SUFRIDA: [],
-        CAPTURA_MULTIPLE_PROPIA: [],
-        TODO_DAMAS: [],
-        POCAS_FICHAS_EN_DESVENTAJA: [],
-        DIFERENCIA_GRANDE_EN_CONTRA: [],
-        DIFERENCIA_GRANDE_A_FAVOR: [],
-        PARIDAD_POCAS_FICHAS: [],
-        PARTIDO_LARGO: [],
-        INICIO_HOSTILIDADES: [],
-        COMENTARIO_ALEATORIO: [],
-        INICIO_PARTIDA: []
+
+        VICTORIA: [
+            "¡Ah, messere! Una victoria digna de ser celebrada con vino, música y una buena serenata.",
+            "¡Che meraviglia! ¡Victoria! El arte de la seducción y el arte de las damas no son tan diferentes después de todo.",
+            "¡Magnifico! Habéis caído ante Icardio de Milán. No os preocupéis, messere: a todos les cuesta resistirse a mis encantos.",
+            "¡Vittoria! Hoy las damas han sido especialmente generosas conmigo.",
+            "¡Bravissimo! Una victoria elegante, como las que aprendí a conquistar en las cortes de Milán."
+        ],
+
+        DERROTA: [
+            "Ah, messere... habéis vencido. Pero no os confiéis: Icardio siempre regresa por aquello que desea.",
+            "¡Mamma mia! ¡Me habéis derrotado! Tendré que practicar más... o buscar una dama que me distraiga de esta derrota.",
+            "Congratulazioni, messere. Hoy habéis sido vos quien se ha llevado la victoria. Pero la próxima partida será otra historia.",
+            "Una derrota... niente di grave. Hasta los mejores seductores reciben algún que otro rechazo.",
+            "¡Per carità! ¡Qué manera de hacerme sufrir! Aunque debo admitir que vuestra victoria ha tenido cierto encanto."
+        ],
+
+        EMPATE: [
+            "Un empate... interessante. Ninguno ha conseguido conquistar definitivamente el corazón del tablero.",
+            "¡Mamma mia! ¡Ni vos ni yo hemos conseguido quedarnos con todas las damas!",
+            "Un empate digno de dos caballeros. Aunque, si me permitís decirlo, yo esperaba conquistar un poco más.",
+            "Ninguno ha logrado seducir al tablero por completo. Una pena... pero ha sido una bella partida, messere."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Ah, finalmente una dama! Ahora sí el juego se pone interesante... aunque no os encariñéis demasiado con ella.",
+            "¡Mamma mia! ¡Habéis conseguido una dama! No tardaré en intentar arrebatárosla, messere.",
+            "Una dama nueva... poderosa, altiva y fuera de mi alcance, por ahora. Pero Icardio nunca abandona el cortejo.",
+            "¡Che bella dama! Aunque debo advertiros que las damas ajenas siempre despiertan especialmente mi curiosidad.",
+            "¡Una dama! Qué alegría para vos... aunque me temo que vuestra alegría podría ser bastante breve."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Finalmente! ¡Una dama digna de acompañar a Icardio de Milán!",
+            "¡Che meraviglia! ¡Una dama, poderosa y altiva como una donzella genovesa!",
+            "¡Mamma mia! ¡Ha nacido una nueva dama! Prometo tratarla con toda la elegancia que aprendí en Milán.",
+            "¡Una dama para Icardio! Ah, messere, ahora sí comienza el verdadero cortejo.",
+            "¡Magnifica! Esta dama acaba de entrar en mi corte. Veremos cuánto tiempo consigo conservarla."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Mamma mia! ¡Me habéis arrebatado varias fichas de una sola vez! Eso ha sido una verdadera tragedia amorosa.",
+            "¡Per carità! ¡Qué carnicería! Ni siquiera tuve tiempo de cortejar a esas pobres fichas.",
+            "Messere, habéis arrasado con mis piezas como las tropas que conocí en mis viajes por Europa.",
+            "¡Che disastro! ¡Habéis hecho desaparecer mis fichas más rápido que un rechazo de una bella ragazza!",
+            "¡Mamma mia! La Torre Gálata de Constantinopla cayó más lentamente que mis piezas."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Ah, messere! ¡He conquistado varias de vuestras fichas en un solo movimiento! Qué deliciosa conquista.",
+            "¡Magnifico! Una, dos, tres... ¡qué manera tan elegante de conquistar!",
+            "¡Che meraviglia! Mis fichas avanzan con la precisión de un caballero que sabe exactamente a qué dama cortejar.",
+            "¡Mamma mia! ¡Cuántas conquistas de una sola vez! Mi reputación sigue intacta.",
+            "¡Bravissimo! En Barcelona aprendí a cortejar; en Milán aprendí a conquistar; hoy aplico ambas artes al tablero."
+        ],
+
+        TODO_DAMAS: [
+            "¡Mamma mia! ¡Sólo quedan damas! Ahora sí estamos jugando un juego que me resulta verdaderamente familiar.",
+            "¡Che meraviglia! ¡El tablero se ha convertido en una auténtica corte de damas!",
+            "Todas damas... esto ya parece una noche en la corte de Milán.",
+            "¡Finalmente, un tablero digno de Icardio! Sólo quedan damas, messere.",
+            "¡Ah, le dame! Ahora comienza la parte verdaderamente interesante de la partida."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "¡Mamma mia! Esto está más difícil que seducir a una ragazza milanese que ya tiene pretendiente.",
+            "Messere, debo reconocer que la situación se ha puesto bastante complicada... aunque todavía conservo algunos encantos.",
+            "¡Per carità! ¡Me quedan pocas fichas! Necesitaré una conquista verdaderamente milagrosa.",
+            "Esto se pone más difícil que convencer a una dama parisina de aceptar una serenata mía.",
+            "¡Che disastro! La partida se me escapa de las manos más rápido que una bella dama después de escuchar mi última serenata."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡Mamma mia! ¡Me estáis sacando una ventaja considerable! Tendré que cambiar de estrategia.",
+            "Messere, debo admitir que la partida se ha puesto difícil. Pero todavía puedo conquistar el tablero.",
+            "¡Per carità! ¡Mis fichas están cayendo como pretendientes rechazados por una dama de Milán!",
+            "Esto empieza a parecer una conquista imposible... pero Icardio jamás abandona una dama que le interesa.",
+            "¡Che disastro! La partida está complicada, pero todavía tengo algunos trucos aprendidos en las cortes de Europa."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Che meraviglia! ¡La partida se está poniendo tan interesante como María Eugenia de China!",
+            "¡Magnifico! Mis fichas avanzan por el tablero con la elegancia de un caballero entrando en una corte.",
+            "Messere, parece que hoy soy yo quien está conquistando territorio... y con bastante éxito.",
+            "¡Mamma mia! ¡Qué ventaja tan encantadora! Esto está resultando incluso mejor que una noche en Milán.",
+            "¡Bravissimo! El tablero está cayendo bajo mis encantos. No digáis que no os advertí."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "¡Mamma mia! Quedan muy pocas fichas y cualquier movimiento puede cambiarlo todo.",
+            "Ahora sí, messere: estamos en territorio peligroso. Un solo error y la dama puede cambiar de dueño.",
+            "¡Che tensione! Esto es como cortejar a una dama indecisa: cualquier movimiento puede ser el último.",
+            "Quedan pocas piezas... ahora comienza el verdadero arte de la seducción, digo, de las damas.",
+            "¡Per carità! Aquí no hay lugar para errores. El que se descuide, pierde su última oportunidad de conquista."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡Mamma mia! ¡Llevamos tanto tiempo jugando que podría haber viajado de Milán a Constantinopla!",
+            "Messere, esta partida es más larga que una serenata mía en una noche de verano.",
+            "¡Por todos los santos! ¡Qué partida interminable! Ya he conocido cortes más breves.",
+            "A este ritmo, tendremos tiempo de viajar a Barcelona, volver a Milán y regresar antes de terminar.",
+            "¡Che fatica! Una partida tan larga requiere más resistencia que cortejar a una dama durante toda una noche."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Ah, finalmente! ¡Ahora sí comienza el verdadero cortejo!",
+            "¡Mamma mia! ¡Primera captura! Ahora la partida se pone interesante.",
+            "¡Che bello! Ya ha comenzado la conquista. Veamos quién se queda con las damas.",
+            "¡Finalmente hay acción! Hasta ahora esto parecía más una conversación cortesana que una batalla."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "En Barcelona aprendí mis primeras artes de cortejo. En Milán perfeccioné la técnica. En París aprendí que no todas las damas aprecian una serenata.",
+            "He recorrido Barcelona, Génova, Milán, París y Constantinopla... y en todas partes he encontrado damas interesantes.",
+            "Cierto es que las señoritas parisinas no son muy aficionadas al baño, pero el aroma que despiden no es nada comparado con el de Empecid Campeador.",
+            "A veces extraño Constantinopla. La Torre Gálata, las tabernas, las damas... ¡qué tiempos aquellos!",
+            "Leonor de Aquitapia es una mujer de carácter. Aun así, creo que una serenata desde su balcón podría resultarle encantadora.",
+            "María Eugenia de China tiene una elegancia verdaderamente admirable. Si alguna vez necesita un juglar para una serenata, conozco a uno muy bueno.",
+            "Dicen que en Génova aprendí a navegar y en Milán aprendí a seducir. No sé cuál de las dos artes me ha resultado más útil.",
+            "Una vez recorrí media Europa siguiendo a una dama. Al final descubrí que ella iba en dirección contraria. ¡Mamma mia, qué aventura!",
+            "El arte de las damas se parece mucho al arte del amor: hay que saber cuándo avanzar, cuándo esperar y, sobre todo, cuándo arrebatar la oportunidad.",
+            "He cantado serenatas bajo balcones de toda Europa. Algunas damas me arrojaron flores; otras, zapatos. Ambas cosas son muestras de afecto, a su manera."
+        ],
+
+        INICIO_PARTIDA: [
+            "¡Ah, una nueva partida! Veamos, messere... ¿quién de los dos tendrá la fortuna de conquistar las damas?",
+            "¡Mamma mia! ¡Qué tablero tan elegante! Esto me recuerda a las cortes de Milán.",
+            "¡Che piacere! Una partida de damas. Por fin un juego en el que mi experiencia con las damas puede ser verdaderamente útil.",
+            "Messere, preparaos. Icardio de Milán está dispuesto a cortejar... digo, a jugar.",
+            "¡Magnifico! Que comience la partida y que las damas sean generosas conmigo.",
+            "He jugado en Barcelona, Génova, Milán, París y Constantinopla. Ahora veremos qué tal se juega en este extraño castillo argentino."
+        ]
+
     },
 
     // ---- Nivel 6: Empecid Campeador ----

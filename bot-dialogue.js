@@ -612,23 +612,135 @@ const BOT_DIALOGUE = {
     },
 
     // ---- Nivel 6: Empecid Campeador ----
+
     empecid: {
-        VICTORIA: [],
-        DERROTA: [],
-        EMPATE: [],
-        CORONACION_SUFRIDA: [],
-        CORONACION_PROPIA: [],
-        CAPTURA_MULTIPLE_SUFRIDA: [],
-        CAPTURA_MULTIPLE_PROPIA: [],
-        TODO_DAMAS: [],
-        POCAS_FICHAS_EN_DESVENTAJA: [],
-        DIFERENCIA_GRANDE_EN_CONTRA: [],
-        DIFERENCIA_GRANDE_A_FAVOR: [],
-        PARIDAD_POCAS_FICHAS: [],
-        PARTIDO_LARGO: [],
-        INICIO_HOSTILIDADES: [],
-        COMENTARIO_ALEATORIO: [],
-        INICIO_PARTIDA: []
+
+        VICTORIA: [
+            "¡Victoria! La mi espada e Rechinante han vencido otra vez. ¡Santiago y cierra, España!",
+            "¡Por el Criador, vencimos! Los tus escaques fueron echados del campo como moros ante aqueste Campeador.",
+            "¡He vencido! ¡Ved, omne de pro, cómo aqueste humilde tauler se torna campo de gloria para Empecid Campeador!",
+            "¡Cantad, campanas del reino! ¡La batalla es nuestra! Rechinante, hoy habéis galopado como el más bravo de los corceles.",
+            "¡Ondra y victoria! Otra hueste ha caído ante mi espada. Que se cuente aquesta gesta por todas las tierras de España."
+        ],
+
+        DERROTA: [
+            "¡Afeado he sido ante el Criador! Aquesta derrota es culpa de la picazón que me acomete en los deudos por desoír los consejos d'Empecid.",
+            "¡Maldición! Fui vencido en campo, mas non por falta de bravura. Quizá Rechinante pisó mal... o quizá el fedor me nubló el entendimiento.",
+            "¡Por Santiago! Hoy la fortuna ha vuelto el rostro contra mí. Mas non temáis: Empecid Campeador habrá de tornar con renovadas huestes.",
+            "¡Triste día para la crónica de mis gestas! Mas un verdadero caballero non se rinde por una sola derrota. La próxima batalla será otra historia.",
+            "¡Caído he, mas non quebrado! Aqueste revés quedará olvidado cuando vuelva al campo con Rechinante e mis armas bien templadas."
+        ],
+
+        EMPATE: [
+            "¡Tablas! Honroso fin pora dos huestes tan bravas. Lograste sacarme un empate, omne de pro.",
+            "¡Pardiez, tablas! Non hubo vencedor aqueste día. La morisma podrá dormir tranquila una jornada más.",
+            "¡Empate! Una tregua digna de caballeros. Guardad vuestras armas, buen varón, que hoy ninguno pudo ganar la honra del campo.",
+            "¡Tablas, por el Criador! Bien peleaste, omne de pro. Mas non os acostumbréis a salir indemne de mis batallas."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Malfetría de omne! ¿Una dueña has alzado? Non cantes victoria, can de traición, que Rechinante ya mete espolones pora darte rancia batalla.",
+            "¡Por Santiago! Has coronado una dueña ante mis ojos. ¡Aquesta afrenta habrá de ser vengada en el campo!",
+            "¡Malhaya mi suerte! Una de tus huestes ha alcanzado la corona. ¡Non permitiremos que esa dueña reine mucho tiempo en aqueste tauler!",
+            "¡Aquesta corona non ha de durar! Cabalgad, Rechinante, que tenemos nueva enemiga que derribar."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡He alzado una dueña! ¡Ved cómo resplandece aqueste noble ejército! Non hay muro que pueda detenerla.",
+            "¡Victoria de gran honra! He coronado una dueña de gran beldad, que de seguro admira las virtudes de aqueste noble Campeador.",
+            "¡Por todos los santos! ¡Una nueva señora entra en mis huestes! Que tiemble la morisma, pues agora tenemos una capitana de gran poder.",
+            "¡He aquí la recompensa de los valientes! Una dueña coronada servirá a mis huestes e llevará mi estandarte por todo el tauler."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Par Dios! Has llevado por delante varias de mis huestes. ¡Deteneos, malandrines! ¡Non huyáis de tal manera!",
+            "¡Maldición! Mis hombres caen uno tras otro. Dicen que huyen por mi fedor de deudos, mas aquesta vez temo que fue por vuestra astucia.",
+            "¡Por las barbas de Santiago! ¡Qué carnicería habéis hecho en mis filas! Rechinante, preparaos, que esto clama venganza.",
+            "¡Aquesta no es manera de guerrear! Mis huestes han sido diezmadas en un solo lance. ¡Habrá cumplida respuesta, por mi honra!"
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Santiago y cierra! ¡Una, dos, tres huestes derribadas! Los tus escaques saltan del tauler por pavor ante aqueste Campeador.",
+            "¡Ved cómo cae la morisma! Mis huestes han entrado en batalla e non han dejado piedra sobre piedra.",
+            "¡Ha sido un lance glorioso! Varias de tus huestes han mordido el polvo. Rechinante, ¡adelante, que hoy somos imparables!",
+            "¡Por el Criador! ¡Cuántos enemigos han caído de un solo golpe! Aquesta es la clase de batalla que merece entrar en los cantares."
+        ],
+
+        TODO_DAMAS: [
+            "¡Dios, qué maravilla! Non quedan varones, sólo bellas dueñas en el tauler. Aqueste Campeador se halla en muy buena compañía.",
+            "¡Todas son dueñas agora! Pardiez, aqueste combate se ha tornado harto más interesante para un caballero de mi condición.",
+            "¡Non queda varón alguno! Sólo dueñas reinan en aqueste campo. ¡Parece más corte de Castilla que batalla de caballeros!",
+            "¡Por Santa María! Todo el ejército se compone agora de dueñas. Rechinante, comportaos con dignidad, que estamos entre damas."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "¡Par Dios, la mi hueste está ya en muy mala ventura! Non sé si habrá castillo que pueda salvarnos.",
+            "¡Santiago nos ampare! Quedan pocas huestes e la batalla se torna muy oscura. Mas mientras Rechinante respire, non daréme por vencido.",
+            "¡La fortuna nos es esquiva! Mis huestes son ya pocas e el enemigo aprieta con furia. Mas aqueste Campeador aún guarda un postrer golpe.",
+            "¡Fuerte es la adversidad! Si he de caer, caeré con ondra, espada en mano e Rechinante a mi lado."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡Par Dios, la mi hueste anda en gran desventura! Mas non ayades pavor: aún queda ondra por ganar en aqueste campo.",
+            "¡Fuerte batalla me dais, omne de pro! Mas aqueste Campeador ha remontado peores contiendas. ¡Aún non está ganada vuestra victoria!",
+            "¡La morisma aprieta nuestras filas! Mas non cantaréis victoria todavía. Rechinante e yo sabemos bien cómo tornar una batalla perdida.",
+            "¡Non niego que la fortuna me es contraria! Mas los grandes caballeros son conocidos cuando el campo se torna difícil. ¡Aún he de luchar!"
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Ved, Rechinante! Mis huestes dominan el campo e los tus escaques ya non saben do esconderse.",
+            "¡Por Santiago! Aquesta batalla se inclina claramente de nuestro lado. Hasta los moros que rondan las fronteras deben estar temblando.",
+            "¡La victoria comienza a mostrarnos su rostro! Mis huestes avanzan como ejército victorioso e las tuyas retroceden sin honra.",
+            "¡Buen camino llevamos! Aqueste campo ya parece conquistado. Non queda sino mantener el acero firme e no cometer yerro."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "¡Agora sí! Quedan pocas huestes e cada movimiento puede dar la victoria. ¡Non ayades pavor, Rechinante!",
+            "¡Por el Criador, estamos en la mesma cornisa del destino! Un solo yerro e la batalla será perdida.",
+            "¡Pocas huestes quedan en campo! Agora se verá quién tiene verdadero seso de caballero e quién sólo presume de espada.",
+            "¡Silencio en las filas! La batalla ha llegado a su momento más peligroso. Un mal lance puede mudar toda la fortuna."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡Por todos los santos, cuánto se alarga aquesta batalla! Hasta Rechinante comienza a querer echarse a dormir.",
+            "¡Más de cien lances llevamos ya! Non recuerdo campaña tan larga desde la última vez que perseguí a un moro que se escondió tras un granero.",
+            "¡Pardiez! Aquesta batalla parece no tener fin. Hasta mis deudos piden descanso e Rechinante comienza a mirar hacia el establo.",
+            "¡Tantas jugadas! ¿Acaso habremos de combatir hasta el día del Juicio Final? Por Santiago, acabemos ya aquesta contienda."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Agora se comiença la batalla! ¡Entren las huestes en campo e venza el que más valiere!",
+            "¡Santiago y cierra, España! ¡Ferid, cavalleros! Aqueste tauler conocerá hoy la furia del Campeador.",
+            "¡Ya corrió la primera sangre! ¡Alzad los pendones, que aqueste combate ha comenzado!",
+            "¡Helo aquí! ¡El enemigo ha sido alcanzado! Agora sí comienza la verdadera lid."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "¡Santas Marías! Olvidé untar mis deudos con la porción d'Empecid. Si me descalzo agora, juro que Rechinante cae de lomos e la morisma huye hasta los confines de África.",
+            "El villano que me vendió las calças insiste en que padezco males en la piel de los deudos. ¡Calumnias! Aquestas son tufas de villano, e nada más.",
+            "Dizque mi fedor espanta a las gentes del reino. ¡Falacias! Un caballero de mi renombre ha de tener una fragancia digna de su grandeza.",
+            "El otro día topé con Icardio de Milán, quien osó decirme que las doncellas se apartan de mí por el fedor. ¡Mentira! Se apartan para poder contemplarme mejor desde lejos.",
+            "Leonor de Aquitapia volvió a ofrecerme un asado en el predio de Ezeiza. Muy noble gesto, mas primero habré de asegurarme de que haya agua abundante pora lavar mis deudos.",
+            "Rechinante non es un matungo, como algunos villanos osan decir. ¡Es un corcel de guerra! Que sea algo pequeño e cansado non quita que tenga noble corazón.",
+            "Hoy pasé por las caballerizas e un mozo se tapó las narices al verme. ¡Qué desvergüenza! Le recordaré que los buenos caballeros son reconocidos por su presencia.",
+            "Dicen que Empecid combate el mal olor de los deudos. Yo digo que un caballero que non deja rastro de su paso es caballero sin gloria.",
+            "Icardio me preguntó si conocía doncellas de buen linaje. Le respondí que conozco muchas, mas ninguna se acerca a aqueste Campeador sin antes persignarse.",
+            "El villano de la despensa, Fray Marolio, insiste en que debo lavarme más. ¡Qué atrevimiento! Non sabe que un verdadero caballero non malgasta el agua del reino.",
+            "Una vez perseguí a tres moros por la campiña durante media legua. Ellos iban huyendo, yo iba galopando e Rechinante iba... bueno, caminando. ¡Gran jornada de Reconquista!",
+            "¡Por Santiago! Ayer olvidé ponerme Empecid antes de dormir. Al alba, hasta las moscas habían abandonado mi aposento. ¡Cobardes!",
+            "Las doncellas del castillo dicen que mi fedor es terrible. Mas estoy seguro de que si esperasen a conocer mi noble corazón, olvidarían semejante pequeñez.",
+            "Myrth La Grande asegura haber conocido a mis antepasados. Non sé si creerle, pues esa dueña dice haber conocido a demasiados antepasados de demasiadas gentes.",
+            "Escuché a Monsieur Fisure Termidor decir que mi fedor le recuerda a cierto vino francés. Non comprendí si aquello era un insulto o un elogio, mas el hombre estaba bebiendo, así que poco importa."
+        ],
+
+        INICIO_PARTIDA: [
+            "En el nombre del Criador, aquí me tenéis. ¿Un juego de tablas, decís? ¡Sea! Empecid Campeador non teme ningún campo.",
+            "¡Por Santiago! ¿Aquestas son las tablas donde he de combatir? Pues bien, buen varón: ensillad vuestras huestes, que aqueste Campeador ya está presto.",
+            "¡Abrid paso! ¡Empecid Campeador ha llegado al tauler! Rechinante, non mordáis las piezas todavía... aguardad hasta que comience la batalla.",
+            "¡Por la honra de Castilla! Un nuevo campo de batalla se abre ante aqueste caballero. ¡Que comiencen las justas!",
+            "¿Un juego de tablas? ¡Ja! Sea juego o guerra, Empecid Campeador jamás retrocede ante enemigo alguno. ¡Adelante, huestes!"
+        ]
+
     },
 
     // ---- Nivel 7: Lora Prodigio — ¡ACÁ VAN NOMBRES DE ARCHIVO DE SONIDO, NO TEXTO! ----

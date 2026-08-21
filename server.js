@@ -116,6 +116,88 @@ function pushSystemMessage(io, text) {
     pushChatMessage(io, { type: 'system', text: text, time: Date.now() });
 }
 
+// ===================================================================
+//  EL RELOJ DE ARENA DE GODOFREDO (modo contrarreloj)
+// ===================================================================
+// El servidor es la ÚNICA fuente de verdad del tiempo -- ni un cliente
+// ni el otro deciden nunca cuándo alguien se quedó sin tiempo, solo lo
+// escuchan. Cada partida con reloj (game.timeControl !== null) guarda:
+//   - game.clocks: { w: ms, b: ms } -- el tiempo que le quedaba a cada
+//     color la ÚLTIMA vez que se hizo esta cuenta (una "foto", no el
+//     valor exacto de ahora mismo si el reloj de alguien sigue corriendo).
+//   - game.turnStartedAt: Date.now() de cuándo arrancó el turno actual.
+//   - game.timeoutHandle: el setTimeout ya armado para el instante
+//     exacto en que el que tiene el turno llegaría a cero, si es que
+//     nunca llega a mover antes de eso.
+// Con esos dos datos (game.clocks + game.turnStartedAt) se puede
+// calcular en cualquier momento el tiempo REAL que le queda a cada
+// color, sin tener que estar actualizando nada a cada segundo.
+
+// Devuelve el tiempo REAL vigente ahora mismo para cada color (o null
+// si esta partida no tiene reloj) -- resta el tiempo transcurrido
+// desde turnStartedAt SOLO al color que tiene el turno; el otro color
+// no tiene su reloj corriendo, así que su valor no cambia.
+function getLiveClocks(game) {
+    if (!game || !game.timeControl) return null;
+    const elapsed = Date.now() - game.turnStartedAt;
+    const live = { w: game.clocks.w, b: game.clocks.b };
+    live[game.turn] = Math.max(0, live[game.turn] - elapsed);
+    return live;
+}
+
+function clearClockTimeout(game) {
+    if (game && game.timeoutHandle) {
+        clearTimeout(game.timeoutHandle);
+        game.timeoutHandle = null;
+    }
+}
+
+// Programa (reemplazando cualquier temporizador anterior) el instante
+// exacto en que el color que tiene el turno ahora llegaría a cero, si
+// es que no mueve antes.
+function armClockTimeout(room) {
+    const game = activeGames[room];
+    if (!game || !game.timeControl) return;
+    clearClockTimeout(game);
+    const color = game.turn;
+    const remaining = game.clocks[color];
+    game.timeoutHandle = setTimeout(() => handleTimeExpired(room, color), remaining);
+}
+
+// Se ejecuta cuando el temporizador de arriba efectivamente vence sin
+// que haya llegado ninguna jugada antes -- game.concluded ya puede
+// estar en true acá (por ejemplo, si la partida se resolvió de otra
+// forma un instante antes y este temporizador quedó viejo sin que
+// llegáramos a cancelarlo a tiempo); en ese caso no hacemos nada.
+function handleTimeExpired(room, color) {
+    const game = activeGames[room];
+    if (!game || game.concluded) return;
+    game.concluded = true;
+    game.clocks[color] = 0;
+
+    const winnerColor = (color === 'w') ? 'b' : 'w';
+    const winnerId = game[winnerColor];
+    const loserId = game[color];
+    const winnerName = connectedUsers[winnerId]?.username;
+    const loserName = connectedUsers[loserId]?.username;
+
+    // Mismo cartel para los dos jugadores (y espectadores): no hace
+    // falta un mensaje distinto por bando, "fulano se quedó sin
+    // tiempo" ya cuenta toda la historia sola.
+    io.to(room).emit('game-over-by-time', { winnerColor, winnerName, loserName });
+
+    if (winnerName && loserName) {
+        pushSystemMessage(io, `⏱️ ${winnerName} le ha ganado por tiempo a ${loserName}`);
+    }
+
+    // --- GODOFREDO LOS DEVUELVE AL SALÓN --- (mismo patrón que surrender/game-over)
+    if (connectedUsers[game.w]) { connectedUsers[game.w].status = "lobby"; connectedUsers[game.w].room = null; connectedUsers[game.w].botName = null; }
+    if (connectedUsers[game.b]) { connectedUsers[game.b].status = "lobby"; connectedUsers[game.b].room = null; connectedUsers[game.b].botName = null; }
+
+    delete activeGames[room];
+    broadcastStatus();
+}
+
 io.on('connection', (socket) => {
 
     socket.on('set-username', (data) => {
@@ -147,10 +229,20 @@ io.on('connection', (socket) => {
         broadcastStatus();
     });
 
-    socket.on('send-challenge', (targetUsername) => {
-        const targetId = Object.keys(connectedUsers).find(id => connectedUsers[id].username === targetUsername);
+    // data: { targetUsername, timeControl } -- timeControl es null para
+    // modo normal, o { initialMs } para modo contrarreloj. Quien desafía
+    // es SIEMPRE quien decide la modalidad (y, si corresponde, los
+    // minutos) -- el servidor acá solo retransmite tal cual, sin validar
+    // ni interpretar nada; la validación de rango (1 a 15 minutos) ya
+    // pasó del lado del cliente que arma el desafío.
+    socket.on('send-challenge', (data) => {
+        const targetId = Object.keys(connectedUsers).find(id => connectedUsers[id].username === data.targetUsername);
         if (targetId) {
-            io.to(targetId).emit('receive-challenge', { fromName: connectedUsers[socket.id].username, fromId: socket.id });
+            io.to(targetId).emit('receive-challenge', {
+                fromName: connectedUsers[socket.id].username,
+                fromId: socket.id,
+                timeControl: data.timeControl || null
+            });
         }
     });
 
@@ -181,6 +273,15 @@ io.on('connection', (socket) => {
             abandonCurrentGameIfAny(socket.id, connectedUsers, activeGames, io);
 
             // Crear la sala (con su propia foto de tablero, arrancando en posición inicial)
+            // timeControl: null en modo normal. Cuando sí viene informado
+            // ({ initialMs }), es una partida contrarreloj -- lo decide
+            // siempre quien desafía, elegido en el modal correspondiente
+            // (ver openChallengeModalityModal / trySendTimedChallenge en
+            // index.html). Se arman los relojes de los dos colores con ese
+            // mismo valor inicial, y el de Blancas arranca a correr de
+            // entrada, antes incluso de su primer movimiento (así se
+            // definió: nadie tiene una jugada "gratis" sin reloj).
+            const timeControl = data.timeControl || null;
             activeGames[roomName] = {
                 w: challengerId,
                 b: socket.id,
@@ -188,8 +289,13 @@ io.on('connection', (socket) => {
                 board: createInitialBoard(),
                 turn: "w",
                 spectators: [], // <--- GODOFREDO PREPARA LA LISTA DE INVITADOS
-                moveHistory: [] // <--- LA CRÓNICA DEL MENSAJERO: arranca en blanco
+                moveHistory: [], // <--- LA CRÓNICA DEL MENSAJERO: arranca en blanco
+                timeControl: timeControl,
+                clocks: timeControl ? { w: timeControl.initialMs, b: timeControl.initialMs } : null,
+                turnStartedAt: timeControl ? Date.now() : null,
+                timeoutHandle: null
             };
+            if (timeControl) armClockTimeout(roomName);
 
             // Actualizar estados Y ROLES en el censo (Vital para la desconexión)
             connectedUsers[challengerId].status = "playing";
@@ -211,7 +317,9 @@ io.on('connection', (socket) => {
                 white: connectedUsers[challengerId].username,
                 black: connectedUsers[socket.id].username,
                 board: activeGames[roomName].board,
-                turn: activeGames[roomName].turn
+                turn: activeGames[roomName].turn,
+                timeControl: timeControl,
+                clocks: getLiveClocks(activeGames[roomName])
             };
 
             io.to(challengerId).emit('assign-role', 'w');
@@ -254,7 +362,14 @@ io.on('connection', (socket) => {
                 turn: game.turn,
                 moveHistory: game.moveHistory || [], // <--- EL MENSAJERO LE CUENTA LO YA JUGADO
                 vsBot: game.vsBot || false,
-                botId: game.botId || null
+                botId: game.botId || null,
+                // El valor REAL vigente ahora mismo (no la última foto guardada):
+                // si no se calculara así, un espectador que se suma a mitad de
+                // partida vería el reloj de quien tiene el turno "congelado" en
+                // el valor de la última jugada, en vez del tiempo que de verdad
+                // le queda en este instante.
+                timeControl: game.timeControl || null,
+                clocks: getLiveClocks(game)
             };
 
             socket.emit('assign-role', 'spectator');
@@ -349,11 +464,41 @@ io.on('connection', (socket) => {
     socket.on('sync-board-state', (data) => {
         const room = connectedUsers[socket.id]?.room;
         if (room && activeGames[room]) {
-            activeGames[room].board = data.boardState;
-            activeGames[room].turn = data.currentPlayer;
+            const game = activeGames[room];
+
+            // --- EL RELOJ DE ARENA: contabilizar el tiempo real gastado ---
+            // Comparamos contra game.turn (el valor ANTES de esta sincronización)
+            // -- si es igual a data.currentPlayer, es un salto intermedio de
+            // una captura múltiple (el mismo jugador sigue moviendo, el turno
+            // no pasó de verdad todavía) y no tocamos el reloj para nada. Solo
+            // cuando de verdad cambia le restamos al que jugó el tiempo que
+            // usó, y le rearmamos el temporizador de vencimiento al que le
+            // toca ahora. Guardamos el resultado en una variable ANTES de
+            // reasignar game.turn más abajo, y la reusamos para decidir si
+            // corresponde rearmar+sincronizar -- si no, un salto intermedio
+            // reprogramaría igual el temporizador (con el mismo valor, pero
+            // calculado desde un "ahora" un poquito más tardío), regalándole
+            // al jugador unos milisegundos gratis en cada salto.
+            const turnActuallyChanged = game.timeControl && data.currentPlayer !== game.turn;
+            if (turnActuallyChanged) {
+                const moverColor = game.turn;
+                const elapsed = Date.now() - game.turnStartedAt;
+                game.clocks[moverColor] = Math.max(0, game.clocks[moverColor] - elapsed);
+                game.turnStartedAt = Date.now();
+            }
+
+            game.board = data.boardState;
+            game.turn = data.currentPlayer;
             if (data.lastMoveEntry) {
-                if (!activeGames[room].moveHistory) activeGames[room].moveHistory = [];
-                activeGames[room].moveHistory.push(data.lastMoveEntry);
+                if (!game.moveHistory) game.moveHistory = [];
+                game.moveHistory.push(data.lastMoveEntry);
+            }
+
+            if (turnActuallyChanged) {
+                armClockTimeout(room);
+                // A TODOS en la sala (jugadores Y espectadores), no solo al
+                // rival -- todos tienen que ver los dos relojes en vivo.
+                io.to(room).emit('clock-sync', { clocks: game.clocks, turn: game.turn });
             }
         }
     });
@@ -371,6 +516,7 @@ io.on('connection', (socket) => {
                     const game = activeGames[user.room];
                     const winnerId = (user.role === 'w') ? game.b : game.w;
                     const winnerName = connectedUsers[winnerId]?.username;
+                    clearClockTimeout(game); // si había reloj corriendo, no hace falta que siga armado
                     socket.to(user.room).emit('opponent-left', {
                         leaverName: user.username,
                         winnerName: winnerName
@@ -418,6 +564,7 @@ io.on('connection', (socket) => {
             const game = activeGames[room];
             if (game && !game.concluded) {
                 game.concluded = true;
+                clearClockTimeout(game); // si había reloj corriendo, no hace falta que siga armado
                 const winnerId = (user.role === 'w') ? game.b : game.w;
                 const winnerName = connectedUsers[winnerId]?.username;
                 if (winnerName) {
@@ -452,6 +599,7 @@ io.on('connection', (socket) => {
         const game = activeGames[room];
         if (game && !game.concluded) {
             game.concluded = true;
+            clearClockTimeout(game); // si había reloj corriendo, no hace falta que siga armado
 
             if (data.winner === 'draw') {
                 const whiteName = connectedUsers[game.w]?.username;

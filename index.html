@@ -623,6 +623,54 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            /* Ancla para el reloj de modo contrarreloj (ver .player-clock):
+               se superpone por ENCIMA de esta fila, sin empujarla ni
+               descentrar el nombre -- el nombre y el circulito de color
+               quedan exactamente donde estaban, centrados igual que
+               siempre; el reloj flota a la derecha, por encima. */
+            position: relative;
+            /* Mismo ancho que el tablero (misma fórmula que .bot-banner):
+               sin esto, la fila se encoge a su propio contenido, y con
+               un nombre corto el reloj (anclado al borde derecho de esa
+               caja angosta) termina tapando el nombre sin necesidad --
+               con este ancho fijo hay lugar real entre un nombre normal
+               centrado y el reloj a la derecha, y solo un nombre
+               genuinamente largo llega a tocarlo. */
+            width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
+        }
+
+        /* --- EL RELOJ DE ARENA (modo contrarreloj, solo humano-vs-humano) --- */
+        /* Oculto por defecto (display:none): solo showClocks() lo hace
+           visible, y solo cuando la partida tiene timeControl. En
+           duelos normales (que son todos, hasta que exista la interfaz
+           de desafíos con reloj) este span existe en el DOM pero nunca
+           se muestra, así que no cambia nada de lo que ya había. */
+        .player-clock {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 0.6em;
+            /* Fondo propio tipo "display digital", bien diferenciado del
+               resto de la fila -- necesita leerse de un vistazo rápido. */
+            background: #111;
+            color: #eafff0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 3px 8px;
+            letter-spacing: 1px;
+            text-shadow: none;
+            z-index: 5;
+        }
+
+        /* Menos de un minuto: rojo, para darle urgencia visual (acá es
+           además donde aparecen las décimas de segundo -- ver
+           formatClockTime en el JS). */
+        .player-clock.urgent {
+            color: #ff5555;
+            border-color: #a33;
         }
 
         .name-indicator {
@@ -1579,6 +1627,59 @@
         </div>
     </div>
 
+    <!-- Primer paso de un desafío nuevo: elegir la modalidad. Modo Normal
+         manda el desafío directo (como siempre); Modo Contrarreloj abre el
+         segundo modal (más abajo) para elegir los minutos antes de mandarlo. -->
+    <div id="challengeModalityModal"
+        style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100; max-width: min(420px, 90vw); text-align: center;">
+        <h3 id="challengeModalityText" style="margin-top: 0;">¿Bajo qué modalidad desea desafiar a Fulano?</h3>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+            <button id="modalityNormalBtn"
+                style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">Modo Normal</button>
+            <button id="modalityTimedBtn"
+                style="padding: 10px 20px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer;">⏱️ Modo Contrarreloj</button>
+            <button id="cancelModalityBtn"
+                style="padding: 10px 20px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Segundo paso, solo si eligió Modo Contrarreloj: cuántos minutos por
+         jugador. Los botones de valores fijos solo rellenan la cajita (no
+         mandan nada todavía) -- el envío siempre pasa por "Enviar desafío",
+         así el mismo camino de validación sirve tanto para los valores
+         fijos como para un valor manual. -->
+    <div id="timeControlModal"
+        style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100; max-width: min(420px, 90vw); text-align: center;">
+        <h3 style="margin-top: 0; margin-bottom: 2px;">Cantidad de minutos:</h3>
+        <p style="color: #f1c40f; font-size: 13px; margin: 0 0 14px 0;">(entre 1 y 15 minutos por jugador)</p>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px;">
+            <button class="tc-preset-btn" data-minutes="2"
+                style="padding: 8px 14px; background: #34495e; color: white; border: 1px solid #f1c40f; border-radius: 5px; cursor: pointer;">2</button>
+            <button class="tc-preset-btn" data-minutes="3"
+                style="padding: 8px 14px; background: #34495e; color: white; border: 1px solid #f1c40f; border-radius: 5px; cursor: pointer;">3</button>
+            <button class="tc-preset-btn" data-minutes="5"
+                style="padding: 8px 14px; background: #34495e; color: white; border: 1px solid #f1c40f; border-radius: 5px; cursor: pointer;">5</button>
+            <button class="tc-preset-btn" data-minutes="7"
+                style="padding: 8px 14px; background: #34495e; color: white; border: 1px solid #f1c40f; border-radius: 5px; cursor: pointer;">7</button>
+            <button class="tc-preset-btn" data-minutes="10"
+                style="padding: 8px 14px; background: #34495e; color: white; border: 1px solid #f1c40f; border-radius: 5px; cursor: pointer;">10</button>
+            <button class="tc-preset-btn" data-minutes="15"
+                style="padding: 8px 14px; background: #34495e; color: white; border: 1px solid #f1c40f; border-radius: 5px; cursor: pointer;">15</button>
+        </div>
+        <div>
+            <input type="number" id="timeControlInput" step="0.25" min="1" max="15" placeholder="minutos"
+                style="width: 110px; padding: 8px; border-radius: 5px; border: 1px solid #f1c40f; text-align: center; font-size: 16px; background: #1c2833; color: white;">
+        </div>
+        <p id="timeControlError" style="color: #e74c3c; font-size: 13px; min-height: 16px; margin: 8px 0 0 0;"></p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
+            <button id="sendTimedChallengeBtn"
+                style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">⚔️
+                Enviar desafío</button>
+            <button id="backToModalityBtn"
+                style="padding: 10px 20px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Volver</button>
+        </div>
+    </div>
+
     <!-- El Cartel de la Doble Puerta: aparece cuando clickeás a alguien que
          está jugando contra un bot. Dos caminos posibles: desafiarlo a un
          duelo de verdad, o sentarte a espectar su partida contra el bot. -->
@@ -2051,6 +2152,31 @@
         // --- EL DESAFÍO QUE PUEDE ARREPENTIRSE (cancelar / timeout) ---
         let pendingChallengeTarget = null;
         let pendingChallengeTimeout = null;
+
+        // --- MODO CONTRARRELOJ: estado del flujo de modalidad ---
+        // A quién se está por desafiar mientras se elige la modalidad
+        // (recordado entre el modal de modalidad y el de minutos, ya que
+        // "Volver" tiene que reabrir el primero sabiendo a quién apuntaba).
+        let pendingModalityTargetUsername = null;
+        // El timeControl del desafío que ACABAMOS de recibir (o null si es
+        // modo normal) -- lo guardamos tal cual llegó para poder aceptarlo
+        // sin inventarlo de nuevo del lado de quien acepta (el desafiante
+        // es quien siempre decide la modalidad y los minutos, nunca el
+        // desafiado).
+        let currentChallengeTimeControl = null;
+        // El timeControl de la partida que ACABA de terminar -- la revancha
+        // lo reutiliza tal cual, sin pasar de nuevo por los menús (a pedido
+        // de Otto: "si piden revancha es exactamente en las mismas
+        // condiciones").
+        let currentGameTimeControl = null;
+
+        // Da una etiqueta legible para mostrar minutos con hasta 2
+        // decimales (sin arrastrar basura de punto flotante) -- por
+        // ejemplo, 2.5 minutos se ve "2.5 min", 5 minutos se ve "5 min".
+        function formatMinutesLabel(ms) {
+            const minutes = Math.round((ms / 60000) * 100) / 100;
+            return `${minutes} min`;
+        }
 
         let board = [
 
@@ -2892,7 +3018,9 @@
             }
 
             const opponentName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
-            socket.emit('send-challenge', opponentName);
+            // Misma modalidad y minutos que la partida que acaba de
+            // terminar, sin pasar por ningún menú -- a pedido de Otto.
+            sendChallengeTo(opponentName, currentGameTimeControl);
 
             const btn = document.getElementById('rematchBtn');
             if (btn) {
@@ -3026,8 +3154,8 @@
                 if (myColor === 'b') {
                     // Si soy NEGRAS: yo abajo, Blancas arriba
                     topLabel.classList.remove("has-bot-banner");
-                    topLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
-                    bottomLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}`;
+                    topLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}<span id="topClock" class="player-clock"></span>`;
+                    bottomLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}<span id="bottomClock" class="player-clock"></span>`;
                 } else {
                     // Si soy BLANCAS o ESPECTADOR: Blancas abajo, Negras arriba.
                     // Contra un bot, el "Negras" de arriba es el bot: mostramos
@@ -3056,9 +3184,9 @@
                             </div>`;
                     } else {
                         topLabel.classList.remove("has-bot-banner");
-                        topLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}`;
+                        topLabel.innerHTML = `<div class="name-indicator" style="background:black"></div> ${blackPlayerName}<span id="topClock" class="player-clock"></span>`;
                     }
-                    bottomLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}`;
+                    bottomLabel.innerHTML = `<div class="name-indicator" style="background:white"></div> ${whitePlayerName}<span id="bottomClock" class="player-clock"></span>`;
                 }
 
                 // INICIO_PARTIDA es distinto a los demás eventos: no pasa por
@@ -3085,6 +3213,25 @@
                 // Y comprobamos si el nombre del bot recién puesto entra
                 // en su espacio, comprimiéndolo si hace falta.
                 checkBotNameOverflow();
+
+                // --- EL RELOJ DE ARENA ---
+                // Si esta partida tiene reloj (data.timeControl viene
+                // informado), mostramos los dos relojes y arrancamos la
+                // animación local a partir de la foto que mandó el
+                // servidor. Si no lo tiene, nos aseguramos de limpiar
+                // cualquier resabio de una partida CON reloj anterior
+                // (por ejemplo, si veníamos de espectar una).
+                // También guardamos currentGameTimeControl tal cual: la
+                // Revancha lo reutiliza directo, sin pasar de nuevo por
+                // los menús de modalidad.
+                currentGameTimeControl = data.timeControl || null;
+                if (data.timeControl && data.clocks) {
+                    setClockState(data.clocks, currentPlayer);
+                    showClocks();
+                    startClockAnimation();
+                } else {
+                    stopClockAnimation();
+                }
             }
 
             document.getElementById("waitingOverlay").style.display = "none";
@@ -3240,6 +3387,99 @@
         // así que se reinicia en TODO arranque de partida nueva, no
         // solo en las que son contra un bot.
         let oneKingEachStreak = 0;
+
+        // --- EL RELOJ DE ARENA (modo contrarreloj) ---
+        // El servidor es la única fuente de verdad del tiempo: este
+        // cliente solo dibuja una cuenta regresiva SUAVE (recalculada
+        // cada 100ms para que se sienta fluida) a partir de la última
+        // "foto" autoritativa que mandó el servidor (clockState),
+        // interpolando localmente cuánto pasó desde que esa foto
+        // llegó. Nunca decide por su cuenta que alguien se quedó sin
+        // tiempo -- eso siempre lo anuncia el servidor (ver el listener
+        // de 'game-over-by-time', más abajo).
+        let clockState = null; // { w: ms, b: ms, turn: 'w'|'b', receivedAt } o null si esta partida no tiene reloj
+        let clockAnimationInterval = null;
+
+        // Bajo el minuto empezamos a mostrar décimas de segundo y el
+        // color rojo, para darle urgencia visual justo cuando importa
+        // -- el resto de la partida, con decimales todo el tiempo, es
+        // ruido que nadie necesita.
+        const CLOCK_URGENT_THRESHOLD_MS = 60000;
+
+        function formatClockTime(ms) {
+            const totalMs = Math.max(0, ms);
+            const minutes = Math.floor(totalMs / 60000);
+            const secondsMs = totalMs - minutes * 60000;
+            if (totalMs < CLOCK_URGENT_THRESHOLD_MS) {
+                const seconds = (secondsMs / 1000).toFixed(1).padStart(4, '0');
+                return `${minutes}m${seconds}s`;
+            }
+            const seconds = String(Math.floor(secondsMs / 1000)).padStart(2, '0');
+            return `${minutes}m${seconds}s`;
+        }
+
+        // Vuelca clockState (ya interpolado con el tiempo local
+        // transcurrido) en los dos <span> del DOM -- topClock y
+        // bottomClock, mapeados a blancas/negras según myColor, con la
+        // misma convención de arriba/abajo que usa el resto del tablero.
+        function renderClocks() {
+            if (!clockState) return;
+            const topEl = document.getElementById("topClock");
+            const bottomEl = document.getElementById("bottomClock");
+            if (!topEl || !bottomEl) return;
+
+            const localElapsed = Date.now() - clockState.receivedAt;
+            const live = { w: clockState.w, b: clockState.b };
+            live[clockState.turn] = Math.max(0, live[clockState.turn] - localElapsed);
+
+            const topColor = (myColor === 'b') ? 'w' : 'b';
+            const bottomColor = (myColor === 'b') ? 'b' : 'w';
+
+            topEl.textContent = formatClockTime(live[topColor]);
+            bottomEl.textContent = formatClockTime(live[bottomColor]);
+            topEl.classList.toggle("urgent", live[topColor] < CLOCK_URGENT_THRESHOLD_MS);
+            bottomEl.classList.toggle("urgent", live[bottomColor] < CLOCK_URGENT_THRESHOLD_MS);
+        }
+
+        function showClocks() {
+            const topEl = document.getElementById("topClock");
+            const bottomEl = document.getElementById("bottomClock");
+            if (topEl) topEl.style.display = "block";
+            if (bottomEl) bottomEl.style.display = "block";
+        }
+
+        function hideClocks() {
+            const topEl = document.getElementById("topClock");
+            const bottomEl = document.getElementById("bottomClock");
+            if (topEl) topEl.style.display = "none";
+            if (bottomEl) bottomEl.style.display = "none";
+        }
+
+        // Actualiza la "foto" autoritativa recién llegada del servidor
+        // (al arrancar la partida, o en cada cambio de turno real).
+        // receivedAt es SIEMPRE un timestamp LOCAL (Date.now() de este
+        // navegador, no del servidor) -- así el cliente nunca necesita
+        // que su reloj esté perfectamente sincronizado con el del
+        // servidor, solo necesita saber "cuánto pasó, en MI propio
+        // reloj, desde que recibí este dato".
+        function setClockState(clocks, turn) {
+            clockState = { w: clocks.w, b: clocks.b, turn: turn, receivedAt: Date.now() };
+            renderClocks();
+        }
+
+        function startClockAnimation() {
+            if (clockAnimationInterval) clearInterval(clockAnimationInterval);
+            clockAnimationInterval = setInterval(renderClocks, 100);
+        }
+
+        function stopClockAnimation() {
+            if (clockAnimationInterval) {
+                clearInterval(clockAnimationInterval);
+                clockAnimationInterval = null;
+            }
+            clockState = null;
+            hideClocks();
+        }
 
         function renderBotsTable() {
             const tbody = document.getElementById("botsTableBody");
@@ -3569,7 +3809,7 @@
         document.getElementById("challengeInsteadBtn").onclick = () => {
             const target = challengeOrSpectateTargetUsername;
             closeChallengeOrSpectateModal();
-            if (target) sendChallengeTo(target);
+            if (target) openChallengeModalityModal(target);
         };
 
         document.getElementById("spectateInsteadBtn").onclick = () => {
@@ -3737,11 +3977,7 @@
                     } else {
                         const etiqueta = (u.status === "spectating") ? " (espectando)" : "";
                         item.textContent = `🛡️ ${u.username}${etiqueta} (Desafiar)`;
-                        item.onclick = () => {
-                            if (confirm(`¿Deseas enviar un desafío a ${u.username}?`)) {
-                                sendChallengeTo(u.username);
-                            }
-                        };
+                        item.onclick = () => openChallengeModalityModal(u.username);
                     }
                     listElement.appendChild(item);
                 });
@@ -3773,11 +4009,15 @@
         // ya asumía eso implícitamente con un solo texto de "waitingStatus").
         // Se cancela por lo que pase primero: el botón, o 30 segundos sin
         // respuesta. cancelPendingChallenge() se usa para ambos casos.
-        function sendChallengeTo(username) {
-            socket.emit('send-challenge', username);
+        // timeControl: null para modo normal, o { initialMs } para
+        // contrarreloj -- siempre lo decide quien desafía, nunca quien
+        // acepta.
+        function sendChallengeTo(username, timeControl = null) {
+            socket.emit('send-challenge', { targetUsername: username, timeControl: timeControl });
             pendingChallengeTarget = username;
 
-            document.getElementById("waitingStatus").textContent = `Esperando respuesta de ${username}... (se cancela a los 30s si no responde)`;
+            const modalityLabel = timeControl ? ` (⏱️ contrarreloj, ${formatMinutesLabel(timeControl.initialMs)})` : '';
+            document.getElementById("waitingStatus").textContent = `Esperando respuesta de ${username}${modalityLabel}... (se cancela a los 30s si no responde)`;
             document.getElementById("cancelChallengeBtn").style.display = "inline-block";
 
             if (pendingChallengeTimeout) clearTimeout(pendingChallengeTimeout);
@@ -3785,6 +4025,86 @@
                 cancelPendingChallenge();
             }, 30000);
         }
+
+        // --- MODO CONTRARRELOJ: los dos modales del flujo de desafío ---
+
+        function openChallengeModalityModal(username) {
+            pendingModalityTargetUsername = username;
+            document.getElementById("challengeModalityText").textContent = `¿Bajo qué modalidad desea desafiar a ${username}?`;
+            document.getElementById("challengeModalityModal").style.display = "block";
+        }
+
+        function closeChallengeModalityModal() {
+            document.getElementById("challengeModalityModal").style.display = "none";
+        }
+
+        document.getElementById("modalityNormalBtn").onclick = () => {
+            const target = pendingModalityTargetUsername;
+            closeChallengeModalityModal();
+            pendingModalityTargetUsername = null;
+            if (target) sendChallengeTo(target, null);
+        };
+
+        document.getElementById("modalityTimedBtn").onclick = () => {
+            closeChallengeModalityModal();
+            openTimeControlModal();
+        };
+
+        document.getElementById("cancelModalityBtn").onclick = () => {
+            closeChallengeModalityModal();
+            pendingModalityTargetUsername = null;
+        };
+
+        function openTimeControlModal() {
+            document.getElementById("timeControlInput").value = "";
+            document.getElementById("timeControlError").textContent = "";
+            document.getElementById("timeControlModal").style.display = "block";
+        }
+
+        function closeTimeControlModal() {
+            document.getElementById("timeControlModal").style.display = "none";
+        }
+
+        // Los botones de valores fijos solo rellenan la cajita -- no mandan
+        // nada por sí mismos, así el envío siempre pasa por la misma
+        // validación, sea un valor preestablecido o uno tipeado a mano.
+        document.querySelectorAll(".tc-preset-btn").forEach(btn => {
+            btn.onclick = () => {
+                document.getElementById("timeControlInput").value = btn.dataset.minutes;
+                document.getElementById("timeControlError").textContent = "";
+            };
+        });
+
+        document.getElementById("backToModalityBtn").onclick = () => {
+            closeTimeControlModal();
+            openChallengeModalityModal(pendingModalityTargetUsername);
+        };
+
+        // Valida (entre 1 y 15 minutos, admite decimales -- 2.5 minutos son
+        // 2m30s, 2.25 minutos son 2m15s) y, si está todo bien, manda el
+        // desafío contrarreloj. Se dispara tanto al clickear "Enviar
+        // desafío" como al apretar Enter en la cajita.
+        function trySendTimedChallenge() {
+            const raw = document.getElementById("timeControlInput").value;
+            const minutes = parseFloat(raw);
+            const errorEl = document.getElementById("timeControlError");
+
+            if (raw === "" || isNaN(minutes) || minutes < 1 || minutes > 15) {
+                errorEl.textContent = "Ingresá un valor válido entre 1 y 15 minutos.";
+                return;
+            }
+
+            const initialMs = Math.round(minutes * 60000);
+            const target = pendingModalityTargetUsername;
+            closeTimeControlModal();
+            pendingModalityTargetUsername = null;
+            if (target) sendChallengeTo(target, { initialMs });
+        }
+
+        document.getElementById("sendTimedChallengeBtn").onclick = trySendTimedChallenge;
+        document.getElementById("timeControlInput").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") trySendTimedChallenge();
+        });
 
         function cancelPendingChallenge() {
             if (pendingChallengeTimeout) {
@@ -3807,7 +4127,13 @@
         // Recibir una invitación
         socket.on('receive-challenge', (data) => {
             currentChallengerId = data.fromId;
-            document.getElementById("challengeText").textContent = `¡${data.fromName} te desafía a un duelo!`;
+            currentChallengeTimeControl = data.timeControl || null;
+            if (currentChallengeTimeControl) {
+                const label = formatMinutesLabel(currentChallengeTimeControl.initialMs);
+                document.getElementById("challengeText").textContent = `¡${data.fromName} te desafía a un duelo en MODO CONTRARRELOJ, con ${label} por jugador!`;
+            } else {
+                document.getElementById("challengeText").textContent = `¡${data.fromName} te desafía a un duelo!`;
+            }
             document.getElementById("challengeModal").style.display = "block";
             playSound(soundChallenge);
         });
@@ -3823,7 +4149,7 @@
 
         // Botones del Modal
         document.getElementById("acceptBtn").onclick = () => {
-            socket.emit('challenge-response', { fromId: currentChallengerId, accepted: true });
+            socket.emit('challenge-response', { fromId: currentChallengerId, accepted: true, timeControl: currentChallengeTimeControl });
             document.getElementById("challengeModal").style.display = "none";
         };
 
@@ -3873,6 +4199,31 @@
                 finalLoserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
             }
             announceGameEnd(`¡${finalLoserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`, { allowRematch: true });
+        });
+
+        // El servidor manda esto cada vez que el turno REALMENTE pasa de
+        // un color a otro (no en cada salto intermedio de una captura
+        // múltiple) -- es la única fuente de verdad del tiempo, así que
+        // simplemente reemplazamos nuestra foto local por la suya.
+        socket.on('clock-sync', (data) => {
+            if (data?.clocks) setClockState(data.clocks, data.turn);
+        });
+
+        // El cuarto motivo de fin de partida (además de aniquilación,
+        // bloqueo y empate): alguien agotó su reloj. Mismo cartel para
+        // los dos jugadores y para los espectadores -- no hace falta
+        // uno distinto por bando, "fulano se quedó sin tiempo" ya
+        // cuenta toda la historia sola.
+        socket.on('game-over-by-time', (data) => {
+            stopClockAnimation(); // la partida terminó, el reloj ya no corre
+            const winnerName = data?.winnerName;
+            const loserName = data?.loserName;
+            if (winnerName && loserName) {
+                announceGameEnd(`¡${winnerName} gana la partida!<br>${loserName} se quedó sin tiempo`, { allowRematch: true });
+            } else {
+                // Fallback defensivo (no debería pasar nunca en la práctica)
+                announceGameEnd(`Uno de los jugadores se quedó sin tiempo.<br>La partida ha finalizado.`, { allowRematch: true });
+            }
         });
 
         // --- AUTO-LOGIN DE GODOFREDO ---

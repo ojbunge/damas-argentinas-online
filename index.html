@@ -662,6 +662,11 @@
             padding: 3px 8px;
             letter-spacing: 1px;
             text-shadow: none;
+            /* Sin esto, hereda text-transform:uppercase de
+               .player-name-label (el padre, para el NOMBRE del jugador)
+               -- y aunque formatClockTime ya arma el texto en minúscula
+               ("12m47s"), el CSS lo mostraba en mayúscula igual. */
+            text-transform: none;
             z-index: 5;
         }
 

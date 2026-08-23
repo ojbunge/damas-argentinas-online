@@ -116,6 +116,40 @@ function pushSystemMessage(io, text) {
     pushChatMessage(io, { type: 'system', text: text, time: Date.now() });
 }
 
+// Mandamos a TODOS los conectados con su status (lobby / spectating /
+// playing / vsbot). El cliente decide qué mostrar como "desafiable" en
+// el Salón (todos menos los que están jugando contra un humano), pero
+// necesita conocer también a los que están jugando para poder resaltar
+// @menciones a ellos en el chat. botName y room solo importan para los
+// que están en 'vsbot' (etiqueta "(vs. Nombre)" y el modal de
+// desafiar-o-espectar), pero no cuesta nada mandarlos siempre.
+//
+// A nivel de MÓDULO (no adentro de io.on('connection', ...) como
+// estaba antes) -- ahí adentro no era alcanzable desde afuera del
+// closure de conexión, y handleTimeExpired (más abajo, también a nivel
+// de módulo) la necesita para poder avisarle al lobby que la partida
+// terminó por tiempo. Esta era la causa exacta del crash que reportó
+// Otto ("ReferenceError: broadcastStatus is not defined"): apenas el
+// reloj de alguien se agotaba, el servidor se caía entero al intentar
+// llamar a una función que, desde ese punto del código, no existía.
+function broadcastStatus() {
+    const allUsers = Object.values(connectedUsers)
+        .map(u => ({ username: u.username, status: u.status, botName: u.botName, room: u.room }));
+
+    // Las partidas contra un bot NO entran acá: ya son accesibles
+    // clickeando el nombre del jugador (desafiar/espectar), así que
+    // listarlas también acá sería mostrar lo mismo dos veces. "Torneos
+    // en Curso" queda reservado a los duelos humano contra humano.
+    const games = Object.keys(activeGames)
+        .filter(id => !activeGames[id].vsBot)
+        .map(id => ({
+            id: id,
+            name: activeGames[id].name
+        }));
+
+    io.emit('update-lobby', { users: allUsers, games: games });
+}
+
 // ===================================================================
 //  EL RELOJ DE ARENA DE GODOFREDO (modo contrarreloj)
 // ===================================================================
@@ -643,31 +677,6 @@ io.on('connection', (socket) => {
         });
     });
 
-    function broadcastStatus() {
-        // Mandamos a TODOS los conectados con su status (lobby / spectating /
-        // playing / vsbot). El cliente decide qué mostrar como "desafiable"
-        // en el Salón (todos menos los que están jugando contra un humano),
-        // pero necesita conocer también a los que están jugando para poder
-        // resaltar @menciones a ellos en el chat. botName y room solo
-        // importan para los que están en 'vsbot' (etiqueta "(vs. Nombre)" y
-        // el modal de desafiar-o-espectar), pero no cuesta nada mandarlos
-        // siempre.
-        const allUsers = Object.values(connectedUsers)
-            .map(u => ({ username: u.username, status: u.status, botName: u.botName, room: u.room }));
-
-        // Las partidas contra un bot NO entran acá: ya son accesibles
-        // clickeando el nombre del jugador (desafiar/espectar), así que
-        // listarlas también acá sería mostrar lo mismo dos veces. "Torneos
-        // en Curso" queda reservado a los duelos humano contra humano.
-        const games = Object.keys(activeGames)
-            .filter(id => !activeGames[id].vsBot)
-            .map(id => ({
-                id: id,
-                name: activeGames[id].name
-            }));
-
-        io.emit('update-lobby', { users: allUsers, games: games });
-    }
 });
 
 const PORT = process.env.PORT || 3000;

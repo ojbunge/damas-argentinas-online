@@ -743,24 +743,135 @@ const BOT_DIALOGUE = {
 
     },
 
-    // ---- Nivel 7: Lora Prodigio — ¡ACÁ VAN NOMBRES DE ARCHIVO DE SONIDO, NO TEXTO! ----
-    loraprodigio: {
-        VICTORIA: [],
-        DERROTA: [],
-        EMPATE: [],
-        CORONACION_SUFRIDA: [],
-        CORONACION_PROPIA: [],
-        CAPTURA_MULTIPLE_SUFRIDA: [],
-        CAPTURA_MULTIPLE_PROPIA: [],
-        TODO_DAMAS: [],
-        POCAS_FICHAS_EN_DESVENTAJA: [],
-        DIFERENCIA_GRANDE_EN_CONTRA: [],
-        DIFERENCIA_GRANDE_A_FAVOR: [],
-        PARIDAD_POCAS_FICHAS: [],
-        PARTIDO_LARGO: [],
-        INICIO_HOSTILIDADES: [],
-        COMENTARIO_ALEATORIO: [],
-        INICIO_PARTIDA: []
+    // ---- Nivel 7: Myrth la Grande ----
+
+    myrthlagrande: {
+
+        VICTORIA: [
+            "¡Gané! Bueno, querido, espero que hayas disfrutado de la partida. La próxima vez jugá un poquito mejor. ¡Besito!",
+            "¡Victoria! ¿Viste, querido? La experiencia es un grado. Y yo tengo bastante experiencia... bastante.",
+            "¡Qué lindo ganar en mi propia mesa! Gracias por venir, querido. El público se renueva, pero la campeona sigue siendo la misma.",
+            "¡Gané! Sí, señor. No cualquiera puede sentarse en esta mesa y derrotar a Myrth la Grande. Vos hoy no pudiste."
+        ],
+
+        DERROTA: [
+            "¡Carajo, mierda! Bueno, querido, ganaste. Te felicito. Yo no soy rencorosa, pero sí memoriosa.",
+            "¡Me ganaste! Muy bien jugado. Te espero para una revancha, querido. Y acordate: yo no olvido una derrota.",
+            "Bueno... perdí. No pasa nada. Lo que no es, puede llegar a ser. Y una revancha siempre puede llegar a ser.",
+            "¡Qué barbaridad! Me ganaste en mi propia mesa. Bueno, disfrutalo, querido, porque no sé cuándo voy a volver a permitir semejante insolencia."
+        ],
+
+        EMPATE: [
+            "¡Tablas! Bueno, querido, no está mal. Una partida equilibrada en mi mesa, con mi tablero y con mi experiencia.",
+            "Empatamos. Mirá vos... hacía tiempo que alguien no me sacaba unas tablas tan dignamente.",
+            "Bueno, querido, quedamos iguales. Eso sí: la revancha se juega acá, porque esta mesa es de mi confianza.",
+            "¡Empate! Muy interesante. Me gusta la gente que me da pelea... aunque después generalmente termino ganándole."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¿Así que ahora tenés una reina? Querido, a lo largo de mi vida he visto nacer y morir muchísimas reinas. Ésta podría ser sólo una más.",
+            "¡Mirá vos, una reina! No te entusiasmes demasiado, querido. He visto coronaciones más impresionantes que ésta.",
+            "Bueno, bueno... ahora resulta que tenemos una reina en la mesa. Yo ya conocí tantas que perdí la cuenta. Y algunas duraron muy poco.",
+            "¿Coronaste? Felicitaciones, querido. Pero no confundas una corona con poder. De eso sé bastante."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Coroné! ¡Qué placer! ¿Viste, querido? Una dama sabe cuándo avanzar y cuándo esperar. Es cuestión de experiencia.",
+            "¡Tengo una reina! Bueno, chicos, esto se está poniendo interesante. A ver cómo hacés para sacármela ahora.",
+            "¡Coronación! Y pensar que algunos todavía creen que a mi edad una ya no tiene reflejos. ¡Por favor!",
+            "¡Reina coronada! Como te ven, te tratan. Y ahora que tengo una reina, espero que me trates con el respeto correspondiente, querido."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Carajo, mierda! Me estás comiendo las fichas una atrás de otra. ¿Qué te pasa hoy, querido?",
+            "Bueno, bueno... esto no me gusta nada. Me estás comiendo las fichas como Neanderthalius se comía los platos cuando lo invité a almorzar.",
+            "¡Pará un poquito! ¿No te enseñaron modales en la mesa? Una cosa es jugar y otra cosa es devorar todo lo que encontrás.",
+            "¡Qué manera de comer fichas! Tus peones están cayendo uno atrás de otro. Me hacés acordar a ciertos invitados que tuve en esta mesa..."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Muy bien! Una, dos, tres... querido, no me gusta desperdiciar oportunidades. En la mesa hay que saber comer.",
+            "¡Qué manera de llevarme fichas! Ya sea comida o damas, yo sé comer equilibrado, como podrás ver.",
+            "Tus fichas están cayendo una atrás de otra, como los señores feudales acaudalados caen en manos de María Eugenia de China.",
+            "¡Mirá cómo avanzo! Eso se llama saber aprovechar una oportunidad, querido. Y yo de oportunidades sé bastante."
+        ],
+
+        TODO_DAMAS: [
+            "¡Todas damas! Bueno, querido, ahora sí que tenemos una mesaza. No quedó un peón sentado a la mesa.",
+            "¡Mirá lo que quedó! Todas reinas. Esto parece una reunión de la nobleza del castillo.",
+            "¡Qué maravilla, todas damas! Y pensar que empezamos con unos pobres peoncitos. Lo que hace el tiempo...",
+            "Todas damas... ¡me encanta! Aunque debo decir que yo he conocido reinas bastante más interesantes que estas."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "Mmm... esto se está poniendo difícil, querido. Aunque lo que se dice 'difícil', a mí no me asusta.",
+            "¡Estás jugando muy bien! Se ve que todavía no probaste el veneno... digo, el vino. Dale un traguito, vas a ver qué rico que está.",
+            "No estoy preocupada. He salido de situaciones bastante peores que ésta. Y algunas fueron hace varios siglos.",
+            "Bueno, querido, me quedan pocas fichas. Pero no te confundas: yo también he visto ejércitos enteros parecer invencibles y terminar en el olvido."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "Mmm... esto huele mal. Aunque lo que se dice 'oler mal' en serio, ¡sólo Empecid Campeador! Cuando vino a almorzar hice servir pescado con camembert y ni así tapaba el tufo.",
+            "¡Carajo, mierda! Me estás dominando. Bueno, chicos, parece que hoy la invitada soy yo en mi propia mesa.",
+            "Querido, te voy a decir una cosa: estás jugando muy bien. Demasiado bien. Y eso me empieza a preocupar.",
+            "Bueno... estoy bastante abajo. Pero yo he visto imperios caer, dinastías desaparecer y castillos cambiar de dueño. ¿Pensás que unas fichas me van a asustar?"
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "Bueno, querido... no quiero presumir, pero me parece que estoy jugando bastante mejor que vos.",
+            "¡Mirá cómo estoy jugando! Esto parece una demostración y no una partida. ¡Besito, querido!",
+            "Te voy a decir la verdad: la mesa es mía, el tablero es mío y la ventaja también. ¿Qué más querés?",
+            "¡Qué placer! Mis fichas avanzan como si supieran exactamente lo que tienen que hacer. Carlosaúlmagno estaría orgulloso de mí."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "Bueno, querido, ahora sí que estamos mano a mano. Una equivocación y esto se termina.",
+            "Quedan poquitas fichas y estamos iguales. Me gustan estas partidas: acá se ve quién sabe jugar de verdad.",
+            "¡Qué suspenso! Mirá, chicos, ahora cualquiera puede ganar. Aunque yo tengo una pequeña ventaja: esta mesa es de mi confianza.",
+            "Estamos parejos, querido. Esto parece uno de esos almuerzos donde nadie quiere hablar primero porque sabe que después viene una pregunta incómoda."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡Cuánto hace que estamos jugando, querido! Ya podríamos haber terminado un almuerzo entero.",
+            "Esta partida es interminable. Y mirá que yo tengo experiencia con las cosas largas... muy largas.",
+            "Seguimos y seguimos... Los chicos ya deben estar preguntándose si vamos a cenar acá también.",
+            "¡Qué partida tan larga! A esta altura ya te considero un invitado habitual de mi mesa."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "Bueno, querido, basta de charla. Vamos a jugar. Y después no digas que no te avisé.",
+            "¿Lo digo o no lo digo? Bueno, lo digo: preparate, querido, porque hoy no pienso regalarte nada.",
+            "¡A jugar! Esta mesa es mía, este tablero es mío y las reglas las conocemos los dos. Vamos a ver quién sabe aprovecharlas.",
+            "Bueno, chicos, empezó la batalla. Que nadie diga después que Myrth la Grande no avisó."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "Dicen que tuve un dinosaurio de mascota. ¡Mentira, querido! Era un tigre dientes de sable. No exageremos.",
+            "La semana pasada vinieron Neanderthalius y Monsieur Fisure Termidor a almorzar. Termidor se tomó hasta mi alcohol medicinal y Neanderthalius casi se come a mi mascota.",
+            "Yo no entiendo por qué dicen que soy tan vieja. Cuando era joven... bueno, eso fue hace tanto que prefiero no hablar del tema.",
+            "No sé por qué dicen que enveneno a mis invitados. Una prepara una mesaza, cocina con cariño y después resulta que todo es sospechoso.",
+            "Yo no soy rencorosa, pero sí memoriosa. Y además tengo una memoria extraordinaria: recuerdo perfectamente quién me ganó y cuándo.",
+            "¿Sabés qué pasa, querido? Como te ven, te tratan. Si te ven mal, te maltratan; y si te ven bien, te contratan. Esto sirve para las damas y para la vida.",
+            "María Eugenia de China es muy linda, sí. Pero que no se haga la distraída: yo sé perfectamente de dónde salió cada uno de sus maridos.",
+            "Me dijeron que Carlosaúlmagno me invita a conocer Anillaco. Qué hombre encantador... y tan simpático. Yo todavía no fui, pero todo se puede conversar.",
+            "La otra noche pensé en invitar a Godofredo a mi mesa. Después me acordé de que trabaja tanto que probablemente estaría construyendo otra pared mientras yo almuerzo.",
+            "Una vez invité a Empecid Campeador a comer. Abrí todas las ventanas del castillo. Todas.",
+            "No entiendo por qué algunos dicen que soy demasiado vieja. Querido, yo he visto cambiar las modas, los reinos y hasta los muebles de este castillo.",
+            "¿Lo dije o lo pensé? Bueno... mejor lo pienso. No quiero generar un conflicto diplomático en la mesa.",
+            "Este programa... digo, esta partida trae suerte. Aunque no necesariamente para el invitado.",
+            "Me gusta la gente joven, querido. Tienen energía, entusiasmo... y todavía creen que pueden ganarme."
+        ],
+
+        INICIO_PARTIDA: [
+            "¡Ta-ble-ra-zo! Bueno, querido, sentate cómodo. Esta es mi mesa y este es mi tablero de mi confianza.",
+            "assets/bots/myrthlagrandecortina.mp3",
+            "Bienvenido a mi mesa, querido. Te acepté el reto de jugar a las damas, pero acá las reglas son claras: se juega con elegancia.",
+            "¡Qué lindo recibirte! Sentate, querido. Los chicos ya están mirando y yo estoy lista. ¡Que empiece la partida!",
+            "Bueno, querido, empezamos. Espero que hayas venido preparado, porque yo no invito a cualquiera a jugar en mi mesa.",
+            "¡Ta-ble-ra-zo! Y te voy a decir una cosa antes de empezar: como te ven, te tratan. Así que jugá bien.",
+            "Bienvenido, querido. Esta mesa ha visto pasar a reyes, reinas, caballeros y personajes de toda clase. Ahora te toca a vos."
+        ]
+
     },
 
     // ---- Nivel 8: Godofredo ----

@@ -75,11 +75,11 @@ const BOT_CHARACTERS = [
         description: "Aromático caballero que galopa por las planicies del reino en busca de rivales que no le huyan. Su olor a pata es tan abrumador que a veces se siente hasta por internet y provoca que las fichas se capturen solas intentando escapar de él. Intentará erradicarte del tablero como erradicó a los moros de España, aunque también se dice que huyeron ellos solos por el olor."
     },
     {
-        id: "loraprodigio",
+        id: "myrthlagrande",
         level: 7,
-        name: "Lora Prodigio",
-        image: "assets/bots/loraprodigio.jpg",
-        description: "El pájaro más inteligente y malhablado de las redes sociales trae sus legendarias puteadas a nuestro castillo, intentando desconcentrarte con cuanta frase picante se cruce por su pico. Esta hábil y locuaz jugadora lo dará todo a cambio de unas pipas, y si te gana, habrás perdido contra un animal. ¡A tomar por culo!"
+        name: "Myrth la Grande",
+        image: "assets/bots/myrthlagrande.jpg",
+        description: "Myrth la Grande es realmente muy grande, por no decir vieja. La reina madre de nuestro castillo, siempre sentada a la cabecera de su mesa, es culta y refinada, pero también mordaz e incisiva, lo que se muestra tanto es sus comentarios como en su juego. Hay quien dice que tuvo a un dinosaurio de mascota y que envenena a sus invitados ¡Desafiala en su propia me-sa-za!"
     },
     {
         id: "godofredo",

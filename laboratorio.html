@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Laboratorio - Damas Argentinas Online</title>
+    <style>
+        /* ============================================================
+           EL LABORATORIO — arquitectura aparte de la Arena principal
+           ============================================================
+           Esta página vive sola: no hay turnos, no hay rival, no hay
+           reloj, no hay Crónica. Es un tablero de estudio, donde la
+           misma persona maneja blancas y negras a la vez. Comparte con
+           index.html el motor de reglas (rules-engine.js, cargado tal
+           cual, sin tocar una coma) y buena parte del CSS del tablero
+           (copiado a propósito, no importado, para que un cambio acá
+           nunca pueda romper la Arena real ni viceversa) — pero toda la
+           lógica de interacción (clic derecho para colocar/sacar
+           fichas, la ruedita, deshacer) es exclusiva de esta página. */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('assets/laboratorio.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            background-blend-mode: overlay;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            padding-bottom: 40px;
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            color: #f1c40f;
+            text-shadow: 2px 2px 4px black;
+            margin: 10px 0 4px 0;
+            font-size: 2.2em;
+            text-align: center;
+        }
+
+        .lab-subtitle {
+            color: #d9c19a;
+            font-size: 14px;
+            margin: 0 0 18px 0;
+            text-align: center;
+        }
+
+        #topBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: flex-end;
+            box-sizing: border-box;
+            z-index: 50;
+        }
+
+        #salirLobbyBtn {
+            padding: 8px 16px;
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1a10;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        #salirLobbyBtn:hover {
+            filter: brightness(1.1);
+        }
+
+        /* --- EL ESCUDO FLUIDO, calcado de index.html --- */
+        :root {
+            --sq-size: clamp(26px, 5.95vw, 51px);
+            --board-border: clamp(13px, 2.55vw, 17px);
+            --board-padding: clamp(3px, 0.51vw, 4.25px);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(10, var(--sq-size));
+            grid-template-rows: repeat(10, var(--sq-size));
+            width: fit-content;
+            border: var(--board-border) solid #2c1a10;
+            border-radius: 15px;
+            padding: var(--board-padding);
+            background-color: #2c1a10;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            margin: 10px auto;
+            position: relative;
+        }
+
+        .coord-label {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d9c19a;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: clamp(9px, 1.6vw, 11px);
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .coord-label-col {
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: calc(var(--board-padding) + var(--board-border));
+        }
+
+        .coord-label-row {
+            top: 0;
+            right: 100%;
+            height: 100%;
+            width: calc(var(--board-padding) + var(--board-border));
+        }
+
+        .square {
+            width: var(--sq-size);
+            height: var(--sq-size);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .light {
+            background-color: #f0d9b5;
+        }
+
+        .dark {
+            background-color: #b58863;
+            cursor: pointer;
+        }
+
+        .piece {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            box-sizing: border-box;
+            transition: transform 0.2s ease-in-out, opacity 0.2s;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .white {
+            background-color: white;
+            border: 2px solid black;
+        }
+
+        .black {
+            background-color: black;
+            border: 2px solid grey;
+        }
+
+        .king::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            right: 15%;
+            bottom: 15%;
+            border: 4px solid #ffb300da;
+            border-radius: 50%;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        .selected {
+            outline: 4px solid red;
+        }
+
+        .highlight {
+            box-shadow: inset 0 0 0 4px lime;
+        }
+
+        @keyframes pulse-blue {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(0, 212, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 212, 255, 0);
+            }
+        }
+
+        .must-move {
+            animation: pulse-blue 1.5s infinite;
+            border: 3px solid #00d4ff !important;
+        }
+
+        /* --- LAYOUT GENERAL DEL LABORATORIO --- */
+        #labWrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Igual que en una partida real: mismo ancho que el tablero (así
+           queda alineada con él, no con el título ni el epígrafe, en
+           pantallas anchas), mismo estilo visual. Como en esta tanda
+           todavía no hay servidor (eso llega en la Tanda 2), arranca
+           siempre en "-", sin nadie espectando. */
+        #spectatorsBox {
+            width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
+            box-sizing: border-box;
+            margin: 0 0 10px 0;
+            text-align: left;
+            color: #f1c40f;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 5px;
+            border-left: 3px solid #f1c40f;
+        }
+
+        /* Arriba del tablero: donde en una partida real iría el nombre
+           del rival -- ahí van los tres botones y el contador de
+           fichas, todos juntos, a pedido de Otto. Quedan justos (el
+           ancho total apunta a coincidir con el del tablero), por eso
+           el padding/gap/tamaño de letra de .lab-btn están más
+           ajustados que en el resto del sitio -- y si aun así no
+           entran en una sola fila (pantallas muy angostas), envuelven
+           prolijamente en dos gracias al flex-wrap. */
+        #topControlsRow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+            width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
+        }
+
+        .lab-btn {
+            padding: 8px 13px;
+            background: linear-gradient(180deg, #9aa7b3, #5c6773);
+            color: #1a1f24;
+            border: 2px solid #3d454d;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13.5px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+
+        .lab-btn:hover:not(:disabled) {
+            filter: brightness(1.12);
+        }
+
+        .lab-btn:disabled {
+            opacity: 0.45;
+            cursor: default;
+            filter: none;
+        }
+
+        #pieceCounter {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 7px 13px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14.5px;
+            white-space: nowrap;
+        }
+
+        /* --- EL SELECTOR DE FICHAS (grid 2x2) --- */
+        #pieceTypePanel {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(241, 196, 15, 0.4);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            margin: 10px auto 0 auto;
+        }
+
+        #pieceTypePanel h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #f1c40f;
+            font-weight: normal;
+        }
+
+        #pieceTypeGrid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .piece-type-btn {
+            width: 44px;
+            height: 44px;
+            background: #1c2833;
+            border: 2px solid #566573;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .piece-type-btn .piece {
+            width: 28px;
+            height: 28px;
+            cursor: default;
+        }
+
+        .piece-type-btn.active {
+            border-color: #f1c40f;
+            background: #3a3020;
+            box-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
+        }
+
+        #boardColumnLab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @media (min-width: 900px) {
+            #labWrapper {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 24px;
+            }
+        }
+
+        #siteFooter {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2100;
+            background: rgba(0, 0, 0, 0.55);
+            color: #cfd8e3;
+            font-size: 11px;
+            text-align: center;
+            padding: 4px 8px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        #siteFooter a {
+            color: #f1c40f;
+            text-decoration: underline;
+        }
+
+        /* --- EL CUERVO MENSAJERO DE GODOFREDO (Chat del Salón) --- */
+        /* Copiado tal cual de index.html: mismo widget, mismos eventos de
+           servidor (chat-message/chat-history), para que el chat sea uno
+           solo en todo el sitio, como pidió Otto. */
+
+        #chatBubble {
+            display: none;
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            border: 2px solid #7a5a24;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+            z-index: 2500;
+        }
+
+        #chatBubble:hover {
+            filter: brightness(1.1);
+        }
+
+        #chatUnreadBadge {
+            display: none;
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #c0392b;
+            color: white;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        #chatPanel {
+            display: none;
+            position: fixed;
+            bottom: 84px;
+            right: 18px;
+            width: min(300px, 90vw);
+            height: min(380px, 60vh);
+            background: #1c2733;
+            border: 2px solid #f1c40f;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            z-index: 2500;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        #chatPanelHeader {
+            background: #2c3e50;
+            color: #f1c40f;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        #closeChatBtn {
+            background: none;
+            border: none;
+            color: #f1c40f;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #chatMessages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .chat-msg {
+            font-size: 13px;
+            color: #ecf0f1;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .chat-msg .chat-time {
+            color: #7f8c9b;
+            font-size: 11px;
+            margin-right: 4px;
+        }
+
+        .chat-msg .chat-username {
+            font-weight: 700;
+            color: #f1c40f;
+        }
+
+        .chat-msg.chat-system {
+            color: #a9c2d9;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .chat-msg.chat-mentioned {
+            background: rgba(241, 196, 15, 0.15);
+            border-left: 3px solid #f1c40f;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+
+        .chat-mention-tag {
+            color: #f1c40f;
+            font-weight: 700;
+        }
+
+        #chatInputBar {
+            display: flex;
+            gap: 6px;
+            padding: 10px;
+            border-top: 1px solid #34495e;
+            flex-shrink: 0;
+        }
+
+        #chatInput {
+            flex: 1;
+            min-width: 0;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #4a5c6e;
+            background: #29394a;
+            color: white;
+            font-size: 13px;
+        }
+
+        #chatInput:focus {
+            outline: none;
+            border-color: #f1c40f;
+        }
+
+        #chatSendBtn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            background: #f1c40f;
+            color: #2c1c0a;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        /* --- EL DESAFÍO QUE PUEDE LLEGAR MIENTRAS SE EXPERIMENTA --- */
+        #labChallengeModal {
+            display: none;
+            background: #2c3e50;
+            padding: 20px;
+            border: 3px solid #f1c40f;
+            border-radius: 15px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3100;
+            max-width: min(420px, 90vw);
+            text-align: center;
+        }
+
+        #labChallengeModal .lab-btn {
+            margin: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <footer id="siteFooter">
+        © 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.
+        <a href="/terminos" target="_blank" rel="noopener">Ver Términos de Uso</a>.
+    </footer>
+
+    <div id="topBar">
+        <button id="salirLobbyBtn" onclick="location.href='index.html'">🚪 Salir al Lobby</button>
+    </div>
+
+    <h1>🧪 El Laboratorio</h1>
+    <p class="lab-subtitle">Estudiá jugadas, probá ataques y defensas, libremente y sin restricciones.</p>
+
+    <div id="labWrapper">
+        <div id="boardColumnLab">
+            <div id="spectatorsBox">
+                <span id="spectatorListDisplay">Espectadores: -</span>
+            </div>
+
+            <div id="topControlsRow">
+                <button id="posicionInicialBtn" class="lab-btn">▶️ Posición inicial</button>
+                <button id="removerTodoBtn" class="lab-btn">🗑️ Remover todo</button>
+                <button id="deshacerBtn" class="lab-btn" disabled>↩️ Deshacer</button>
+                <span id="pieceCounter">⚪ 0 | ⚫ 0</span>
+            </div>
+
+            <div id="board"></div>
+        </div>
+
+        <div id="pieceTypePanel">
+            <h3>Ficha a colocar<br>(clic derecho en el tablero)</h3>
+            <div id="pieceTypeGrid">
+                <button class="piece-type-btn" data-type="w" title="Peón blanco">
+                    <div class="piece white"></div>
+                </button>
+                <button class="piece-type-btn" data-type="W" title="Dama blanca">
+                    <div class="piece white king"></div>
+                </button>
+                <button class="piece-type-btn" data-type="b" title="Peón negro">
+                    <div class="piece black"></div>
+                </button>
+                <button class="piece-type-btn" data-type="B" title="Dama negra">
+                    <div class="piece black king"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chatBubble" onclick="toggleChat()">
+        💬
+        <span id="chatUnreadBadge">0</span>
+    </div>
+
+    <div id="chatPanel">
+        <div id="chatPanelHeader">
+            <span>💬 Chat del Salón</span>
+            <button id="closeChatBtn" onclick="toggleChat()">✕</button>
+        </div>
+        <div id="chatMessages"></div>
+        <div id="chatInputBar">
+            <input type="text" id="chatInput" placeholder="Escribí un mensaje..." maxlength="300"
+                onkeydown="handleChatKeydown(event)">
+            <button id="chatSendBtn" onclick="sendChatMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Un desafío puede llegar en cualquier momento, incluso mientras se
+         experimenta en el laboratorio. Aceptar acá no arma la partida en
+         esta misma página (el laboratorio no sabe renderizar un duelo
+         real) -- manda a index.html, que sí sabe, cargando la aceptación
+         en la propia dirección para que se complete sola al llegar. -->
+    <div id="labChallengeModal">
+        <h3 id="labChallengeText" style="margin-top: 0;">¡Un caballero te desafía!</h3>
+        <p style="color: #f1c40f; font-size: 13px;">(si aceptás, salís del laboratorio)</p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
+            <button class="lab-btn" style="background: linear-gradient(180deg, #6fcf87, #27ae60); color: white;"
+                onclick="acceptLabChallenge()">Aceptar</button>
+            <button class="lab-btn" style="background: linear-gradient(180deg, #e77568, #c0392b); color: white;"
+                onclick="declineLabChallenge()">Rechazar</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="rules-engine.js"></script>
+    <script>
+        // ============================================================
+        //  ESTADO
+        // ============================================================
+        let board = Array.from({ length: 10 }, () => Array(10).fill(null));
+        let selectedPosition = null;
+        let currentAllowedMoves = [];
+        let pieceMustContinueCapturing = null;
+        let selectedPieceType = 'w'; // 'w' | 'W' | 'b' | 'B' -- mismo alfabeto que el propio tablero
+
+        // Hasta 4 fotos del tablero, para el botón de Deshacer. Se
+        // blanquea por completo (undoStack = []) apenas el jugador edita
+        // el tablero a mano (clic derecho, Posición inicial, Remover
+        // todo) -- Otto fue explícito en que estas dos cosas no pueden
+        // convivir: deshacer un movimiento hacia una foto vieja, después
+        // de que el jugador ya reacomodó fichas a mano, podría intentar
+        // devolver una ficha a una casilla que ahora ocupa otra.
+        let undoStack = [];
+        const MAX_UNDO_STEPS = 4;
+
+        const MAX_PIECES_PER_COLOR = 15;
+        const MAX_KINGS_PER_COLOR = 7;
+        const PIECE_TYPE_CYCLE = ['w', 'W', 'b', 'B'];
+
+        const soundMove = new Audio('assets/move.mp3');
+        const soundCapture = new Audio('assets/capture.mp3');
+        const soundCrowning = new Audio('assets/crowning.mp3');
+        const soundError = new Audio('assets/laberror1.mp3');
+
+        function playSound(audio) {
+            audio.currentTime = 0;
+            audio.play().catch(() => { });
+        }
+
+        const boardElement = document.getElementById('board');
+
+        // ============================================================
+        //  UTILIDADES DE TABLERO
+        // ============================================================
+        function isDarkSquare(row, col) {
+            return (row + col) % 2 === 1;
+        }
+
+        function cloneBoard(b) {
+            return b.map(row => row.slice());
+        }
+
+        function countPieces(color) {
+            let total = 0, kings = 0;
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const p = board[r][c];
+                    if (p && p.toLowerCase() === color) {
+                        total++;
+                        if (p === p.toUpperCase()) kings++;
+                    }
+                }
+            }
+            return { total, kings };
+        }
+
+        function updatePieceCounter() {
+            const w = countPieces('w').total;
+            const b = countPieces('b').total;
+            document.getElementById('pieceCounter').textContent = `⚪ ${w} | ⚫ ${b}`;
+        }
+
+        // Copiado literal de createInitialBoard() en server.js -- misma
+        // posición inicial exacta que usa cualquier partida real.
+        function createInitialLabBoard() {
+            return [
+                [null, "b", null, "b", null, "b", null, "b", null, "b"],
+                ["b", null, "b", null, "b", null, "b", null, "b", null],
+                [null, "b", null, "b", null, "b", null, "b", null, "b"],
+                [null, null, null, null, null, null, null, null, null, null],
+                [null, null, null, null, null, null, null, null, null, null],
+                [null, null, null, null, null, null, null, null, null, null],
+                [null, null, null, null, null, null, null, null, null, null],
+                ["w", null, "w", null, "w", null, "w", null, "w", null],
+                [null, "w", null, "w", null, "w", null, "w", null, "w"],
+                ["w", null, "w", null, "w", null, "w", null, "w", null]
+            ];
+        }
+
+        // ============================================================
+        //  DESHACER
+        // ============================================================
+        function pushUndoSnapshot() {
+            undoStack.push(cloneBoard(board));
+            if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
+            updateUndoButton();
+        }
+
+        function clearUndoStack() {
+            undoStack = [];
+            updateUndoButton();
+        }
+
+        function updateUndoButton() {
+            document.getElementById('deshacerBtn').disabled = (undoStack.length === 0);
+        }
+
+        function undoLastMove() {
+            if (undoStack.length === 0) return;
+            board = undoStack.pop();
+            updateUndoButton();
+            selectedPosition = null;
+            currentAllowedMoves = [];
+            pieceMustContinueCapturing = null;
+            renderBoard();
+            syncLabBoard();
+        }
+
+        // ============================================================
+        //  RENDERIZADO
+        // ============================================================
+        function renderBoard() {
+            boardElement.innerHTML = '';
+
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    const dark = isDarkSquare(row, col);
+                    square.classList.add(dark ? 'dark' : 'light');
+
+                    const isHighlighted = currentAllowedMoves.some(m => m.row === row && m.col === col);
+                    if (isHighlighted) square.classList.add('highlight');
+
+                    // Clic izquierdo en la casilla vacía resaltada: mueve
+                    // la ficha seleccionada ahí.
+                    square.addEventListener('click', () => {
+                        if (!selectedPosition) return;
+                        if (!isHighlighted) return;
+                        const chosenMove = currentAllowedMoves.find(m => m.row === row && m.col === col);
+                        if (chosenMove) executeMove(chosenMove);
+                    });
+
+                    // Clic derecho: colocar o sacar una ficha (ver
+                    // handleRightClick). preventDefault() para que no
+                    // aparezca el menú contextual del navegador encima
+                    // del tablero.
+                    square.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleRightClick(row, col);
+                    });
+
+                    const pieceValue = board[row][col];
+                    if (pieceValue) {
+                        const piece = document.createElement('div');
+                        piece.classList.add('piece');
+                        if (pieceValue.toLowerCase() === 'w') piece.classList.add('white');
+                        if (pieceValue.toLowerCase() === 'b') piece.classList.add('black');
+                        if (pieceValue === 'W' || pieceValue === 'B') piece.classList.add('king');
+
+                        if (selectedPosition && selectedPosition.row === row && selectedPosition.col === col) {
+                            piece.classList.add('selected');
+                        }
+
+                        // Brillo celeste de obligación: solo tiene sentido
+                        // una vez que HAY algo seleccionado (no hay
+                        // "turno" ambiente en el laboratorio) -- muestra
+                        // todas las piezas del MISMO color que comparten
+                        // la obligación de capturar, no solo la
+                        // seleccionada, para que se entienda por qué el
+                        // resto no se puede tocar.
+                        if (pieceMustContinueCapturing) {
+                            if (row === pieceMustContinueCapturing.row && col === pieceMustContinueCapturing.col) {
+                                piece.classList.add('must-move');
+                            }
+                        } else if (selectedPosition) {
+                            const actingPiece = board[selectedPosition.row][selectedPosition.col];
+                            const actingColor = actingPiece ? actingPiece.toLowerCase() : null;
+                            if (actingColor) {
+                                const bestGlobal = getGlobalBestMoves(actingColor);
+                                if (bestGlobal.length > 0 && bestGlobal.some(bg => bg.row === row && bg.col === col)) {
+                                    piece.classList.add('must-move');
+                                }
+                            }
+                        }
+
+                        piece.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            handlePieceClick(row, col, pieceValue);
+                        });
+                        piece.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRightClick(row, col);
+                        });
+
+                        square.appendChild(piece);
+                    }
+
+                    if (row === 9) {
+                        const colLabel = document.createElement('span');
+                        colLabel.classList.add('coord-label', 'coord-label-col');
+                        colLabel.textContent = String.fromCharCode(97 + col);
+                        square.appendChild(colLabel);
+                    }
+                    if (col === 0) {
+                        const rowLabel = document.createElement('span');
+                        rowLabel.classList.add('coord-label', 'coord-label-row');
+                        rowLabel.textContent = 10 - row;
+                        square.appendChild(rowLabel);
+                    }
+
+                    boardElement.appendChild(square);
+                }
+            }
+
+            updatePieceCounter();
+        }
+
+        // ============================================================
+        //  CLIC IZQUIERDO: "JUGAR" CON LAS FICHAS YA PUESTAS
+        // ============================================================
+        function handlePieceClick(row, col, pieceValue) {
+            if (isSpectatorMode) return; // los espectadores solo miran, no tocan nada
+            const pieceColor = pieceValue.toLowerCase();
+
+            // Si hay una captura en cadena en curso, solo se puede seguir
+            // con esa MISMA ficha -- ninguna otra es seleccionable hasta
+            // que la cadena termine.
+            if (pieceMustContinueCapturing) {
+                if (row !== pieceMustContinueCapturing.row || col !== pieceMustContinueCapturing.col) return;
+            }
+
+            // Tocar la ya seleccionada: deseleccionar.
+            if (selectedPosition && selectedPosition.row === row && selectedPosition.col === col) {
+                selectedPosition = null;
+                currentAllowedMoves = [];
+                renderBoard();
+                return;
+            }
+
+            // El clic "declara" el color actuante para esta jugada, sin
+            // importar qué color se clickeó la vez anterior -- si HAY
+            // captura obligatoria para este color en cualquier parte del
+            // tablero, solo una de las piezas obligadas puede
+            // seleccionarse (art. 9/10, igual que en una partida real).
+            const bestGlobalCaptures = getGlobalBestMoves(pieceColor);
+            let movesForThisPiece = [];
+
+            if (bestGlobalCaptures.length > 0) {
+                const canThisPieceMove = bestGlobalCaptures.find(bc => bc.row === row && bc.col === col);
+                if (!canThisPieceMove) return;
+                movesForThisPiece = canThisPieceMove.moves;
+            } else {
+                movesForThisPiece = getLegalMoves(row, col);
+            }
+
+            currentAllowedMoves = movesForThisPiece;
+            selectedPosition = { row, col };
+            renderBoard();
+        }
+
+        function executeMove(move) {
+            // Si esta jugada es NUEVA (no la continuación de una captura
+            // en cadena), guardamos una foto de cómo estaba el tablero
+            // ANTES de tocar nada -- así "deshacer" vuelve exactamente a
+            // como estaba antes de esta jugada completa, con todos sus
+            // saltos incluidos, no solo el último.
+            if (!pieceMustContinueCapturing) {
+                pushUndoSnapshot();
+            }
+
+            const fromRow = selectedPosition.row, fromCol = selectedPosition.col;
+            const piece = board[fromRow][fromCol];
+            board[fromRow][fromCol] = null;
+            board[move.row][move.col] = piece;
+
+            const landedPiece = board[move.row][move.col];
+            let justCrowned = false;
+            if ((landedPiece === "w" && move.row === 0) || (landedPiece === "b" && move.row === 9)) {
+                board[move.row][move.col] = landedPiece.toUpperCase();
+                justCrowned = true;
+            }
+
+            if (move.type === "capture") {
+                board[move.capturedRow][move.capturedCol] = null;
+
+                if (justCrowned) {
+                    finishTurn();
+                } else {
+                    const nextMoves = getLegalMoves(move.row, move.col);
+                    const canCaptureMore = nextMoves.some(m => m.type === "capture");
+                    if (canCaptureMore) {
+                        pieceMustContinueCapturing = { row: move.row, col: move.col };
+                        selectedPosition = { row: move.row, col: move.col };
+                        const bestGlobal = getGlobalBestMoves(landedPiece.toLowerCase());
+                        const thisPieceMoves = bestGlobal.find(bg => bg.row === move.row && bg.col === move.col);
+                        if (thisPieceMoves) currentAllowedMoves = thisPieceMoves.moves;
+                    } else {
+                        finishTurn();
+                    }
+                }
+            } else {
+                finishTurn();
+            }
+
+            if (move.type === "capture") playSound(soundCapture);
+            else playSound(soundMove);
+            if (justCrowned) playSound(soundCrowning);
+
+            renderBoard();
+            syncLabBoard();
+        }
+
+        function finishTurn() {
+            pieceMustContinueCapturing = null;
+            selectedPosition = null;
+            currentAllowedMoves = [];
+        }
+
+        // ============================================================
+        //  CLIC DERECHO: COLOCAR / SACAR FICHAS
+        // ============================================================
+        function handleRightClick(row, col) {
+            if (isSpectatorMode) return; // los espectadores solo miran, no tocan nada
+            if (!isDarkSquare(row, col)) return; // solo casillas jugables
+
+            if (board[row][col]) {
+                // Saca lo que haya ahí, sin importar tipo ni color.
+                board[row][col] = null;
+                clearUndoStack();
+                selectedPosition = null;
+                currentAllowedMoves = [];
+                pieceMustContinueCapturing = null;
+                renderBoard();
+                syncLabBoard();
+                return;
+            }
+
+            const type = selectedPieceType;
+            const color = type.toLowerCase();
+            const isKing = (type === 'W' || type === 'B');
+            const counts = countPieces(color);
+
+            if (counts.total >= MAX_PIECES_PER_COLOR) { playSound(soundError); return; }
+            if (isKing && counts.kings >= MAX_KINGS_PER_COLOR) { playSound(soundError); return; }
+
+            // Coronación automática: un peón colocado directamente en la
+            // última fila de SU PROPIO color es dama de entrada -- esa
+            // situación nunca podría darse en una partida real (un peón
+            // ahí ya habría coronado solo al llegar caminando).
+            let finalType = type;
+            let willCrown = false;
+            if (type === 'w' && row === 0) { finalType = 'W'; willCrown = true; }
+            if (type === 'b' && row === 9) { finalType = 'B'; willCrown = true; }
+
+            board[row][col] = finalType;
+            clearUndoStack();
+            selectedPosition = null;
+            currentAllowedMoves = [];
+            pieceMustContinueCapturing = null;
+            if (willCrown) playSound(soundCrowning);
+            renderBoard();
+            syncLabBoard();
+        }
+
+        // ============================================================
+        //  SELECCIÓN DEL TIPO DE FICHA A COLOCAR (rueda + grid 2x2)
+        // ============================================================
+        function updatePieceTypeUI() {
+            document.querySelectorAll('.piece-type-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === selectedPieceType);
+            });
+        }
+
+        document.querySelectorAll('.piece-type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedPieceType = btn.dataset.type;
+                updatePieceTypeUI();
+            });
+        });
+
+        // Solo mientras el mouse está sobre el tablero -- este listener
+        // vive en boardElement, no en window/document, así que fuera del
+        // tablero la rueda sigue haciendo scroll normal de la página.
+        boardElement.addEventListener('wheel', (e) => {
+            if (isSpectatorMode) return; // los espectadores solo miran, no tocan nada
+            e.preventDefault();
+            const idx = PIECE_TYPE_CYCLE.indexOf(selectedPieceType);
+            const dir = e.deltaY > 0 ? 1 : -1;
+            const newIdx = (idx + dir + PIECE_TYPE_CYCLE.length) % PIECE_TYPE_CYCLE.length;
+            selectedPieceType = PIECE_TYPE_CYCLE[newIdx];
+            updatePieceTypeUI();
+        }, { passive: false });
+
+        // ============================================================
+        //  BOTONES: POSICIÓN INICIAL / REMOVER TODO / DESHACER
+        // ============================================================
+        document.getElementById('posicionInicialBtn').addEventListener('click', () => {
+            board = createInitialLabBoard();
+            clearUndoStack();
+            selectedPosition = null;
+            currentAllowedMoves = [];
+            pieceMustContinueCapturing = null;
+            renderBoard();
+            syncLabBoard();
+        });
+
+        document.getElementById('removerTodoBtn').addEventListener('click', () => {
+            board = Array.from({ length: 10 }, () => Array(10).fill(null));
+            clearUndoStack();
+            selectedPosition = null;
+            currentAllowedMoves = [];
+            pieceMustContinueCapturing = null;
+            renderBoard();
+            syncLabBoard();
+        });
+
+        document.getElementById('deshacerBtn').addEventListener('click', undoLastMove);
+
+        // ============================================================
+        //  IDENTIDAD Y CONEXIÓN -- el laboratorio es una página aparte,
+        //  con su propia conexión de socket, así que la identidad viene
+        //  de sessionStorage (la misma que ya usa index.html para no
+        //  volver a pedir el nombre) en vez de un formulario propio. Si
+        //  alguien llega acá sin haber pasado antes por la entrada del
+        //  castillo, lo mandamos para allá.
+        // ============================================================
+        const myUsername = sessionStorage.getItem('damas_username');
+        if (!myUsername) {
+            location.href = 'index.html';
+        }
+
+        let isSpectatorMode = false;
+        let knownUsernames = [];
+
+        const socket = io();
+        socket.emit('set-username', { username: myUsername, isFirstArrival: false });
+
+        // Le manda al servidor la foto actual del tablero -- se llama
+        // después de CUALQUIER acción que lo modifique (colocar, sacar,
+        // mover, deshacer, los dos botones grandes). No hace nada si
+        // estamos en modo espectador (ahí el tablero nunca se edita
+        // localmente) ni si por algún motivo el socket no está listo.
+        function syncLabBoard() {
+            if (isSpectatorMode) return;
+            if (socket) socket.emit('sync-lab-board', { board: board });
+        }
+
+        function updateSpectatorsDisplay(names) {
+            const el = document.getElementById('spectatorListDisplay');
+            if (!el) return;
+            el.textContent = (names && names.length > 0)
+                ? `Espectadores: ${names.join(', ')}`
+                : 'Espectadores: -';
+        }
+
+        // Da una etiqueta legible para mostrar minutos con hasta 2
+        // decimales -- igual que en index.html, para el texto del
+        // desafío entrante si es en modo contrarreloj.
+        function formatMinutesLabel(ms) {
+            const minutes = Math.round((ms / 60000) * 100) / 100;
+            return `${minutes} min`;
+        }
+
+        // ============================================================
+        //  MODO ESPECTADOR -- si la URL trae ?spectate=<sala>, no somos
+        //  el dueño de este laboratorio, solo estamos mirando. Se
+        //  deshabilita toda edición y el tablero se actualiza en vivo
+        //  con lo que mande el servidor.
+        // ============================================================
+        const urlParams = new URLSearchParams(location.search);
+        const spectateTarget = urlParams.get('spectate');
+
+        function enterSpectatorMode(labRoom) {
+            isSpectatorMode = true;
+            document.getElementById('topControlsRow').style.display = 'none';
+            document.getElementById('pieceTypePanel').style.display = 'none';
+            document.getElementById('posicionInicialBtn').parentElement.style.display = 'none';
+            socket.emit('join-lab-spectator', labRoom);
+        }
+
+        socket.on('lab-init', (data) => {
+            board = data.board;
+            const subtitle = document.querySelector('.lab-subtitle');
+            if (subtitle) subtitle.textContent = `🔬 Espectando el laboratorio de ${data.ownerName || 'alguien'}.`;
+            renderBoard();
+        });
+
+        socket.on('lab-board-update', (data) => {
+            board = data.board;
+            renderBoard();
+        });
+
+        socket.on('lab-not-found', () => {
+            alert('Ese laboratorio ya no existe.');
+            location.href = 'index.html';
+        });
+
+        socket.on('lab-closed', () => {
+            if (!isSpectatorMode) return; // al dueño esto no le aplica
+            alert('El dueño de este laboratorio se fue. Volvés al Salón de los Caballeros.');
+            location.href = 'index.html';
+        });
+
+        socket.on('lab-spectators-update', (names) => {
+            updateSpectatorsDisplay(names);
+        });
+
+        socket.on('update-lobby', (data) => {
+            knownUsernames = data.users.map(u => u.username);
+        });
+
+        if (spectateTarget) {
+            enterSpectatorMode(spectateTarget);
+        } else {
+            socket.emit('enter-lab');
+        }
+
+        // ============================================================
+        //  EL DESAFÍO QUE PUEDE LLEGAR MIENTRAS SE EXPERIMENTA
+        // ============================================================
+        // Aceptar un desafío desde acá no arma la partida en esta misma
+        // página -- el laboratorio no sabe renderizar un duelo real, esa
+        // maquinaria vive entera en index.html. En cambio, mandamos a
+        // index.html con la aceptación ya "cargada" en la propia
+        // dirección; index.html, al arrancar, la detecta y la completa
+        // sola (ver el manejo de acceptChallengeFrom ahí). Rechazar, en
+        // cambio, no necesita viajar a ningún lado: se avisa directo
+        // desde acá mismo.
+        let labChallengerId = null;
+        let labChallengeTimeControl = null;
+
+        socket.on('receive-challenge', (data) => {
+            labChallengerId = data.fromId;
+            labChallengeTimeControl = data.timeControl || null;
+            const label = labChallengeTimeControl
+                ? ` en MODO CONTRARRELOJ, con ${formatMinutesLabel(labChallengeTimeControl.initialMs)} por jugador`
+                : '';
+            document.getElementById('labChallengeText').textContent = `¡${data.fromName} te desafía a un duelo${label}!`;
+            document.getElementById('labChallengeModal').style.display = 'block';
+        });
+
+        socket.on('challenge-canceled', (data) => {
+            if (labChallengerId && data.fromId === labChallengerId) {
+                document.getElementById('labChallengeModal').style.display = 'none';
+                labChallengerId = null;
+            }
+        });
+
+        function acceptLabChallenge() {
+            document.getElementById('labChallengeModal').style.display = 'none';
+            const fromId = labChallengerId;
+            const tc = labChallengeTimeControl;
+            labChallengerId = null;
+            if (!fromId) return;
+            const tcParam = encodeURIComponent(JSON.stringify(tc));
+            location.href = `index.html?acceptChallengeFrom=${encodeURIComponent(fromId)}&timeControl=${tcParam}`;
+        }
+
+        function declineLabChallenge() {
+            document.getElementById('labChallengeModal').style.display = 'none';
+            if (labChallengerId) {
+                socket.emit('challenge-response', { fromId: labChallengerId, accepted: false });
+            }
+            labChallengerId = null;
+        }
+
+        // ============================================================
+        //  EL CUERVO MENSAJERO (chat) -- copiado tal cual de index.html,
+        //  mismos eventos de servidor, para que el chat sea uno solo en
+        //  todo el sitio.
+        // ============================================================
+        let chatIsOpen = false;
+        let chatUnreadCount = 0;
+
+        function toggleChat() {
+            chatIsOpen = !chatIsOpen;
+            document.getElementById("chatPanel").style.display = chatIsOpen ? "flex" : "none";
+            if (chatIsOpen) {
+                chatUnreadCount = 0;
+                updateChatBadge();
+                const box = document.getElementById("chatMessages");
+                box.scrollTop = box.scrollHeight;
+                document.getElementById("chatInput").focus();
+            }
+        }
+
+        function updateChatBadge() {
+            const badge = document.getElementById("chatUnreadBadge");
+            if (chatUnreadCount > 0) {
+                badge.textContent = (chatUnreadCount > 9) ? "9+" : chatUnreadCount;
+                badge.style.display = "flex";
+            } else {
+                badge.style.display = "none";
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function escapeRegExp(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function formatChatTime(timestamp) {
+            const d = new Date(timestamp);
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+
+        function highlightMentions(safeText) {
+            let result = safeText;
+            knownUsernames.forEach(name => {
+                const safeName = escapeHtml(name);
+                const pattern = new RegExp('@' + escapeRegExp(safeName) + '\\b', 'gi');
+                result = result.replace(pattern, `<span class="chat-mention-tag">@${safeName}</span>`);
+            });
+            return result;
+        }
+
+        function messageJSMentionsMe(text, username) {
+            if (!username) return false;
+            const pattern = new RegExp('@' + escapeRegExp(username) + '\\b', 'i');
+            return pattern.test(text);
+        }
+
+        function renderChatMessage(msg) {
+            const box = document.getElementById("chatMessages");
+            const div = document.createElement("div");
+            const timeStr = formatChatTime(msg.time);
+
+            if (msg.type === 'system') {
+                div.className = "chat-msg chat-system";
+                div.textContent = `${msg.text} · ${timeStr}`;
+            } else {
+                const mentionsMe = messageJSMentionsMe(msg.text, myUsername);
+                div.className = "chat-msg" + (mentionsMe ? " chat-mentioned" : "");
+
+                const safeUsername = escapeHtml(msg.username);
+                const safeText = highlightMentions(escapeHtml(msg.text));
+                div.innerHTML = `<span class="chat-time">${timeStr}</span><span class="chat-username">${safeUsername}:</span> ${safeText}`;
+            }
+
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById("chatInput");
+            const text = input.value.trim();
+            if (!text) return;
+            socket.emit('chat-message', { text: text });
+            input.value = "";
+        }
+
+        function handleChatKeydown(event) {
+            if (event.key === "Enter") {
+                sendChatMessage();
+            }
+        }
+
+        socket.on('chat-history', (history) => {
+            const box = document.getElementById("chatMessages");
+            box.innerHTML = "";
+            history.forEach(msg => renderChatMessage(msg));
+        });
+
+        socket.on('chat-message', (msg) => {
+            renderChatMessage(msg);
+            if (!chatIsOpen) {
+                chatUnreadCount++;
+                updateChatBadge();
+            }
+        });
+
+        document.getElementById('chatBubble').style.display = 'flex';
+
+        // ============================================================
+        //  ARRANQUE: tablero vacío, tipo de ficha por defecto = peón blanco
+        // ============================================================
+        updatePieceTypeUI();
+        renderBoard();
+    </script>
+
+
+</body>
+
+</html>

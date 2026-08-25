@@ -17,6 +17,7 @@ app.get('/terminos', (req, res) => {
 
 let connectedUsers = {}; // { socketId: { username, status, room } }
 let activeGames = {};    // { roomName: { w: id, b: id, name, board, turn } }
+let activeLabs = {};     // { labRoomName: { ownerId, board, spectators: [usernames] } }
 let botRoomCounter = 0;  // contador incremental para nombres de sala de partidas vs. bot (más robusto que Date.now(), que puede repetirse si dos arrancan en el mismo milisegundo)
 
 // --- EL PERÍODO DE GRACIA DE GODOFREDO ---
@@ -95,6 +96,35 @@ function abandonCurrentGameIfAny(userId, connectedUsers, activeGames, io) {
 
     io.to(oldRoom).emit('opponent-left', { leaverName: user.username });
     delete activeGames[oldRoom];
+}
+
+// --- EL LABORATORIO: mismo par de funciones, pero para activeLabs ---
+// Igual que abandonCurrentGameIfAny/leaveSpectatingIfAny de arriba, pero
+// para el laboratorio -- se llaman EXACTAMENTE en los mismos lugares que
+// esas dos (challenge-response para ambas partes, join-as-spectator,
+// start-bot-game), así que sin importar de dónde venga alguien (dueño de
+// un laboratorio, o espectador de uno), queda prolijamente limpio antes
+// de arrancar cualquier otra cosa.
+function leaveLabIfAny(userId, connectedUsers, activeLabs, io) {
+    const user = connectedUsers[userId];
+    if (!user || user.status !== "inlab" || !user.room) return;
+    const labRoom = user.room;
+    if (!activeLabs[labRoom]) return;
+
+    io.to(labRoom).emit('lab-closed');
+    delete activeLabs[labRoom];
+}
+
+function leaveLabSpectatingIfAny(userId, connectedUsers, activeLabs, io) {
+    const user = connectedUsers[userId];
+    if (user && user.status === "spectating" && user.room && activeLabs[user.room]) {
+        const lab = activeLabs[user.room];
+        lab.spectators = lab.spectators.filter(name => name !== user.username);
+        io.to(user.room).emit('lab-spectators-update', lab.spectators);
+
+        const userSocket = io.sockets.sockets.get(userId);
+        if (userSocket) userSocket.leave(user.room);
+    }
 }
 
 // --- EL CUERVO MENSAJERO DE GODOFREDO (Chat del Salón) ---
@@ -294,6 +324,16 @@ io.on('connection', (socket) => {
     socket.on('challenge-response', (data) => {
         if (data.accepted) {
             const challengerId = data.fromId;
+
+            // Guarda defensiva: si cualquiera de las dos partes no está
+            // registrada (nunca mandó set-username todavía, o el
+            // desafiante se desconectó justo antes de que le
+            // respondieran), no seguimos -- sin esto, el servidor entero
+            // se caía al intentar leer el nombre de alguien que no existe
+            // en connectedUsers, tumbando la partida de TODOS los
+            // conectados por una carrera de tiempos de una sola persona.
+            if (!connectedUsers[challengerId] || !connectedUsers[socket.id]) return;
+
             const roomName = `room_${challengerId}_${socket.id}`;
 
             // Si alguna de las dos partes venía espectando otra partida, la
@@ -305,6 +345,14 @@ io.on('connection', (socket) => {
             leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
             abandonCurrentGameIfAny(challengerId, connectedUsers, activeGames, io);
             abandonCurrentGameIfAny(socket.id, connectedUsers, activeGames, io);
+            // Si cualquiera de las dos partes estaba en su laboratorio (o
+            // espectando el de otro), lo cerramos/lo sacamos prolijamente
+            // antes de meterlo en la partida nueva -- así se cumple lo que
+            // pidió Otto: aceptar un desafío abandona el laboratorio solo.
+            leaveLabIfAny(challengerId, connectedUsers, activeLabs, io);
+            leaveLabIfAny(socket.id, connectedUsers, activeLabs, io);
+            leaveLabSpectatingIfAny(challengerId, connectedUsers, activeLabs, io);
+            leaveLabSpectatingIfAny(socket.id, connectedUsers, activeLabs, io);
 
             // Crear la sala (con su propia foto de tablero, arrancando en posición inicial)
             // timeControl: null en modo normal. Cuando sí viene informado
@@ -375,6 +423,8 @@ io.on('connection', (socket) => {
             // Si ya estaba espectando otra partida, lo sacamos prolijamente de
             // ahí antes de meterlo en esta (para no quedar "fantasma" en dos salas).
             leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
+            leaveLabIfAny(socket.id, connectedUsers, activeLabs, io);
+            leaveLabSpectatingIfAny(socket.id, connectedUsers, activeLabs, io);
 
             socket.join(roomName);
             connectedUsers[socket.id].status = "spectating";
@@ -440,6 +490,8 @@ io.on('connection', (socket) => {
         leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
         // Y si ya estaba jugando otra (vs. bot o vs. humano) sin cerrar, la cerramos.
         abandonCurrentGameIfAny(socket.id, connectedUsers, activeGames, io);
+        leaveLabIfAny(socket.id, connectedUsers, activeLabs, io);
+        leaveLabSpectatingIfAny(socket.id, connectedUsers, activeLabs, io);
 
         // Contador incremental en el nombre de sala: acá solo hay UN socket
         // real involucrado (a diferencia de un desafío entre dos ids
@@ -480,6 +532,86 @@ io.on('connection', (socket) => {
             botId: botId
         });
 
+        broadcastStatus();
+    });
+
+    // --- EL LABORATORIO ---
+    // A diferencia de una partida, acá no hay reglas que validar del lado
+    // del servidor: es UNA sola persona manejando las dos fichas a su
+    // antojo, así que el servidor no necesita saber nada de captura
+    // obligatoria ni de turnos -- solo guarda la última foto del tablero
+    // (para poder mandársela a quien se sume después) y la retransmite en
+    // vivo a los espectadores. Reutiliza connectedUsers y broadcastStatus
+    // tal cual, tratando "estar en el laboratorio" como una tercera forma
+    // de estar ocupado, junto a "jugando" y "jugando contra un bot".
+    socket.on('enter-lab', () => {
+        const user = connectedUsers[socket.id];
+        if (!user) return;
+
+        leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
+        abandonCurrentGameIfAny(socket.id, connectedUsers, activeGames, io);
+        leaveLabIfAny(socket.id, connectedUsers, activeLabs, io);
+        leaveLabSpectatingIfAny(socket.id, connectedUsers, activeLabs, io);
+
+        const labRoom = `lab_${socket.id}`;
+        activeLabs[labRoom] = {
+            ownerId: socket.id,
+            board: Array.from({ length: 10 }, () => Array(10).fill(null)),
+            spectators: []
+        };
+
+        connectedUsers[socket.id].status = "inlab";
+        connectedUsers[socket.id].room = labRoom;
+        connectedUsers[socket.id].role = "labOwner";
+
+        socket.join(labRoom);
+        broadcastStatus();
+    });
+
+    // El dueño del laboratorio manda la foto actualizada del tablero cada
+    // vez que coloca, saca o mueve una ficha -- la guardamos y se la
+    // retransmitimos a quien esté espectando (nunca al dueño mismo, que
+    // ya tiene el tablero al día del lado suyo).
+    socket.on('sync-lab-board', (data) => {
+        const user = connectedUsers[socket.id];
+        if (!user || user.status !== "inlab" || !user.room) return;
+        const lab = activeLabs[user.room];
+        if (!lab) return;
+
+        lab.board = data.board;
+        socket.to(user.room).emit('lab-board-update', { board: lab.board });
+    });
+
+    // Alguien se suma a mirar un laboratorio ajeno -- mismo mecanismo que
+    // join-as-spectator, pero apuntando a activeLabs en vez de
+    // activeGames, y sin nada de turno/reloj/crónica (el laboratorio no
+    // tiene ninguna de esas cosas).
+    socket.on('join-lab-spectator', (labRoom) => {
+        const lab = activeLabs[labRoom];
+        if (!lab) {
+            socket.emit('lab-not-found');
+            return;
+        }
+
+        leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
+        leaveLabSpectatingIfAny(socket.id, connectedUsers, activeLabs, io);
+
+        socket.join(labRoom);
+        connectedUsers[socket.id].status = "spectating";
+        connectedUsers[socket.id].room = labRoom;
+        connectedUsers[socket.id].role = "spectator";
+
+        const username = connectedUsers[socket.id].username;
+        if (!lab.spectators.includes(username)) {
+            lab.spectators.push(username);
+        }
+
+        socket.emit('lab-init', {
+            board: lab.board,
+            ownerName: connectedUsers[lab.ownerId]?.username
+        });
+
+        io.to(labRoom).emit('lab-spectators-update', lab.spectators);
         broadcastStatus();
     });
 
@@ -561,6 +693,18 @@ io.on('connection', (socket) => {
                     const game = activeGames[user.room];
                     game.spectators = game.spectators.filter(name => name !== user.username);
                     io.to(user.room).emit('update-spectators-list', game.spectators);
+                }
+            } else if (user.room && activeLabs[user.room]) {
+                if (user.role === 'labOwner') {
+                    // El dueño se fue -- el laboratorio se cierra, y quien
+                    // lo estuviera espectando se entera (ver lab-closed en
+                    // laboratorio.html, que lo devuelve al lobby).
+                    io.to(user.room).emit('lab-closed');
+                    delete activeLabs[user.room];
+                } else if (user.role === 'spectator') {
+                    const lab = activeLabs[user.room];
+                    lab.spectators = lab.spectators.filter(name => name !== user.username);
+                    io.to(user.room).emit('lab-spectators-update', lab.spectators);
                 }
             }
             if (pendingDepartureTimers[user.username]) clearTimeout(pendingDepartureTimers[user.username]);

@@ -1611,6 +1611,11 @@
             <button id="cancelChallengeBtn" onclick="cancelPendingChallenge()"
                 style="display: none; padding: 8px 15px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar
                 desafío</button>
+
+            <p class="bots-hint-text" style="margin-top: 18px;">¿Querés estudiar jugadas? ¿Probar ataques y
+                defensas? ¿Mostrarle algo a alguien? Entrá a nuestro laboratorio y experimentá en el tablero
+                libremente y sin restricciones.</p>
+            <button class="bots-lobby-btn" onclick="location.href='laboratorio.html'">🧪 Entrar al Laboratorio</button>
         </div>
 
     </div>
@@ -2720,7 +2725,19 @@
         // puede terminar más alto o más bajo según cuánto texto tenga,
         // la colita se reposiciona cada vez para seguir apuntando bien
         // al círculo real, sin importar cuán alto haya crecido el globo.
-        function showBotSpeechBubble(text) {
+        // Extensiones de audio reconocidas: si una entrada del diccionario
+        // de diálogos (bot-dialogue.js) termina en una de estas, se toma
+        // como la ruta de un archivo de sonido para reproducir, en vez de
+        // una frase de texto para mostrar. No hace falta ninguna sintaxis
+        // especial -- va en el mismo arreglo de comillas separadas por
+        // coma de siempre, solo que la "frase" es la ruta del archivo.
+        const BOT_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg'];
+        function isBotAudioClipPath(value) {
+            const lower = value.toLowerCase();
+            return BOT_AUDIO_EXTENSIONS.some(ext => lower.endsWith(ext));
+        }
+
+        function showBotSpeechBubble(entry) {
             if (dialoguesMuted) return;
             const bubble = document.getElementById("botSpeechBubble");
             const banner = document.querySelector(".bot-banner");
@@ -2731,7 +2748,23 @@
 
             if (botSpeechBubbleTimeout) clearTimeout(botSpeechBubbleTimeout);
 
-            bubble.textContent = text;
+            // Si la entrada es un archivo de audio (por ejemplo, la
+            // sintonía de un programa para el saludo inicial de un
+            // personaje), lo reproducimos y mostramos una notita musical
+            // en el globo en vez del texto -- así se nota que el
+            // personaje "dijo" algo, aunque haya sido con un sonido en
+            // vez de una frase. Respeta el silenciador general del sitio
+            // (isMuted) además del de diálogos de bots (dialoguesMuted,
+            // ya chequeado arriba) -- si cualquiera de los dos está
+            // activo, no se reproduce nada.
+            const isAudio = isBotAudioClipPath(entry);
+            const displayText = isAudio ? "🎵" : entry;
+            if (isAudio && !isMuted) {
+                const clip = new Audio(entry);
+                clip.play().catch(() => { });
+            }
+
+            bubble.textContent = displayText;
             // Apoyamos el globo justo arriba del nombre, midiendo su alto
             // REAL en vez de asumir un número fijo (el nombre puede medir
             // distinto según el personaje, o si el texto llega a
@@ -2763,8 +2796,12 @@
             // ~16 caracteres por segundo de lectura, con un piso de 4s,
             // más 3 segundos extra (a pedido de Otto, que sintió corto el
             // tiempo original) -- una frase de 180 caracteres queda
-            // arriba unos 14 segundos, tiempo de sobra para leerla con calma.
-            const durationMs = Math.max(4000, text.length * 60) + 3000;
+            // arriba unos 14 segundos, tiempo de sobra para leerla con
+            // calma. Para el caso de audio (displayText = "🎵", 1 solo
+            // carácter) esto simplemente usa el piso de 4s+3s: 7
+            // segundos con la notita en pantalla, tiempo de sobra para un
+            // clip cortito.
+            const durationMs = Math.max(4000, displayText.length * 60) + 3000;
             botSpeechBubbleTimeout = setTimeout(() => {
                 bubble.classList.remove("visible");
                 botSpeechBubbleTimeout = null;
@@ -3796,12 +3833,15 @@
         // --- EL CARTEL DE LA DOBLE PUERTA (desafiar o espectar) ---
         let challengeOrSpectateTargetUsername = null;
         let challengeOrSpectateTargetRoom = null;
+        let challengeOrSpectateKind = 'bot'; // 'bot' | 'lab' -- decide qué hace el botón de Espectar
 
-        function openChallengeOrSpectateModal(username, botName, room) {
+        function openChallengeOrSpectateModal(username, botName, room, kind = 'bot') {
             challengeOrSpectateTargetUsername = username;
             challengeOrSpectateTargetRoom = room;
-            document.getElementById("challengeOrSpectateText").textContent =
-                `¿Desea desafiar a ${username} o espectar su partida contra ${botName}?`;
+            challengeOrSpectateKind = kind;
+            document.getElementById("challengeOrSpectateText").textContent = (kind === 'lab')
+                ? `¿Desea desafiar a ${username} o espectar su laboratorio?`
+                : `¿Desea desafiar a ${username} o espectar su partida contra ${botName}?`;
             document.getElementById("challengeOrSpectateModal").style.display = "block";
         }
 
@@ -3819,8 +3859,16 @@
 
         document.getElementById("spectateInsteadBtn").onclick = () => {
             const room = challengeOrSpectateTargetRoom;
+            const kind = challengeOrSpectateKind;
             closeChallengeOrSpectateModal();
-            if (room) socket.emit('join-as-spectator', room);
+            if (!room) return;
+            if (kind === 'lab') {
+                // El laboratorio vive en su propia página -- espectarlo
+                // significa navegar ahí, pasándole a quién mirar.
+                location.href = `laboratorio.html?spectate=${encodeURIComponent(room)}`;
+            } else {
+                socket.emit('join-as-spectator', room);
+            }
         };
 
         document.getElementById("cancelChallengeOrSpectateBtn").onclick = () => {
@@ -3978,7 +4026,10 @@
 
                     if (u.status === "vsbot") {
                         item.textContent = `🛡️ ${u.username} (vs. ${u.botName})`;
-                        item.onclick = () => openChallengeOrSpectateModal(u.username, u.botName, u.room);
+                        item.onclick = () => openChallengeOrSpectateModal(u.username, u.botName, u.room, 'bot');
+                    } else if (u.status === "inlab") {
+                        item.textContent = `🔬 ${u.username} (laboratorio)`;
+                        item.onclick = () => openChallengeOrSpectateModal(u.username, null, u.room, 'lab');
                     } else {
                         const etiqueta = (u.status === "spectating") ? " (espectando)" : "";
                         item.textContent = `🛡️ ${u.username}${etiqueta} (Desafiar)`;
@@ -4238,6 +4289,27 @@
                 // Si el nombre ya existe, lo ponemos en el input y entramos solos
                 document.getElementById("usernameInput").value = savedName;
                 registerUser();
+            }
+
+            // --- EL DESAFÍO QUE VINO DESDE EL LABORATORIO ---
+            // Si alguien aceptó un desafío mientras estaba en el
+            // laboratorio (ver acceptLabChallenge en laboratorio.html),
+            // esa página no puede renderizar la partida ella misma --
+            // manda para acá con la aceptación ya "cargada" en la propia
+            // dirección, y la completamos solos apenas arrancamos.
+            const urlParams = new URLSearchParams(location.search);
+            const acceptFrom = urlParams.get('acceptChallengeFrom');
+            if (acceptFrom && savedName) {
+                let timeControl = null;
+                try {
+                    timeControl = JSON.parse(urlParams.get('timeControl') || 'null');
+                } catch (e) {
+                    timeControl = null;
+                }
+                socket.emit('challenge-response', { fromId: acceptFrom, accepted: true, timeControl: timeControl });
+                // Limpiamos la URL: si el jugador refresca la página más
+                // tarde, no debe intentar aceptar el mismo desafío de nuevo.
+                history.replaceState({}, document.title, location.pathname);
             }
         };
 

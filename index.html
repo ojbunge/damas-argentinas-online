@@ -63,6 +63,13 @@
             color: white;
             margin: 0;
             min-height: 100vh;
+            /* Sin esto, el padding de arriba (20px) + el de abajo (20px)
+               se sumaban POR ENCIMA de min-height:100vh en vez de quedar
+               incluidos adentro -- el body terminaba midiendo 100vh+40px
+               de verdad, generando un scroll vertical "fantasma" de 40px
+               que no correspondía a ningún contenido real (aparecía la
+               barra, pero desplazarla no movía nada visible). */
+            box-sizing: border-box;
         }
 
         :root {
@@ -1612,7 +1619,7 @@
                 style="display: none; padding: 8px 15px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar
                 desafío</button>
 
-            <p class="bots-hint-text" style="margin-top: 18px;">¿Querés estudiar jugadas? ¿Probar ataques y
+            <p class="bots-hint-text" style="margin-top: 54px;">¿Querés estudiar jugadas? ¿Probar ataques y
                 defensas? ¿Mostrarle algo a alguien? Entrá a nuestro laboratorio y experimentá en el tablero
                 libremente y sin restricciones.</p>
             <button class="bots-lobby-btn" onclick="leaveAndGoTo('laboratorio.html')">🧪 Entrar al Laboratorio</button>

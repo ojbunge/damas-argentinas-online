@@ -352,6 +352,7 @@ const BOT_DIALOGUE = {
         VICTORIA: [
             "¡Alabado sea el Señor! ¡Victoria para este humilde servidor de la despensa!",
             "¡Por la Santísima Trinidad! ¡Hemos vencido! Hoy habrá que celebrar con una lata de arvejas Marolio.",
+            "assets/bots/marolio2.mp3",
             "¡Bendito sea Dios! ¡Quién iba a decir que este humilde fraile podía semejante hazaña!",
             "¡Gloria al Señor! Y gloria también a las fichas Marolio, que se han comportado con dignidad.",
             "¡Amén! ¡Victoria! Ahora sí puedo volver a la despensa con el corazón contento."
@@ -382,6 +383,7 @@ const BOT_DIALOGUE = {
         CORONACION_PROPIA: [
             "¡Alabado sea el Señor! ¡Una de mis humildes fichas ha alcanzado la gloria!",
             "¡Por la Santísima Trinidad! ¡Tenemos nueva dama! ¡Que Dios guíe sus pasos!",
+            "assets/bots/marolio3.mp3",
             "¡Bendito sea Dios! ¡Esta ficha acaba de ascender en la jerarquía del tablero!",
             "¡Gloria al Señor! Una ficha pequeña, pero con grandes aspiraciones. Como una lata de arvejas que termina en la mesa de un noble."
         ],
@@ -465,6 +467,7 @@ const BOT_DIALOGUE = {
 
         INICIO_PARTIDA: [
             "¿Qué tenemos aquí? ¡Una nueva partida! Dios y María Santísima, que el Señor guíe mis humildes fichas.",
+            "assets/bots/marolio1.mp3",
             "¡Por la Santísima Trinidad! ¡Comencemos! Aunque primero quisiera saber quién ha dejado estas fichas fuera de la despensa.",
             "Bendito sea Dios... otra partida de damas. Que el Señor me dé sabiduría, paciencia y un presupuesto un poquito mayor.",
             "¡Alabado sea el Señor! ¡Vamos a jugar! Si Dios quiere, hoy las fichas se comportarán mejor que los proveedores de la despensa.",

@@ -564,7 +564,7 @@
     </footer>
 
     <div id="topBar">
-        <button id="salirLobbyBtn" onclick="location.href='index.html'">🚪 Salir al Lobby</button>
+        <button id="salirLobbyBtn" onclick="leaveAndGoTo('index.html')">🚪 Salir al Lobby</button>
     </div>
 
     <h1>🧪 El Laboratorio</h1>
@@ -1075,6 +1075,15 @@
         const socket = io();
         socket.emit('set-username', { username: myUsername, isFirstArrival: false });
 
+        // --- LA DESPEDIDA LIMPIA DE GODOFREDO --- (ver el mismo comentario
+        // en index.html: sin esto, el servidor tarda hasta ~20-45
+        // segundos en darse cuenta de que nos fuimos, dejando un usuario
+        // "fantasma" con el estado viejo conviviendo con el nuevo.)
+        function leaveAndGoTo(url) {
+            socket.disconnect();
+            location.href = url;
+        }
+
         // Le manda al servidor la foto actual del tablero -- se llama
         // después de CUALQUIER acción que lo modifique (colocar, sacar,
         // mover, deshacer, los dos botones grandes). No hace nada si
@@ -1132,13 +1141,13 @@
 
         socket.on('lab-not-found', () => {
             alert('Ese laboratorio ya no existe.');
-            location.href = 'index.html';
+            leaveAndGoTo('index.html');
         });
 
         socket.on('lab-closed', () => {
             if (!isSpectatorMode) return; // al dueño esto no le aplica
             alert('El dueño de este laboratorio se fue. Volvés al Salón de los Caballeros.');
-            location.href = 'index.html';
+            leaveAndGoTo('index.html');
         });
 
         socket.on('lab-spectators-update', (names) => {
@@ -1193,7 +1202,7 @@
             labChallengerId = null;
             if (!fromId) return;
             const tcParam = encodeURIComponent(JSON.stringify(tc));
-            location.href = `index.html?acceptChallengeFrom=${encodeURIComponent(fromId)}&timeControl=${tcParam}`;
+            leaveAndGoTo(`index.html?acceptChallengeFrom=${encodeURIComponent(fromId)}&timeControl=${tcParam}`);
         }
 
         function declineLabChallenge() {

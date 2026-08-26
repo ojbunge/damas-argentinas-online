@@ -726,7 +726,7 @@ const BOT_DIALOGUE = {
             "Dicen que Empecid combate el mal olor de los deudos. Yo digo que un caballero que non deja rastro de su paso es caballero sin gloria.",
             "Icardio me preguntó si conocía doncellas de buen linaje. Le respondí que conozco muchas, mas ninguna se acerca a aqueste Campeador sin antes persignarse.",
             "El villano de la despensa, Fray Marolio, insiste en que debo lavarme más. ¡Qué atrevimiento! Non sabe que un verdadero caballero non malgasta el agua del reino.",
-            "Una vez perseguí a tres moros por la campiña durante media legua. Ellos iban huyendo, yo iba galopando e Rechinante iba... bueno, caminando. ¡Gran jornada de Reconquista!",
+            "Una vez perseguí a tres moros por la campiña durante media legua. Ellos iban huyendo, yo iba dando voces e Rechinante iba... bueno, caminando. ¡Gran jornada de Reconquista!",
             "¡Por Santiago! Ayer olvidé ponerme Empecid antes de dormir. Al alba, hasta las moscas habían abandonado mi aposento. ¡Cobardes!",
             "Las doncellas del castillo dicen que mi fedor es terrible. Mas estoy seguro de que si esperasen a conocer mi noble corazón, olvidarían semejante pequeñez.",
             "Myrth La Grande asegura haber conocido a mis antepasados. Non sé si creerle, pues esa dueña dice haber conocido a demasiados antepasados de demasiadas gentes.",
@@ -875,23 +875,210 @@ const BOT_DIALOGUE = {
     },
 
     // ---- Nivel 8: Godofredo ----
+
     godofredo: {
-        VICTORIA: [],
-        DERROTA: [],
-        EMPATE: [],
-        CORONACION_SUFRIDA: [],
-        CORONACION_PROPIA: [],
-        CAPTURA_MULTIPLE_SUFRIDA: [],
-        CAPTURA_MULTIPLE_PROPIA: [],
-        TODO_DAMAS: [],
-        POCAS_FICHAS_EN_DESVENTAJA: [],
-        DIFERENCIA_GRANDE_EN_CONTRA: [],
-        DIFERENCIA_GRANDE_A_FAVOR: [],
-        PARIDAD_POCAS_FICHAS: [],
-        PARTIDO_LARGO: [],
-        INICIO_HOSTILIDADES: [],
-        COMENTARIO_ALEATORIO: [],
-        INICIO_PARTIDA: []
+
+        VICTORIA: [
+            "¡Victoria, mi señor! ¡Por las barbas de mi abuelo, parece que el entrenamiento con la espada no fue en vano!",
+            "¡He vencido, mi señor Otto! ¡Qué honor combatir en este castillo que yo mismo ayudé a levantar!",
+            "¡Victoria! No soy hombre de presumir, mi señor, pero hoy las damas me han tratado con justicia.",
+            "¡Por Dios y por todos los santos! ¡He ganado! Mi señor Otto podrá estar orgulloso de su humilde peón.",
+            "¡He aquí el fruto del trabajo, mi señor! Quien pone empeño en su oficio acaba por recoger buenos frutos.",
+            "¡Victoria! Tal vez no tenga sangre noble, pero hoy he combatido con honra y eso me basta.",
+            "¡Ganamos, mi señor! Y si algún noble del castillo desea probar mi acero, que haga fila después de terminar la partida.",
+            "¡Ah, qué alegría! ¡He demostrado que un peón también puede vencer a los grandes señores!"
+        ],
+
+        DERROTA: [
+            "¡Ouwê! He sido derrotado, mi señor. Mas no os preocupéis: volveré a entrenar y regresaré más fuerte.",
+            "Habéis jugado mejor que yo, mi señor. Acepto la derrota con honra y os felicito por vuestra victoria.",
+            "¡Por las barbas de mi abuelo! Esta vez las damas me han sido adversas. Habrá revancha, si vos lo permitís.",
+            "He perdido, mi señor. Quizá deba volver a la pala y al martillo hasta recuperar la buena fortuna.",
+            "¡Wâfâ! No salió como esperaba. Mas un hombre trabajador no abandona su labor por un solo fracaso.",
+            "Mi señor, habéis demostrado ser un adversario digno. Guardaré memoria de esta derrota y aprenderé de ella.",
+            "¡Donnerwetter! Me habéis vencido limpiamente. No hay vergüenza en caer ante un rival que ha combatido mejor.",
+            "Perdí esta vez, mi señor, pero todavía me quedan fuerzas para otro duelo. Un peón puede caer y volver a levantarse."
+        ],
+
+        EMPATE: [
+            "¡Tablas, mi señor! Un resultado justo entre dos combatientes que han dado cuanto tenían.",
+            "Empate, mi señor. No es victoria, pero tampoco derrota. A veces el trabajo bien hecho termina así.",
+            "¡Ahâ! Parece que ninguno de los dos ha logrado doblegar al otro. Os felicito, mi señor.",
+            "Un honorable empate. Ha sido un placer medir mis fuerzas con vos, mi señor.",
+            "¡Por Dios! Tanto esfuerzo para terminar en tablas... Mas así son los duelos, y hay que aceptar el resultado.",
+            "Habéis resistido muy bien, mi señor. Será menester que volvamos a enfrentarnos en otra ocasión.",
+            "Tablas. Quizá ninguno de los dos merecía perder este combate.",
+            "Mi señor, si todas las batallas fueran tan limpias como ésta, habría mucha menos sangre en los caminos."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Ouwê! ¡Una de vuestras fichas ha alcanzado la última línea! Tendré que redoblar mis esfuerzos, mi señor.",
+            "¡Por las barbas de mi abuelo! Esa ficha ha ascendido de rango. Ahora el combate será mucho más difícil.",
+            "¡Halt! No puedo permitir que esa nueva dama haga estragos entre mis filas.",
+            "Una nueva dama en vuestro ejército... Esto comienza a ponerse serio, mi señor.",
+            "¡Donnerwetter! Esa ficha ha llegado demasiado lejos. Mi defensa tendrá que trabajar como nunca.",
+            "He permitido que una de vuestras fichas alcance la gloria, y ahora debo pagar por mi descuido.",
+            "¡Wâfen! ¡A las armas! Esa nueva dama puede causar grandes daños si no la detenemos.",
+            "Mi señor, habéis conseguido una poderosa pieza. Pero todavía no habéis ganado la batalla."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Victoria! ¡Una de mis fichas ha alcanzado la última línea y se ha convertido en dama! ¡Qué honor!",
+            "¡Por Dios! ¡He coronado una dama! Mi entrenamiento comienza a dar sus frutos.",
+            "¡Ahâ! Una ficha humilde ha ascendido. Como un peón que después de años de trabajo alcanza una posición honorable.",
+            "¡Donnerwetter! ¡Una nueva dama en mis filas! Ahora sí que el combate se vuelve interesante.",
+            "¡He aquí una recompensa al esfuerzo, mi señor! Una de mis fichas ha llegado hasta el final del camino.",
+            "¡Una dama! Mi señor Otto estaría orgulloso de ver cómo se desempeñan mis tropas en su castillo.",
+            "¡Por las barbas de mi abuelo! Esa ficha ha recorrido más terreno que yo cargando piedras para levantar estos muros.",
+            "¡Magnífico! Una nueva dama se une a mis filas. Ahora veremos si puede ganarse su lugar en el campo de batalla."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Wâfâ! ¡Me estáis arrebatando mis hombres a manos llenas, mi señor! Tendré que reorganizar mis filas.",
+            "¡Donnerwetter! ¡Mis fichas están cayendo una tras otra! No esperaba semejante golpe.",
+            "¡Por las barbas de mi abuelo! Habéis abierto una brecha terrible en mi defensa.",
+            "Mi señor, estáis causando estragos entre mis filas. Tendré que ser mucho más cuidadoso.",
+            "¡Harm! Ese golpe ha sido duro. Pero mientras quede una ficha en pie, seguiré combatiendo.",
+            "¡Wâfen! ¡No puedo permitir que sigáis avanzando de ese modo! Aún queda batalla por librar.",
+            "Me estáis comiendo muchas fichas, mi señor, casi como Rechinante se comió la mitad del trigo que había segado la semana pasada.",
+            "¡Ouwê! Mis hombres han sufrido una gran pérdida. Mas todavía no ha llegado el momento de rendirse."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Ahâ! ¡He abierto una brecha en vuestras filas! Por las barbas de mi abuelo, eso sí que ha sido un buen golpe.",
+            "¡Donnerwetter! ¡Mis hombres han avanzado como una verdadera hueste y han dejado vuestro ejército muy mermado!",
+            "¡Victoria para mis filas! He logrado derribar varias posiciones enemigas de una sola acometida.",
+            "¡Por Dios! ¡Cuántas fichas han caído ante mis hombres! Mi entrenamiento está dando resultado.",
+            "¡Magnífico! Hoy mis tropas han combatido con la fuerza de los hombres que levantaron estos muros.",
+            "¡Ahâ! Una buena jornada de combate. He limpiado vuestro camino de obstáculos, mi señor.",
+            "¡Por las barbas de mi abuelo! Si hubiera construido el castillo con la misma facilidad con la que acabo de capturar esas fichas, habría terminado en la mitad de tiempo.",
+            "¡Mis filas avanzan con firmeza! Parece que la pala y el martillo me enseñaron más estrategia de lo que yo creía."
+        ],
+
+        TODO_DAMAS: [
+            "¡Ahâ! Ya no quedan peones entre nosotros, mi señor. Sólo damas en el campo de batalla.",
+            "¡Por Dios! ¡Todas las fichas humildes han desaparecido y sólo quedan damas! Parece un duelo entre grandes señoras.",
+            "¡Donnerwetter! El tablero se ha convertido en un campo de batalla de damas. Habrá que combatir con mucho cuidado.",
+            "Sólo quedan damas, mi señor. Ahora cada movimiento puede decidir el destino del combate.",
+            "¡Qué curioso destino! Comenzamos con humildes peones y ahora sólo quedan damas luchando por la victoria.",
+            "Ya no hay trabajadores en el campo, mi señor. Sólo las grandes señoras han sobrevivido al combate.",
+            "¡Por las barbas de mi abuelo! Si todos los combates terminaran así, tendría que construir un castillo entero para albergar tantas damas.",
+            "El tablero está despejado de peones. Ahora veremos quién de nosotros sabe mandar mejor a sus damas."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "Esto está complicado, mi señor. Mas una vez logré sacar a Neanderthalius de un glaciar, y si pude hacer eso, todavía puedo salir de ésta.",
+            "¡Ouwê! Quedan pocas fuerzas en mis filas, pero mientras quede un hombre en pie, no abandonaré el combate.",
+            "Mi señor, la situación es mala. Pero he trabajado en condiciones peores y siempre he encontrado una manera de terminar la tarea.",
+            "¡Donnerwetter! Ya casi no quedan hombres bajo mi mando. Tendré que hacer que cada uno de ellos valga por diez.",
+            "La batalla se ha puesto muy cuesta arriba, mi señor. Aun así, no pienso entregar las armas.",
+            "¡Wâfen! Mis filas están muy reducidas, pero todavía puedo daros un buen susto antes del final.",
+            "He visto caer muros y he levantado otros desde sus cimientos. Esto tampoco será fácil, pero tampoco es imposible.",
+            "Mi señor, esto está tan complicado como cuando encontré a Neanderthalius congelado en el hielo. Y mirad: al final lo saqué de allí."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡Ouwê! Me estáis dominando con claridad, mi señor. Tendré que trabajar mucho para darle la vuelta a este combate.",
+            "¡Donnerwetter! Vuestro ejército avanza con demasiada fuerza. Pero aún no he arriado mi estandarte.",
+            "Mi señor, he de reconocerlo: estáis jugando mejor que yo. Mas todavía queda camino por recorrer.",
+            "¡Por las barbas de mi abuelo! Mis filas están siendo superadas. Tendré que pensar cada movimiento como si colocara una piedra fundamental.",
+            "Esto no marcha bien, mi señor. Pero he construido este castillo piedra por piedra; también puedo reconstruir mi partida movimiento por movimiento.",
+            "¡Harm! El combate se me está poniendo cuesta arriba. Aun así, un hombre de trabajo no abandona una obra a medio terminar.",
+            "Parece que vuestro ejército ha tomado ventaja. ¡Mas no cantéis victoria todavía, mi señor!",
+            "¡Wâfen! ¡No permitiré que me derribéis tan fácilmente! Todavía tengo fuerzas para cambiar el curso de la batalla."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Ahâ! Mis filas están dominando el combate, mi señor. Hoy parece que el entrenamiento ha dado sus frutos.",
+            "¡Por Dios! Vuestro ejército está retrocediendo. Si mi señor Otto pudiera verme ahora, estaría orgulloso.",
+            "¡Donnerwetter! ¡Estoy llevando ventaja y no pienso desperdiciarla!",
+            "Mi señor, parece que hoy mis hombres trabajan mejor que los vuestros. Tal vez sea hora de que vos toméis algunas lecciones de un humilde peón.",
+            "¡Por las barbas de mi abuelo! Estoy dominando el campo de batalla. Hasta Monsieur Fisure Termidor podría pensar que estoy jugando después de beberme un buen vino.",
+            "Mis tropas avanzan con firmeza, mi señor. Como cuando levantamos los muros de este castillo: piedra sobre piedra, sin detenernos.",
+            "¡Ahâ! Parece que conocer este tablero casi tan bien como conozco sus piedras me está dando ventaja.",
+            "¡Mi señor Otto estaría orgulloso! Un humilde peón está dominando el campo de batalla que él me confió."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "Ahora estamos en terreno peligroso, mi señor. Un solo error puede echar abajo todo el trabajo.",
+            "¡Ouwê! Quedan pocas fuerzas para ambos bandos. Ahora cada movimiento debe hacerse con mucho cuidado.",
+            "¡Donnerwetter! El combate está tan parejo que hasta una piedra mal colocada podría cambiar el destino de la batalla.",
+            "Mi señor, hemos llegado al momento en que un hombre prudente piensa antes de levantar el martillo.",
+            "Quedan pocas fichas y ninguna ventaja clara. Ahora veremos quién conserva mejor la cabeza fría.",
+            "¡Por Dios! Estamos sobre la cornisa. Un error y uno de los dos caerá al vacío.",
+            "Así como un muro puede caer por una sola piedra mal puesta, una partida puede perderse por un solo movimiento.",
+            "Mi señor, ya no hay lugar para la imprudencia. Aquí se gana con paciencia y trabajo."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡Donnerwetter! ¡Este combate lleva más tiempo que la construcción de algunas de las torres del castillo!",
+            "Mi señor, llevamos tanto tiempo jugando que empiezo a extrañar la pala y el martillo.",
+            "¡Ouwê! ¿Cuánto tiempo llevamos en esto? Hasta Godofredo empieza a necesitar un descanso.",
+            "¡Por las barbas de mi abuelo! He construido muros más deprisa de lo que estamos terminando esta partida.",
+            "Mi señor, si seguimos así, tendremos que llamar a Fray Marolio para que nos traiga comida.",
+            "Este combate parece no tener fin. Espero que Monsieur Fisure Termidor no haya terminado ya todo el vino mientras nosotros seguimos aquí.",
+            "¡Halt! Un momento de descanso no vendría mal. Hasta los hombres más fuertes necesitan sentarse después de tanto tiempo.",
+            "¡Donnerwetter! Si esta partida dura mucho más, mi señor Otto tendrá que agregar una sala nueva al castillo sólo para guardar nuestras fichas."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Ahâ! ¡Ahora sí comienza el verdadero combate, mi señor!",
+            "¡Por las barbas de mi abuelo! ¡La primera sangre ha sido derramada! Que cada hombre se prepare para la batalla.",
+            "¡Donnerwetter! Ya no estamos practicando. Ahora estamos combatiendo de verdad.",
+            "¡Wâfen! ¡A las armas, mi señor! La batalla ha comenzado.",
+            "¡Por Dios! Una primera ficha ha caído. Ahora veremos quién de nosotros tiene mejor temple.",
+            "¡Halt! ¡Se acabaron las cortesías! Ahora cada movimiento tendrá sus consecuencias.",
+            "Mi señor, la primera ficha ha sido tomada. Como en cualquier obra, ahora comienza la parte difícil.",
+            "¡Ahâ! Ya se ha escuchado el primer golpe. Que gane el más hábil y que el combate sea honorable."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "Mi señor Otto me pidió que levantara estos muros y lo hice. Si me pide que luche, también cumpliré con mi deber.",
+            "A veces extraño mi aldea en la Selva Negra. Allí no había damas ni grandes señores, pero sí mucho trabajo.",
+            "He trabajado con la pala desde que era niño. Nunca pensé que algún día tendría una espada en la mano.",
+            "Mi señor Otto me dio el honor de combatir aquí. No pienso desperdiciar la confianza que depositó en mí.",
+            "Dicen que soy sólo un peón. Puede ser. Pero hasta el castillo más grande comienza con un trabajador que coloca la primera piedra.",
+            "La semana pasada tuve que reparar una pared porque alguien se apoyó sobre ella con demasiada fuerza. No diré quién fue, pero Monsieur Fisure Termidor estaba cerca.",
+            "Icardio volvió a tocar la mandolina anoche. ¡Por Dios! Uno puede soportar un día entero de trabajo, pero no una serenata a las tres de la madrugada.",
+            "Fray Marolio es un buen hombre, aunque si algún día me invita a comer espero que haya algo más que arroz y lentejas.",
+            "Neanderthalius me cae bien. No hace demasiadas preguntas y nunca se queja cuando le pido que ayude a mover piedras.",
+            "Yo fui quien sacó a Neanderthalius del hielo. Pensé que iba a morir allí, pero resultó ser más resistente de lo que parecía.",
+            "Leonor de Aquitapia me pidió que formara parte de su séquito para secarle la nuca. Al día siguiente quería invitarme a un asado a solas. No termino de comprender a esa mujer.",
+            "Myrth la Grande merece mi respeto por sus muchos años. Aunque, siendo sincero, prefiero jugar las damas con mi señor Otto que sentarme a su mesa.",
+            "La princesa María Eugenia me mandó ayer a recoger flores para su alcoba. A veces pienso que en este castillo hay demasiados nobles y muy pocos trabajadores.",
+            "Carlosaúlmagno es un hombre simpático, pero no sé si confiaría en él. Me ofreció una fortuna para ir a trabajar a Anillaco. Algo no me termina de convencer.",
+            "Empecid Campeador pasó esta mañana junto al taller. Rechinante se comió parte del trigo que habíamos almacenado y el buen caballero aseguró que fue culpa de los moros.",
+            "Monsieur Fisure Termidor dice que trabaja mejor después de beber. Yo trabajo mejor después de dormir ocho horas. Cada hombre tiene sus métodos.",
+            "A veces pienso que los nobles gastan más dinero en cosas innecesarias de lo que mi señor Otto gasta en pagarme. Y eso ya es decir bastante.",
+            "He levantado muros, reparado tejados y cavado zanjas. Nunca imaginé que alguna de mis herramientas sería reemplazada por una espada.",
+            "Un buen trabajo requiere paciencia. Primero se mide, luego se corta y después se coloca. En las damas debe ser parecido, aunque aquí las piedras se mueven solas.",
+            "Por las barbas de mi abuelo, todavía recuerdo cuando puse la primera piedra de este castillo. Ahora veo a toda esta gente jugando dentro de él. Es un gran orgullo para mí.",
+            "No soy hombre de grandes riquezas ni de alta cuna. Pero sé trabajar, sé mantener mi palabra y sé quién es mi señor.",
+            "Hoy vi a Icardio cortejando a una doncella en el patio. Si dedicara a trabajar la mitad del esfuerzo que dedica a las serenatas, levantaría una torre él solo.",
+            "Neanderthalius todavía intenta encender fuego golpeando piedras. No quise decirle que hay formas más sencillas. Parecía muy orgulloso.",
+            "Fray Marolio me prometió una comida especial. Cuando llegué había arroz, lentejas y sardinas. Supongo que eso cuenta como especial.",
+            "El castillo podrá ser de piedra, pero lo importante son las personas que lo mantienen en pie. Aunque algunos de ellos den más trabajo del que merecen.",
+            "A veces me pregunto si un peón como yo puede llegar muy lejos. Luego recuerdo que construí un castillo y pienso que quizá no haya límites.",
+            "Mi señor Otto es algo ahorrativo con el dinero, eso es cierto. Pero jamás olvidaré que me dio la oportunidad de luchar en este lugar.",
+            "No entiendo cómo Leonor de Aquitapia puede organizar un torneo, preparar un asado y secarse la nuca al mismo tiempo. Es una habilidad que jamás aprendí.",
+            "Dicen que Carlosaúlmagno tiene un gran reino en Anillaco. Yo sólo espero que allí paguen mejor que aquí.",
+            "Si algún día termino mis obligaciones y puedo descansar una tarde entera, quizá vuelva a tomar la pala por gusto. Uno se acostumbra al trabajo.",
+            "Por las barbas de mi abuelo, a veces pienso que los caballeros se complican demasiado. Una buena pala resuelve muchos problemas."
+        ],
+
+        INICIO_PARTIDA: [
+            "¡Ahâ! ¡Así que éste es el duelo! Mi señor Otto, será un honor combatir ante vos.",
+            "Por las barbas de mi abuelo, qué extraño se siente empuñar una espada después de tantos años con la pala. ¡Comencemos, mi señor!",
+            "Mi señor, he dejado la pala y el martillo a un lado y he venido a combatir. Haré cuanto esté en mi mano para honrar vuestro castillo.",
+            "¡Donnerwetter! Jamás pensé que el peón que levantó estos muros terminaría luchando sobre ellos. ¡Comencemos!",
+            "Mi señor Otto, conozco estas piedras mejor que nadie. Quizá ese conocimiento me dé alguna ventaja en este combate.",
+            "¡Por Dios! He trabajado para levantar este castillo y ahora tengo el honor de defender mi nombre dentro de él. ¡Que comience el duelo!",
+            "Mi señor, no tengo sangre noble ni grandes títulos, pero sí tengo brazos fuertes, buena voluntad y muchas horas de entrenamiento.",
+            "¡Hê! ¡Todos listos! He dejado mis herramientas en el taller y ahora toca demostrar lo aprendido en el campo de batalla.",
+            "Mi señor Otto, cuando construimos este patio jamás imaginé que algún día estaría aquí con una espada en la mano. ¡Será un honor enfrentaros!",
+            "¡Por las barbas de mi abuelo! Si el castillo que construí puede resistir mis golpes de martillo, espero que vuestras fichas puedan resistir mis movimientos."
+        ]
+
     },
 
     // ---- Nivel 9: Princesa María Eugenia de China ----

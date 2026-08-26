@@ -1556,7 +1556,7 @@
         <!-- Solo queda el botón de Rendición -->
         <button id="surrenderBtn" onclick="surrender()">Rendirse</button>
         <button id="muteDialogueBtn" onclick="toggleDialogueMute()" title="Silenciar diálogos de los personajes">🗣️</button>
-        <button id="leaveLobbyBtn" onclick="location.reload()"
+        <button id="leaveLobbyBtn" onclick="leaveAndReload()"
             style="display: none; padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Salir
             al Lobby</button>
     </div>
@@ -1615,7 +1615,7 @@
             <p class="bots-hint-text" style="margin-top: 18px;">¿Querés estudiar jugadas? ¿Probar ataques y
                 defensas? ¿Mostrarle algo a alguien? Entrá a nuestro laboratorio y experimentá en el tablero
                 libremente y sin restricciones.</p>
-            <button class="bots-lobby-btn" onclick="location.href='laboratorio.html'">🧪 Entrar al Laboratorio</button>
+            <button class="bots-lobby-btn" onclick="leaveAndGoTo('laboratorio.html')">🧪 Entrar al Laboratorio</button>
         </div>
 
     </div>
@@ -2144,6 +2144,25 @@
 
         let myColor = null; // Guardará 'w' o 'b'
         let knownUsernames = []; // Nombres conocidos (jugando/espectando/libres), para @menciones en el chat
+
+        // --- LA DESPEDIDA LIMPIA DE GODOFREDO ---
+        // Antes de navegar a otra página o recargar, desconectamos el
+        // socket A PROPÓSITO. Sin esto, el navegador simplemente
+        // abandona la conexión sin avisar, y el servidor tarda hasta
+        // ~20-45 segundos (el tiempo de espera por defecto de
+        // socket.io, pensado para tolerar cortes de red momentáneos) en
+        // darse cuenta de que ya no estamos -- dejando, mientras tanto,
+        // un usuario "fantasma" con el estado viejo conviviendo con el
+        // estado nuevo en el Salón de los Caballeros. Llamar a
+        // socket.disconnect() manda el aviso al toque, sin esperar nada.
+        function leaveAndReload() {
+            socket.disconnect();
+            location.reload();
+        }
+        function leaveAndGoTo(url) {
+            socket.disconnect();
+            location.href = url;
+        }
 
         const socket = io(); // Esto inicia la conexión mágica con el servidor
 
@@ -3036,7 +3055,7 @@
         <p style="margin-bottom: 20px;">${message}</p>
         <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
             ${rematchButtonHtml}
-            <button onclick="location.reload()" style="padding:15px 30px; font-size: 20px; cursor:pointer; background: #f1c40f; border: none; border-radius: 10px; font-weight: bold;">
+            <button onclick="leaveAndReload()" style="padding:15px 30px; font-size: 20px; cursor:pointer; background: #f1c40f; border: none; border-radius: 10px; font-weight: bold;">
                 SALIR AL LOBBY
             </button>
         </div>
@@ -3865,7 +3884,7 @@
             if (kind === 'lab') {
                 // El laboratorio vive en su propia página -- espectarlo
                 // significa navegar ahí, pasándole a quién mirar.
-                location.href = `laboratorio.html?spectate=${encodeURIComponent(room)}`;
+                leaveAndGoTo(`laboratorio.html?spectate=${encodeURIComponent(room)}`);
             } else {
                 socket.emit('join-as-spectator', room);
             }

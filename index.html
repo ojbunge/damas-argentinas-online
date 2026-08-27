@@ -164,6 +164,25 @@
             align-items: center;
         }
 
+        /* Por defecto (antes de que arranque cualquier partida), ni el
+           tablero ni el resto de la interfaz "de partida" (el título
+           grande, la barra de turno/puntaje, la caja de espectadores)
+           deben ocupar espacio real en la página -- aunque estén
+           tapados por #waitingOverlay (que es position:fixed y cubre
+           toda la ventana con fondo oscuro), sin esto seguían
+           técnicamente presentes en el flujo normal del documento,
+           empujando la altura de la página hacia abajo y generando un
+           scroll que no llevaba a ningún lado visible (el "scroll
+           fantasma" que reportó Otto: aparecía la barra, se podía
+           mover, pero nada en pantalla cambiaba). display:none con
+           !important para no chocar con la regla de abajo, que alterna
+           #boardAndHistoryWrapper puntualmente entre flex/block según
+           el ancho de pantalla -- eso debe seguir decidiéndolo solo esa
+           regla, nunca un estilo puesto a mano por JS. */
+        .hidden-before-game {
+            display: none !important;
+        }
+
         #boardColumn {
             display: flex;
             flex-direction: column;
@@ -467,7 +486,15 @@
             background-color: rgba(0, 0, 0, 0.85);
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            /* SIN justify-content:center acá a propósito -- ver el
+               comentario en #entranceSection/#lobbySection, más abajo,
+               que centran con margin:auto en su lugar. justify-content
+               centra el desborde por igual arriba y abajo cuando el
+               contenido no entra, y como el scroll nunca puede ir
+               negativo, la mitad de arriba queda inalcanzable para
+               siempre -- exactamente el bug que reportó Otto (no podía
+               llegar al título con el scroll, sin importar cuánto lo
+               subiera). */
             align-items: center;
             z-index: 2000;
             color: #f1c40f;
@@ -475,6 +502,15 @@
             backdrop-filter: blur(10px);
             /* Esto hace que el tablero de atrás se vea borroso, ¡muy fancy! */
             background-color: rgba(0, 0, 0, 0.7);
+            /* Al ser position:fixed, el scroll de la PÁGINA nunca lo
+               mueve ni le sirve de nada -- necesita su propio scroll
+               interno para cuando su contenido (el Salón de los
+               Caballeros, la Sala de Armas, etc.) no entra en una
+               ventana angosta. Sin esto, esas partes quedaban
+               directamente inalcanzables, cortadas por el borde de la
+               ventana, sin ningún scroll (ni el de la página, que no
+               aplica; ni uno propio, que no existía) que las alcance. */
+            overflow-y: auto;
         }
 
         #entranceSection {
@@ -483,6 +519,22 @@
             align-items: center;
             /* Centra todo el contenido internamente */
             text-align: center;
+            /* Centrado vertical vía margen automático (no
+               justify-content en el padre): cuando el contenido entra
+               de sobra, los márgenes se reparten y queda centrado en la
+               pantalla, igual que antes. Pero cuando el contenido NO
+               entra, los márgenes automáticos colapsan a cero solos, en
+               vez de forzar un centrado imposible -- así el contenido
+               se ancla arriba y el scroll (ver overflow-y:auto en
+               #waitingOverlay) puede alcanzar todo, de punta a punta. */
+            margin: auto 0;
+        }
+
+        /* Mismo motivo que #entranceSection de arriba (ver ese
+           comentario): margin:auto en vez de depender de
+           justify-content:center en el padre. */
+        #lobbySection {
+            margin: auto 0;
         }
 
         /* El Castillo de Godofredo: fondo de la pantalla de entrada.
@@ -1551,9 +1603,9 @@
         <button id="muteBtn" class="rules-btn" onclick="toggleMute()" title="Silenciar / activar sonido">🔊</button>
     </div>
 
-    <h1>Damas Argentinas</h1>
+    <h1 class="hidden-before-game">Damas Argentinas</h1>
 
-    <div class="status-container">
+    <div class="status-container hidden-before-game">
         <div>
             <span id="turnIndicator">Turno: Blancas</span>
         </div>
@@ -1569,12 +1621,12 @@
     </div>
 
     <!-- El Mirador de Godofredo (Lista de Espectadores) -->
-    <div id="spectatorsBox">
+    <div id="spectatorsBox" class="hidden-before-game">
         <span id="spectatorListDisplay">Espectadores: -</span>
     </div>
 
     <!-- La Crónica y la Arena, lado a lado -->
-    <div id="boardAndHistoryWrapper">
+    <div id="boardAndHistoryWrapper" class="hidden-before-game">
         <div id="boardColumn">
             <!-- Estandarte del oponente (Arriba) -->
             <div id="topPlayerName" class="player-name-label"></div>
@@ -3303,6 +3355,7 @@
             }
 
             document.getElementById("waitingOverlay").style.display = "none";
+            document.querySelectorAll(".hidden-before-game").forEach(el => el.classList.remove("hidden-before-game"));
             renderBoard();
             updateTurnIndicator();
         });

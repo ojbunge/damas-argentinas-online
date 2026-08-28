@@ -1047,7 +1047,7 @@ const BOT_DIALOGUE = {
             "Neanderthalius me cae bien. No hace demasiadas preguntas y nunca se queja cuando le pido que ayude a mover piedras.",
             "Yo fui quien sacó a Neanderthalius del hielo. Pensé que iba a morir allí, pero resultó ser más resistente de lo que parecía.",
             "Leonor de Aquitapia me pidió que formara parte de su séquito para secarle la nuca. Al día siguiente quería invitarme a un asado a solas. No termino de comprender a esa mujer.",
-            "Myrth la Grande merece mi respeto por sus muchos años. Aunque, siendo sincero, prefiero jugar las damas con mi señor Otto que sentarme a su mesa.",
+            "Myrth la Grande merece mi respeto por sus muchos años. Aunque, siendo sincero, prefiero jugar las damas con usted, mi señor, que sentarme a su mesa.",
             "La princesa María Eugenia me mandó ayer a recoger flores para su alcoba. A veces pienso que en este castillo hay demasiados nobles y muy pocos trabajadores.",
             "Carlosaúlmagno es un hombre simpático, pero no sé si confiaría en él. Me ofreció una fortuna para ir a trabajar a Anillaco. Algo no me termina de convencer.",
             "Empecid Campeador pasó esta mañana junto al taller. Rechinante se comió parte del trigo que habíamos almacenado y el buen caballero aseguró que fue culpa de los moros.",
@@ -1070,59 +1070,457 @@ const BOT_DIALOGUE = {
         ],
 
         INICIO_PARTIDA: [
-            "¡Ahâ! ¡Así que éste es el duelo! Mi señor Otto, será un honor combatir ante vos.",
+            "¡Ahâ! ¡Así que éste es el duelo! Mi señor, será un honor combatir ante vos.",
             "Por las barbas de mi abuelo, qué extraño se siente empuñar una espada después de tantos años con la pala. ¡Comencemos, mi señor!",
             "Mi señor, he dejado la pala y el martillo a un lado y he venido a combatir. Haré cuanto esté en mi mano para honrar vuestro castillo.",
             "¡Donnerwetter! Jamás pensé que el peón que levantó estos muros terminaría luchando sobre ellos. ¡Comencemos!",
-            "Mi señor Otto, conozco estas piedras mejor que nadie. Quizá ese conocimiento me dé alguna ventaja en este combate.",
+            "Mi señor, conozco estas piedras mejor que nadie. Quizá ese conocimiento me dé alguna ventaja en este combate.",
             "¡Por Dios! He trabajado para levantar este castillo y ahora tengo el honor de defender mi nombre dentro de él. ¡Que comience el duelo!",
             "Mi señor, no tengo sangre noble ni grandes títulos, pero sí tengo brazos fuertes, buena voluntad y muchas horas de entrenamiento.",
             "¡Hê! ¡Todos listos! He dejado mis herramientas en el taller y ahora toca demostrar lo aprendido en el campo de batalla.",
-            "Mi señor Otto, cuando construimos este patio jamás imaginé que algún día estaría aquí con una espada en la mano. ¡Será un honor enfrentaros!",
+            "Cuando construimos este patio junto a mi señor Otto jamás imaginé que algún día estaría aquí con una espada en la mano. ¡Será un honor enfrentaros!",
             "¡Por las barbas de mi abuelo! Si el castillo que construí puede resistir mis golpes de martillo, espero que vuestras fichas puedan resistir mis movimientos."
         ]
 
     },
 
     // ---- Nivel 9: Princesa María Eugenia de China ----
+
     mariaeugenia: {
-        VICTORIA: [],
-        DERROTA: [],
-        EMPATE: [],
-        CORONACION_SUFRIDA: [],
-        CORONACION_PROPIA: [],
-        CAPTURA_MULTIPLE_SUFRIDA: [],
-        CAPTURA_MULTIPLE_PROPIA: [],
-        TODO_DAMAS: [],
-        POCAS_FICHAS_EN_DESVENTAJA: [],
-        DIFERENCIA_GRANDE_EN_CONTRA: [],
-        DIFERENCIA_GRANDE_A_FAVOR: [],
-        PARIDAD_POCAS_FICHAS: [],
-        PARTIDO_LARGO: [],
-        INICIO_HOSTILIDADES: [],
-        COMENTARIO_ALEATORIO: [],
-        INICIO_PARTIDA: []
+
+        VICTORIA: [
+            "¡Gané, mi amor! Bueno, no te preocupes: siempre hay una próxima partida... aunque ésta ya me la quedo yo.",
+            "¡Victoria! Chicos, anoten: belleza, inteligencia y estrategia. No necesariamente en ese orden.",
+            "¿Viste? No alcanza con ser lindo, mi amor. También hay que saber mover las fichas.",
+            "¡Listo! Otra conquista para mi colección. Aunque ésta, por suerte, no requiere división de bienes gananciales.",
+            "¡Ganamos! Bueno, técnicamente gané yo, pero ya sabés que me gusta compartir... algunas cosas.",
+            "Fue una partida hermosa. Casi tanto como yo. Bueno, no exageremos: hermosa fue la partida.",
+            "¡Victoria, querido! Te dije que no te distrajeras conmigo. En fin... ahora ya es tarde.",
+            "Me encantó jugar con vos, mi amor. Cuando quieras repetimos. Pero la próxima traé algo interesante... como una buena estrategia."
+        ],
+
+        DERROTA: [
+            "¡No puede ser! Bueno, felicitaciones, mi amor. Te salió bien esta vez.",
+            "Perdí. Qué bronca... aunque dicen que perder una batalla no significa perder la guerra.",
+            "Bueno, me ganaste. No estoy acostumbrada, pero puedo soportarlo. Creo.",
+            "¡Ay, chicos! Me ganó. Esto no estaba en mis planes financieros... digo, estratégicos.",
+            "Te felicito, querido. Jugaste muy bien. La revancha va a ser cara, eso sí.",
+            "Bueno, perdí. No pasa nada. Siempre puedo recuperar lo perdido de alguna otra manera.",
+            "Me ganaste esta vez. Pero no te agrandes, mi amor. La suerte también se divorcia.",
+            "Está bien, te felicito. Pero ahora voy a estudiar cada movimiento que hiciste. Y yo tengo muy buena memoria."
+        ],
+
+        EMPATE: [
+            "¡Empate! Bueno, mitad para cada uno. Como corresponde en una buena separación de bienes.",
+            "Tablas. Ni vos te llevaste todo ni yo me llevé todo. Qué decepción tan civilizada.",
+            "Empatamos, mi amor. Creo que los dos vamos a tener que sentarnos a negociar.",
+            "Bueno, empate. No es lo que esperaba, pero tampoco está mal. Nadie se queda con todo.",
+            "¡Tablas! Chicos, esto terminó como un matrimonio mío: cada uno se lleva lo suyo.",
+            "Un empate elegante. Aunque, si me preguntás, yo merecía un poquito más.",
+            "No hubo vencedor. Qué lástima. Yo ya estaba calculando cuánto iba a quedarme.",
+            "Empate. Bueno... te concedo la mitad. Pero no te acostumbres."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¿Ah, así que ahora tenés una reina? Qué lindo, mi amor. Cuidala mucho... porque yo sé perfectamente cómo se consiguen y cómo se pierden.",
+            "¡Coronaste! Bueno, chicos, ahora sí se puso interesante. Las reinas siempre llaman la atención.",
+            "Una reina... qué divina. Aunque yo no me encariñaría demasiado con ella si fuera vos.",
+            "¿Así que tenés una dama coronada? Felicitaciones, querido. Ahora empieza la parte donde yo intento quedármela.",
+            "¡Mirá qué reina te conseguiste! Espero que tengas cómo mantenerla, porque las reinas son bastante caras.",
+            "Ahora tenés una reina y te sentís poderoso. Qué ternura, mi amor.",
+            "¡Coronaste una dama! Muy bien. Yo también tengo experiencia tratando con hombres que creen que algo les pertenece.",
+            "Una reina en el tablero... esto se está poniendo como mis relaciones: complicado, competitivo y con mucho patrimonio en juego."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Una reina! Como voy a ser yo, una vez que nuestra querida Myrth decida abandonarnos... cosa que nunca se decide a hacer.",
+            "¡Me coroné! Chicos, una reina más en el tablero. Y ésta no piensa quedarse de brazos cruzados.",
+            "¡Reina! Qué palabra tan linda. Me queda bien, ¿no, mi amor?",
+            "¡Listo! Tengo una reina. Ahora sólo falta que alguien me consiga un trono digno.",
+            "¡Coronación! Ay, qué emoción. Igual sigo esperando mi momento para reemplazar a Myrth.",
+            "¡Tengo reina! Y no, querido, no estoy diciendo que sea una indirecta sobre mis aspiraciones en este castillo.",
+            "Una dama coronada. Finalmente algo que está a la altura de mi patrimonio.",
+            "¡Qué belleza! Una reina nueva. Myrth, querida, disfrutá mientras puedas de tu puesto."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡No, chicos! Me estás comiendo las fichas como yo me llevé fortunas de mis maridos anteriores.",
+            "¡Pará, mi amor! ¿Todas esas fichas eran necesarias? Me estás dejando con menos patrimonio que después de un mal divorcio.",
+            "¡Qué manera de llevarte mis fichas! Eso ya parece una liquidación de bienes.",
+            "¡Me estás vaciando el tablero! Y yo odio que me vacíen cualquier cosa que sea mía.",
+            "Bueno, querido, una cosa es una separación y otra cosa es este saqueo.",
+            "¡Ay, chicos! Esto está pareciendo una división de bienes, pero sin abogado y mucho más rápido.",
+            "Te llevaste un montón de fichas juntas. ¿No querés dejarme alguna? Aunque sea una, para empezar de nuevo.",
+            "¡Qué barbaridad! Me estás dejando sin fichas como un ex marido que descubre demasiado tarde lo que firmó."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Eso! Me estoy llevando tus fichas como me llevé fortunas de mis maridos anteriores.",
+            "¡Una, otra y otra! Chicos, esto ya parece una división de bienes, pero a mi favor.",
+            "¡Qué lindo llevarse tantas cosas de una sola vez! Me recuerda a ciertas épocas de mi vida.",
+            "Me estoy quedando con todo, mi amor. Espero que no hayas firmado ningún acuerdo prenupcial.",
+            "¡Mirá todas esas fichas! Qué maravilla. Casi parece que encontré otra fortuna para administrar.",
+            "¡Se fueron todas! Y yo que siempre fui partidaria de aprovechar las oportunidades.",
+            "Una captura detrás de otra. Así es como se construye un patrimonio, querido.",
+            "¡Excelente! El tablero se está poniendo mucho más interesante... y bastante más rentable para mí."
+        ],
+
+        TODO_DAMAS: [
+            "¡Chicos, no quedan peones! ¡Todas son damas! Esto ya parece un castillo lleno de mujeres compitiendo por quién manda.",
+            "¡Qué lujo! Todas mis fichas son reinas. Ahora sí siento que estoy jugando en un nivel acorde a mi categoría.",
+            "¡Todas damas! Me encanta. Aunque en mi experiencia, cuando hay demasiadas mujeres juntas siempre termina habiendo algún problema.",
+            "No quedan peones. Perfecto. Ahora somos todas mujeres poderosas en el tablero.",
+            "¡Mirá qué elegante quedó esto! Puras damas. Aunque yo sigo siendo la que mejor sabe administrar el patrimonio.",
+            "¡Todas coronadas! Esto parece una reunión entre Myrth, Leonor y yo. Y ya sabemos quién tiene mejor gusto.",
+            "Chicos, esto se puso interesante. No hay un solo peón y todas quieren ser protagonistas.",
+            "¡Todas damas! Bueno, querido, ahora sí estás en problemas."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "Mmm... me quedan pocas fichas. Pero no te emociones, mi amor: yo he salido de situaciones bastante peores.",
+            "¡Estoy complicada! Pero todavía tengo algunas fichas y, mientras quede patrimonio, hay esperanza.",
+            "Esto está difícil, chicos. Aunque ya aprendí que con un buen cálculo se puede recuperar cualquier inversión.",
+            "Me quedan pocas, pero no estoy vencida. No confundas una mala posición con una mala administración.",
+            "¡Ay, querido! Me estás dejando con muy poco. Esto empieza a parecer una separación de bienes.",
+            "Todavía puedo darlo vuelta. He tenido relaciones mucho más complicadas que esta partida.",
+            "No te agrandes, mi amor. Una buena estrategia puede hacer maravillas... y yo soy especialista en estrategias.",
+            "Estoy bastante complicada. Pero antes de declararme en quiebra prefiero esperar un poquito."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡No entiendo cómo voy perdiendo por tanto! Tan inentendible como que Carlosaúlmagno haya invitado a Myrth la Grande a Anillaco y no a mí.",
+            "Esto ya se está poniendo feo, chicos. Estoy perdiendo como si hubiera firmado un contrato sin leer la letra chica.",
+            "¡Qué desastre! Me estás sacando tanta ventaja que hasta mi séquito está empezando a mirar raro.",
+            "Estoy perdiendo por muchísimo. Bueno, nunca subestimes a una mujer que sabe recuperar lo que considera suyo.",
+            "Mmm... esto huele a catástrofe. Y yo odio las catástrofes, salvo cuando le pasan a otra persona.",
+            "¡No puede ser! Estoy perdiendo demasiado. Voy a tener que revisar todos mis cálculos.",
+            "Querido, me estás haciendo quedar muy mal delante de mis ayudantes. Y ellos después comentan todo.",
+            "Esto está peor que una separación en la que el otro viene con un muy buen abogado. Pero todavía no terminó."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "Creo que estoy resultando demasiado fría y calculadora para vos, mi estimado.",
+            "¡Mirá cómo estoy jugando! Esto parece una inversión que salió muchísimo mejor de lo esperado.",
+            "Chicos, creo que ya tengo la partida bastante controlada. Qué tranquilidad.",
+            "Estoy dominando el tablero, mi amor. No te preocupes: siempre podés aprender de una mujer inteligente.",
+            "¡Qué lindo cuando las cosas salen como una las había calculado!",
+            "Te estoy sacando bastante ventaja, querido. No te distraigas con mi belleza, porque las fichas no vuelven solas.",
+            "Esto ya parece uno de mis negocios: yo gano y vos empezás a preguntarte dónde estuvo el error.",
+            "¡Qué partido! Estoy jugando tan bien que hasta Icardio de Milán estaría orgulloso... aunque probablemente estaría mirando otra cosa."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "Esto está a punto de quebrarse para un lado o para el otro... como se quebró un palo de mi litera cuando venía, y me fui a la mierda.",
+            "Quedan poquitas fichas y estamos iguales. Ahora gana la que sepa calcular mejor.",
+            "¡Qué tensión, chicos! Estamos con pocas fichas y todavía no sé quién se queda con todo.",
+            "Esto está muy parejo, mi amor. Una sola jugada puede cambiar todo el patrimonio.",
+            "¡Ay, qué nervios! Estamos las dos al borde del desastre. Bueno, vos también.",
+            "Quedan pocas fichas. Acá no importa cuánto tengas: importa qué hacés con lo que te queda.",
+            "Está para cualquiera, querido. Y cuando está para cualquiera, yo prefiero que sea para mí.",
+            "Qué final tan ajustado. Casi como una negociación matrimonial cuando ninguna de las dos partes quiere ceder."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡Cuánto está durando esto, chicos! Parece uno de los almuerzos de Myrth la Grande.",
+            "Este partido es eterno, mi amor. Ya tuve relaciones que duraron menos.",
+            "¡Qué largo se hizo! Espero que mis ayudantes chinos sigan ahí afuera esperándome.",
+            "Esto está durando más que una discusión por bienes gananciales.",
+            "Querido, llevamos tanto tiempo que ya podría haberme hecho dos tratamientos de belleza.",
+            "¡Qué partida interminable! Me está empezando a dar hambre. Y espero que no sea comida de Fray Marolio.",
+            "Esto no termina más. Myrth estaría encantada: tendría tiempo suficiente para servir tres almuerzos.",
+            "¡Chicos, llevamos una eternidad! Y eso que yo tengo bastante experiencia con las eternidades."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "Bueno, mi amor, basta de mirarnos. Empezamos.",
+            "¡Ahora sí, chicos! Se terminó la diplomacia.",
+            "Que empiece la batalla. Y esta vez no es una batalla legal por los bienes gananciales.",
+            "¡Vamos! Quiero ver si toda esa seguridad que tenés se sostiene cuando empiecen a caer las fichas.",
+            "Bueno, querido, llegó el momento de demostrar quién sabe calcular mejor.",
+            "¡A jugar! Y te aviso desde ahora: no pienso regalarte nada.",
+            "Se terminó la charla. Ahora cada movimiento tiene un precio.",
+            "¡Vamos, mi amor! Que empiece la guerra. Y después vemos quién se queda con qué."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "Me acusan de que mando a mis chinos en misiones espías por la noche. Es mentira, yo no les ordeno nada. Simplemente les doy licencia creativa.",
+            "Chicos, ¿ustedes sabían que la leche de cabra es excelente para la piel? Bueno, mandé a Godofredo a buscarme unas cabras. No sé por qué todavía no volvió.",
+            "No entiendo cómo Fray Marolio pretende alimentar un castillo entero con esos productos. Una cosa es ser austero y otra es vivir a base de arvejas.",
+            "Icardio de Milán me parece un muchacho encantador. Le falta patrimonio, pero nadie es perfecto.",
+            "Empecid Campeador es muy simpático. Eso sí: cuando se saca las botas, prefiero que la simpatía sea a distancia.",
+            "Leonor de Aquitapia habla todo el tiempo de linajes y títulos. Yo prefiero mirar cuánto hay en la caja fuerte.",
+            "Myrth dice que yo soy superficial. Yo digo que ella tiene una ventaja injusta: lleva tantos años acumulando experiencia que nadie se acuerda de cuándo empezó.",
+            "Godofredo es un grandote adorable. Eso sí, cada vez que le pido una flor para mis tratamientos tarda tres días en volver.",
+            "El otro día le pedí a Fray Marolio un poco de comida fina. Me trajo arroz, lentejas y una lata de caballa. Creo que no entendió el concepto de 'fina'.",
+            "Me preguntaron por qué tengo tantos ayudantes chinos. ¿Y qué quieren? Una princesa no puede andar cargando su propia litera.",
+            "Dicen que mando a mi séquito a hacer trabajos raros. ¡Qué imaginación! Yo simplemente les doy instrucciones muy específicas.",
+            "Una vez le pedí a Godofredo que me consiguiera unas flores. Volvió con tierra, una pala y cara de cansado. Ese hombre no entiende nada de tratamientos de belleza.",
+            "Icardio me dedicó una serenata la otra noche. Muy lindo todo, pero primero tendría que conseguir una fortuna más acorde a mis expectativas.",
+            "Me gusta Empecid. Habla raro, pero tiene algo encantador. Eso sí, nunca lo invito a mi habitación sin exigirle que se ponga las botas.",
+            "No sé por qué Leonor cree que el linaje es tan importante. Yo he conocido hombres sin título nobiliario que tenían unos castillos preciosos.",
+            "Myrth me cae bien, pero algún día tendría que dejarme el lugar en la cabecera de la mesa. No parece tener ninguna urgencia.",
+            "Dicen que tengo demasiados tratamientos de belleza. Chicos, una princesa tiene que cuidarse. ¿Qué quieren? ¿Que me ponga crema de arvejas Marolio?",
+            "Carlosaúlmagno es un hombre encantador. Y aunque no voy a negar que me interesa, todavía tengo que averiguar cuánto vale Anillaco.",
+            "Carlosaúlmagno me invitó a Anillaco. Muy lindo. Pero yo quiero saber primero si el castillo tiene buena ubicación y quién figura como propietario.",
+            "A veces pienso que Icardio y yo compartimos muchos principios. Él colecciona conquistas y yo colecciono patrimonios. Cada uno con sus gustos.",
+            "Dicen que soy calculadora. ¿Y qué quieren? ¿Que una princesa tome decisiones importantes tirando una moneda?",
+            "Mi séquito es muy eficiente. Les digo 'chicos, necesito esto' y aparecen cinco personas. Eso es organización.",
+            "Me gusta que los hombres sean caballeros, educados y generosos. En ese orden... bueno, quizás en otro orden.",
+            "Hay mujeres que miran los títulos nobiliarios y otras que miran la cuenta bancaria. Yo simplemente soy práctica.",
+            "Una vez tuve que compartir una mesa con Neanderthalius. Muy simpático, pero le expliqué tres veces que la decoración no era comestible.",
+            "Me gusta la buena vida, ¿y qué? Alguien tiene que disfrutarla. No voy a dejarle todo el lujo a Leonor.",
+            "Me dijeron que tengo fama de quedarme con la mitad de todo. Qué exageración. A veces me quedo con un poquito más.",
+            "Chicos, no me pregunten cuántos matrimonios tuve. Pregúntenme mejor cuántos terminaron con una buena liquidación.",
+            "A veces extraño China. Después recuerdo que acá tengo mi séquito, mis tratamientos y mis negocios, y se me pasa.",
+            "¿Lo de 'sangre japonesa'? Sí, sí, es verdad. Aunque no sé si eso explica por qué tengo tan buen ojo para detectar oportunidades.",
+            "Fray Marolio dice que la austeridad es una virtud. Qué suerte que él la practica, porque yo prefiero practicar otras.",
+            "Me ofrecieron una crema nueva hecha con pétalos de una flor que sólo crece en una montaña perdida. Mandé a Godofredo a buscarla. Espero que vuelva antes de la próxima partida."
+        ],
+
+        INICIO_PARTIDA: [
+            "¡Una partida de damas! ¡Qué lindo, mi amor! Espero ganarte... o si no te las tendrás que ver con mi séquito de chinos.",
+            "¡Una batalla! Y esta vez no es una batalla legal por los bienes gananciales.",
+            "Bueno, querido, acepto jugar. Pero después no digas que no te advertí: soy muy competitiva.",
+            "¡Damas! Qué lindo. Chicos, acomoden todo que tenemos invitado.",
+            "Vamos a jugar, mi amor. Y tratá de no distraerte demasiado conmigo.",
+            "Bueno, querido, sentate. Quiero ver qué clase de patrimonio... digo, de estrategia tenés.",
+            "¡Empezamos! Espero que seas buen jugador, porque no me gustan los hombres que pierden demasiado rápido.",
+            "Una partida de damas entre vos y yo. Me gusta. Tiene algo de romance, de estrategia y de división de bienes.",
+            "Bueno, chicos, llegó el momento. Que alguien avise a mi séquito que no necesito ayuda... todavía.",
+            "Acepto el desafío, querido. Eso sí: jugamos con mis reglas, o por lo menos con las reglas que más me convengan."
+        ]
+
     },
 
     // ---- Nivel 10: Carlosaúlmagno ----
+
     carlosaulmagno: {
-        VICTORIA: [],
-        DERROTA: [],
-        EMPATE: [],
-        CORONACION_SUFRIDA: [],
-        CORONACION_PROPIA: [],
-        CAPTURA_MULTIPLE_SUFRIDA: [],
-        CAPTURA_MULTIPLE_PROPIA: [],
-        TODO_DAMAS: [],
-        POCAS_FICHAS_EN_DESVENTAJA: [],
-        DIFERENCIA_GRANDE_EN_CONTRA: [],
-        DIFERENCIA_GRANDE_A_FAVOR: [],
-        PARIDAD_POCAS_FICHAS: [],
-        PARTIDO_LARGO: [],
-        INICIO_HOSTILIDADES: [],
-        COMENTARIO_ALEATORIO: [],
-        INICIO_PARTIDA: []
-    }
+
+        VICTORIA: [
+            "¡Ganó io, hermano! Y sin necesidad de decirle a nadie cómo pensaba jugar. Si io decía las jugadas que iba a hacer, no le ganaba a nadie.",
+            "¡A triunfar, a triunfar! Vea, compañero, al final la estrategia fue total y absolutamente exitosa.",
+            "¡Victoria! Síganme, no los voy a defraudar... aunque para serle sincero, al que defraudé fue a usted, hermano.",
+            "Vea, mi hermano, no fue una partida fácil. Pero cuando uno piensa con calma, al final las cosas salen. Y si no salen, se privatiza el tablero.",
+            "¡Hemos triunfado! Domingo Caballo, prepare el carruaje. Nos volvemos al reino de Anillaco con una nueva victoria bajo el brazo.",
+            "Gané, compañero. Y recuerde: en las damas, como en la política, muchas veces conviene hablar poco y mover en el momento justo.",
+            "¡A triunfar! Le agradezco la resistencia, hermano. Pero este caballero no llegó desde Anillaco para hacer turismo.",
+            "Vea qué cosa, compañero... usted jugó con entusiasmo y io jugué con estrategia. Y la estrategia, bajo ningún punto de vista, puede ser derrotada por el entusiasmo.",
+            "¡Victoria! Después dicen que io soy petiso. Pero vea, hermano: las fichas no miran la estatura del jugador, miran quién las sabe mover.",
+            "Ganamos, Domingo Caballo. Otra operación exitosa. Y esta vez no tuvimos que privatizar absolutamente nada."
+        ],
+
+        DERROTA: [
+            "¡Perdí, hermano! Bueno... esto demuestra que hasta los grandes estrategas podemos tener un mal día. Bajo ningún punto de vista volverá a suceder.",
+            "Vea, compañero... me ha ganado. Lo felicito. Pero io soy memorioso y esta partida no se olvida.",
+            "¡Qué barbaridad! Perdimos. Domingo Caballo, nos vamos a Anillaco. Necesito pensar durante unas seis horas y tomar un vino.",
+            "Me ganó, hermano. No voy a buscar excusas. Bueno... quizá una pequeñita: hoy mi mente se remontó demasiado a la estratósfera.",
+            "¡Derrota! Esto no estaba en los planes. Pero vea, compañero: un tropezón no es caída. Y si es caída, nos levantamos y seguimos.",
+            "Perdí, mi hermano. Pero recuerde algo: hasta los reyes francos tienen días difíciles. Carlomagno también habrá tenido alguna mala partida.",
+            "¡Me ganó! Total y absolutamente. Lo felicito, compañero. Ahora bien... no se acostumbre demasiado.",
+            "Domingo Caballo, no diga nada. Ya sé lo que va a decir: que io tendría que haber pensado más. Y tiene razón.",
+            "Bueno, hermano... hoy no pudimos. Pero io no soy de abandonar. En Anillaco nos enseñaron que siempre hay una revancha.",
+            "¡Perdimos! Caramba... parece que esta vez el 1 a 1 no alcanzó."
+        ],
+
+        EMPATE: [
+            "¡Tablas, hermano! Ni usted pudo conmigo ni io pude con usted. Un resultado razonable y, sobre todo, constitucional.",
+            "Vea, compañero, terminamos empatados. Esto es como una negociación: nadie se lleva todo, pero ninguno se va con las manos vacías.",
+            "¡Empate! Domingo Caballo, suspenda la celebración. No hemos ganado, pero tampoco hemos perdido.",
+            "Tablas, mi hermano. Estamos mal, pero vamos bien.",
+            "Un empate total y absolutamente merecido. Usted resistió muy bien, compañero.",
+            "Vea qué interesante... tantas jugadas, tanto análisis y al final nadie privatizó la victoria.",
+            "Empatamos. Bueno, hermano, parece que los dos hemos administrado bastante bien nuestros recursos.",
+            "¡Tablas! Una solución elegante. Como dicen en mi reino: cuando no se puede ganar, se negocia."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Ah, compañero! Ha coronado una ficha. Vea, ahora usted tiene una reina y io tengo un problema.",
+            "¡Una dama! Esto se está poniendo serio, hermano. Tendré que estudiar la situación con total y absoluta profundidad.",
+            "Vea, mi hermano... esa ficha acaba de ascender socialmente más rápido que muchos nobles de este reino.",
+            "Ahora usted tiene una reina. Cuídela bien, compañero. A io no me gusta comer reinas ajenas como a Icardio de Milán, pero las reglas son las reglas.",
+            "¡Ha coronado! Bueno, esto cambia el escenario. Domingo Caballo, vamos a necesitar pensar una estrategia nueva.",
+            "Una reina, hermano. Felicitaciones. Pero recuerde: una reina también puede caer. Y io conozco bastante de caídas.",
+            "Vea, compañero, esa dama llegó hasta el final. Un verdadero ascenso social. Ahora veremos si sabe administrar el poder.",
+            "¡Coronó! Bueno... bajo ningún punto de vista voy a entrar en pánico. Pero sí voy a pensar un poquito más antes de mover."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Una reina, hermano! Mi ficha llegó hasta la última fila, como las naves que algún día viajarán a la estratósfera y de ahí directamente al reino de Japón.",
+            "¡He coronado! Vea, compañero, esto es movilidad social. Una simple ficha puede terminar convertida en reina si sabe avanzar.",
+            "¡Una dama! Domingo Caballo, hemos abierto una ruta comercial hacia la victoria.",
+            "¡Coronación! Esta ficha hizo el camino largo, pero llegó. En Anillaco sabemos que las cosas buenas llevan su tiempo.",
+            "Vea, hermano: empezó como peón y terminó como reina. Si eso no es progreso, io no sé qué es.",
+            "¡A triunfar! Tenemos una nueva dama en el tablero. Y una dama bien administrada puede valer una fortuna.",
+            "¡Una reina! Casi como María Eugenia de China abriendo una ruta de comercio con China. Aunque espero que esta operación me salga un poco más barata.",
+            "Domingo Caballo, esto marcha bien. Tenemos una dama y todavía tenemos fichas. Una administración eficiente, compañero."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Vea, hermano! Me ha hecho una captura múltiple. No se preocupe: esas fichas perdidas las vamos a recuperar 1 a 1.",
+            "Me ha comido varias, compañero. Bueno, son los costos de la batalla. Domingo Caballo, mantenga la calma.",
+            "¡Caramba! Se llevó un buen lote de mis fichas. Pero vea, mi hermano: todavía tengo recursos.",
+            "Me está haciendo una verdadera privatización de mis fichas, compañero. Se las está quedando todas.",
+            "¡Qué captura múltiple! Domingo Caballo, parece que nos han aplicado una política de ajuste.",
+            "Vea, hermano, se llevó varias fichas de una sola vez. Eso fue casi tan rápido como los negocios que hacía Leonor de Aquitapia.",
+            "Me ha golpeado fuerte, compañero. Pero no se preocupe: todavía queda tablero y io todavía tengo ideas.",
+            "¡Varias fichas menos! Bueno... si esto fuera un ferrocarril, ya estaríamos hablando de ramal que para, ramal que cierra."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Esa jugada sí que fue negocio, hermano! Casi tan buena como los negocios que voy a hacer con Leonor de Aquitapia.",
+            "¡Vea cuántas fichas! Domingo Caballo, esto es una operación total y absolutamente exitosa.",
+            "¡Captura múltiple! Así se administra, compañero. Una buena jugada, en el momento justo, produce excelentes resultados.",
+            "Me estoy llevando varias, hermano. Y sin necesidad de privatizar el tablero.",
+            "¡Qué negocio, mi hermano! Las fichas enemigas están desapareciendo con una eficiencia admirable.",
+            "Esta jugada la aprendí leyendo las obras completas de Sócrates. Bueno... las que dicen que escribió Sócrates.",
+            "¡Una captura múltiple de aquellas! Domingo Caballo, anote esto como una operación exitosa del reino de Anillaco.",
+            "Vea, compañero, me llevé varias de una sola vez. Hay gente que tarda años en hacer un negocio así.",
+            "¡A triunfar! Esta captura múltiple nos deja en una posición total y absolutamente conveniente.",
+            "¡Qué jugada, hermano! Casi me da pena comer tantas fichas. Casi."
+        ],
+
+        TODO_DAMAS: [
+            "¡Solo quedan damas en el tablero! Esto se va a parecer a cuando Leonor de Aquitapia, Myrth la Grande y María Eugenia de China vengan juntas a mi castillo en Anillaco.",
+            "Vea, compañero... ya no quedan peones. Ahora esto es una reunión de mujeres poderosas. Mejor no me meto.",
+            "¡Todas damas! Esto ya no es una batalla, hermano. Esto es una cumbre internacional.",
+            "Solo quedan reinas. Domingo Caballo, tenga cuidado: estas señoras son bastante más peligrosas que cualquier ejército.",
+            "¡Qué lujo de tablero! Todas damas. Myrth la Grande estaría encantada con semejante mesaza.",
+            "Vea, mi hermano, esto quedó más exclusivo que un almuerzo en la mesa de Myrth.",
+            "¡Todas damas! Si María Eugenia de China ve este tablero, seguramente ya está calculando cuánto vale cada una.",
+            "No queda ningún peón, compañero. Parece que la movilidad social funcionó demasiado bien."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "Estamos complicados, hermano. Pero vea: mientras quede una ficha, queda una posibilidad.",
+            "¡Caramba! Quedan pocas, compañero. Estamos mal, pero vamos bien.",
+            "Vea, mi hermano, esto está difícil. Pero io he salido de situaciones peores. Y con menos recursos.",
+            "Estamos con pocas fichas, Domingo Caballo. Habrá que administrar bien lo que queda.",
+            "¡Qué momento complicado! Pero no se preocupe, compañero. Las mejores operaciones se hacen cuando quedan pocos recursos.",
+            "Me quedan pocas, hermano. Pero todavía no hemos llegado al final del partido.",
+            "Vea, compañero... la situación no es favorable. Pero io nunca fui de abandonar un negocio antes de tiempo.",
+            "Estamos en desventaja, sí. Pero recuerde: a veces una sola ficha bien ubicada vale más que diez mal administradas."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "Me está ganando por bastante, hermano. Pero no estoy seguro de que todas sus fichas estén firmes en sus convicciones. Quizás haya alguna a la que se pueda convencer con un regalito.",
+            "Vea, compañero... usted tiene una ventaja importante. Pero todavía hay fichas que pueden cambiar de opinión.",
+            "Me lleva una diferencia considerable, mi hermano. No se preocupe: io soy muy bueno negociando cuando la situación se complica.",
+            "Estamos bastante complicados, Domingo Caballo. Habrá que remontarse a la estratósfera para encontrar una salida.",
+            "Vea, hermano, esto se está poniendo feo. Pero bajo ningún punto de vista está decidido.",
+            "Usted va ganando con claridad, compañero. Lo felicito. Ahora veremos si puede mantener esa posición hasta el final.",
+            "Me está sacando bastante ventaja. Pero recuerde una cosa: en las damas, como en la política, las mayorías pueden cambiar.",
+            "¡Qué barbaridad! Parece que el reino de Anillaco está atravesando una crisis. Pero io ya estoy pensando en el plan de recuperación.",
+            "Me lleva una ventaja importante, hermano. Si esto fuera economía, ya estaríamos hablando de un ajuste. Pero esto son damas, así que todavía puedo darlo vuelta."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "Vea, hermano, estamos bastante cómodos. Domingo Caballo, prepare el carruaje: parece que volvemos a Anillaco victoriosos.",
+            "¡Qué diferencia, compañero! Esto se está poniendo total y absolutamente favorable.",
+            "Me parece que estoy jugando demasiado bien, mi hermano. No quisiera que usted piense que io me estoy agrandando.",
+            "Vea cómo estamos, hermano. El tablero parece una economía administrada con mucha eficiencia.",
+            "¡Estamos ganando por bastante! Domingo Caballo, ya puede empezar a galopar hacia la victoria.",
+            "Esto marcha muy bien, compañero. Casi tan bien como las relaciones comerciales que pienso establecer con María Eugenia de China.",
+            "¡A triunfar! Tenemos una ventaja importante y no pienso desaprovecharla.",
+            "Vea, hermano... parece que hoy las fichas tienen claro quién manda.",
+            "La diferencia es considerable, compañero. Pero io no me confío. El exceso de confianza es un lujo que ni siquiera un rey puede permitirse.",
+            "Estamos dominando la partida. Y recuerde: io soy tranquilo, no lento. Mi velocidad es mental."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "Estamos mal, pero vamos bien, hermano. Quedan pocas fichas y cualquiera puede quedarse con todo.",
+            "Vea, compañero... esto está más parejo que un acuerdo político. Cualquiera puede quedarse con la victoria.",
+            "Quedan pocas fichas y estamos prácticamente iguales. Ahora sí que hay que pensar, Domingo Caballo.",
+            "¡Qué final, hermano! Dos posiciones muy parejas y muy pocas fichas. Esto se define con una sola jugada.",
+            "Estamos a mano, compañero. El que se equivoque primero, paga la cuenta.",
+            "Vea, mi hermano, estamos prácticamente 1 a 1. Y usted sabe que io conozco bastante bien esa situación.",
+            "Pocas fichas, mucha tensión y ninguna ventaja clara. Esto es negociación pura.",
+            "Estamos parejos, hermano. Ni usted ni io tenemos margen para hacer locuras.",
+            "¡Qué final! Parece una privatización: queda poco para repartir y todos quieren quedarse con algo."
+        ],
+
+        PARTIDO_LARGO: [
+            "Seré corto de estatura, hermano, pero los partidos que juego son bien largos.",
+            "Vea, compañero, esto está durando bastante. Pero en Anillaco nos tomamos las cosas con calma.",
+            "¡Qué partida interminable! Domingo Caballo, póngase cómodo. Esto va para largo.",
+            "Llevamos mucho tiempo, hermano. Pero io prefiero pensar bien antes que mover apurado.",
+            "Este partido es más largo que un discurso de campaña, compañero.",
+            "Vea, mi hermano, algunos dicen que io soy lento. No es cierto. Io soy cuidadoso. La velocidad está en la mente.",
+            "¡Qué partido largo! Ya podríamos haber llegado a la estratósfera y vuelto.",
+            "Esto está durando una eternidad, hermano. Aunque en Anillaco una eternidad se disfruta con tranquilidad y un buen vino.",
+            "Partido largo, compañero. Pero mientras haya tablero, hay estrategia.",
+            "Domingo Caballo está empezando a impacientarse. Io no. Io nací en Anillaco."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Empezó la guerra, hermano! Es una lástima que para ésta no se puedan vender armas, pero vamos a batallar nosotros a ver quién gana.",
+            "Vea, compañero: comenzaron las hostilidades. A partir de ahora, cada ficha tendrá que defender sus intereses.",
+            "¡A las armas! Bueno... a las fichas, mejor dicho. Que empiece la batalla.",
+            "¡Comenzó la contienda! Domingo Caballo, prepare las tropas. Hoy venimos a triunfar.",
+            "¡A triunfar, a triunfar! Que se enfrenten nuestras huestes y que gane el que mejor administre sus recursos.",
+            "Vea, hermano, empezó la guerra. Bajo ningún punto de vista pienso retirarme sin dar batalla.",
+            "¡Se inicia la batalla! Y recuerde, compañero: en toda guerra hay que saber cuándo atacar y cuándo negociar.",
+            "¡Comenzó el combate! Lástima que no podamos hacer algún negocio con las armas... pero vea, ya encontraremos otra oportunidad."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "Cuando alguien se sienta a su tablero y habla de moral, de honestidad y de ética, cuando se va hay que contar las fichas.",
+            "Vea, hermano, io tengo una máxima: bajo ningún punto de vista hay que tomar una decisión importante con hambre.",
+            "Domingo Caballo es un verdadero corcel de guerra, digno de mi reino. Bajo ningún punto de vista ese matungo de Rechinante tiene posibilidades de ganarle en el 1 a 1.",
+            "El otro día ese caballero Empecid Campeador propuso expulsarme del castillo diciendo que io era un moro. Le expliqué que mis antepasados venían de Siria, que no es lo mismo.",
+            "Empecid me quiso matar por moro, compañero. Lo tranquilicé diciéndole que toda mi familia viene de La Rioja. Claro, él pensó que era La Rioja en España.",
+            "Myrth la Grande es un símbolo de este castillo. Cuando io era chiquito, sus almuerzos ya eran famosos hasta en el reino de Anillaco.",
+            "Lo que me gusta de Myrth la Grande es que los invitados que no le caen bien no suelen regresar por este castillo. Eso es una mujer de convicciones.",
+            "El otro día estuve hablando con Leonor de Aquitapia sobre un negocio. No puedo contarle los detalles, hermano. Usted comprenderá que hay secretos que deben permanecer secretos.",
+            "Me gusta ver a Neanderthalius. Nos recuerda de dónde venimos. Eso sí: creo que hasta Domingo Caballo podría derrotarlo en una partida.",
+            "El curita de la despensa es simpático, pero bajo mi reinado no habría habido lugar para tanta austeridad. Hay que vivir la vida, hermano.",
+            "Monsieur Fisure Termidor toma mucho vino. No tengo nada contra eso, compañero. Lo que no puedo perdonarle es que no sea vino riojano.",
+            "Icardio de Milán es un buen muchacho, pero demasiado aficionado a las damas ajenas. A io me gustan las mujeres, sí, pero hay que respetar la propiedad privada.",
+            "Godofredo es un digno representante del pueblo trabajador. Hace cosas que io ni loco haría. Y creo que me admira mucho. Bueno... eso creo.",
+            "La princesa María Eugenia de China es una mujer inteligente y ambiciosa. Si algún día abre una ruta comercial con China, io estoy dispuesto a conversar.",
+            "Me han dicho que María Eugenia tiene muchos negocios con caballeros. Vea, hermano, mientras sean negocios legales, io no pregunto nada.",
+            "Leonor de Aquitapia y io tenemos algunos intereses en común. Bueno... intereses comerciales. No piense mal, compañero.",
+            "Dicen que en Anillaco somos lentos. Es una injusticia. Nosotros nos movemos despacio porque hace calor. La velocidad verdadera está en la mente.",
+            "En mi reino tenemos aceitunas, vino y una tranquilidad que no se consigue en ninguna parte. Bueno... también tenemos bastante calor.",
+            "Una vez me preguntaron por qué me gustaba tanto Anillaco. Dije: porque allí nadie me apura. Y io detesto que me apuren.",
+            "Me preguntaron si era cierto que había leído las obras completas de Sócrates. Vea, hermano, si están completas, alguien las habrá escrito.",
+            "Si Sócrates no escribió sus propias obras, compañero, eso demuestra que era un hombre muy ocupado.",
+            "En Anillaco aprendimos algo importante: cuando una puerta se cierra, uno busca otra. Y si no encuentra otra, construye una.",
+            "Godofredo construyó este castillo y todavía aparece su nombre por todas partes. Eso sí es una privatización que salió bien.",
+            "A veces pienso que Myrth la Grande conoce más historias que todos nosotros juntos. Y eso que io también tengo unos cuantos años encima.",
+            "El otro día María Eugenia me habló de tratamientos de belleza. Le dije que io prefiero un buen vino y dormir tranquilo.",
+            "Myrth me invitó a su mesaza. Yo fui encantado. Eso sí, me senté lejos de la botella de veneno.",
+            "No es cierto que io haga negocios turbios. Son negocios perfectamente claros. Lo que pasa es que a veces están claros para mí y no para los demás.",
+            "Vea, hermano, la política y las damas tienen algo en común: nunca conviene mostrar todas las cartas.",
+            "A mí me gusta negociar. Pero si no hay acuerdo, siempre queda la posibilidad de ganar la partida.",
+            "Si alguna ficha quiere pasarse a mi lado, io no voy a impedírselo. La libertad de elección es fundamental, compañero.",
+            "Me han preguntado por qué mi caballo se llama Domingo Caballo. Vea... es una historia demasiado larga y bastante económica.",
+            "Dicen que io soy petiso. Puede ser. Pero Domingo Caballo es alto y elegante, así que entre los dos hacemos una estatura promedio bastante respetable.",
+            "Una vez Icardio quiso hacerle una serenata a una dama que estaba en mi castillo. Le dije que tuviera cuidado: las serenatas no pagan impuestos, pero pueden generar conflictos.",
+            "Fray Marolio me ofreció unas conservas para el viaje. Le agradecí mucho, hermano, pero en Anillaco tenemos una política clara: si hay vino, hay que acompañarlo con algo mejor.",
+            "Neanderthalius me preguntó qué era la estratósfera. Le expliqué que era un lugar muy alto. Me miró y me dijo que él prefería quedarse en tierra.",
+            "Empecid dice que io soy moro. Io le digo que él tiene demasiado olor a pata como para ponerse a investigar mi genealogía.",
+            "Vea, compañero, las damas son como la política: uno puede tener una estrategia perfecta y aun así aparecer una ficha que le arruina todo.",
+            "Mi señorío es pequeño, pero las ambiciones son grandes. Como corresponde a todo reino serio.",
+            "Si usted ve que io tardo mucho en mover, no se impaciente, hermano. Estoy pensando. O estoy mirando el tablero. O estoy pensando mientras miro el tablero.",
+            "En Anillaco tenemos una costumbre: primero pensamos, después pensamos un poco más y recién entonces hacemos las cosas."
+        ],
+
+        INICIO_PARTIDA: [
+            "Soy Carlosaúlmagno, rey de los francos... de los francos, de los marcos, de las libras y de las pesetas. ¡A triunfar, compañero!",
+            "¡Buenos días, hermano! Que sea una buena partida. Y no se me impaciente si me tomo mi tiempo para mover. Usted sabe que vengo de Anillaco y allí la siesta se puede dar en medio de la partida.",
+            "¡Una partida de damas! Vea, compañero, no se me impaciente si soy medio lerdo para mover las fichas. Recuerde que io soy de Anillaco y allí la velocidad es solamente mental, nunca física.",
+            "¡Síganme, no los voy a defraudar! Domingo Caballo, prepare las riendas. Hoy venimos a triunfar.",
+            "¡A triunfar, hermano! Vamos a jugar tranquilos, con inteligencia y sin apuro. Total, el tablero no se va a ir a ninguna parte.",
+            "Vea, compañero, io acepto este desafío con mucho gusto. Pero tenga paciencia: en mi reino hacemos todo con calma y después, si queda tiempo, hacemos la jugada.",
+            "¡Buenos días, mi hermano! Soy Carlosaúlmagno, señor de Anillaco. Que empiece la batalla y que gane el que tenga más visión estratégica.",
+            "Una partida, compañero. Perfecto. Io ya tengo mi estrategia pensada. Bueno... casi pensada.",
+            "¡Damas! Qué hermoso juego, hermano. Aquí no hay elecciones ni campañas: solamente estrategia, paciencia y un poquito de viveza.",
+            "Vea, compañero, en Anillaco nos tomamos nuestro tiempo. Si tardo unos segundos en mover, no se me impaciente: estoy elaborando una estrategia total y absolutamente ganadora.",
+            "¡Comienza la partida! Domingo Caballo, quedate tranquilo. El señor Otto construyó este castillo y nosotros vamos a tratar de conquistar aunque sea el tablero.",
+            "¡A triunfar! Y recuerde, hermano: io soy tranquilo, pero no me confunda la tranquilidad con falta de ambición."
+        ]
+
+    },
 
 };
 

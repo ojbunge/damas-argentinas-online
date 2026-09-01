@@ -376,7 +376,7 @@
 <p>En fin, ésto que te digo es sólo para que tomes nota y tengamos una evaluación más precisa del último estado del bot, pero no cambia en nada la tarea que tenés que hacer, así que seguí desarrollándola como venías</p>
 <p>”</p>
 <div class="speaker-label speaker-claude">CLAUDE</div>
-<p>(en un momento de la respuesta se trabó y luego siguió en inglés, por razones inexplicables. Lo copio tal cual)</p>
+<p>(en un momento la respuesta se trabó y luego siguió en inglés, por razones inexplicables. Lo copio tal cual)</p>
 <p>“Retomo. Anoto lo que me contás sobre las 6 partidas (nivel 6-7, mejoró bastante respecto a la primera versión) — dato valioso para cuando calibremos, no toca nada de lo que estoy haciendo ahora. Sigo con la parte 2: el bono de "camino despejado".</p>
 <p>Ran 8 commands, viewed a file, edited a file · 4 notes</p>
 <p>Encontré algo importante: mi criterio de "continuidad" tenía un problema — podía aferrarse a una opinión temprana y poco informada (de profundidad 1-3) en vez de a algo genuinamente confirmado por profundidades más recientes. Lo rediseño para que solo confíe en lo que se sostiene entre las <strong>últimas dos</strong> profundidades consecutivas, no en un origen viejo:</p>
@@ -899,9 +899,29 @@
 <p>El bug no producía un patrón de error parejo y bien distribuido — producía saltos ocasionales, catastróficos e impredecibles, mecánicamente disparados por una condición técnica bien específica (una posición de hoja con el rival por mover, involucrando una pieza con una captura devastadora disponible si fuera turno del bot otra vez). Eso no se parece tanto a "un jugador principiante que a veces se equivoca" como a "un jugador que casi siempre juega razonablemente bien, pero de tanto en tanto tropieza con algo random y grave" — que es justo el patrón que vos mismo describiste como indeseable cuando lo reportaste la primera vez, y por el que lo llamamos bug en vez de "nivel de dificultad".</p>
 <p>Un nivel 2 o 3 bien diseñado debería tener errores frecuentes pero parejos (con ruido alto, como ya hacen el 1-4 hoy), no errores raros pero desproporcionadamente grandes. Además, técnicamente, reintroducir el bug solo para un par de niveles significaría mantener dos versiones distintas de la evaluación dando vueltas — más superficie para futuros dolores de cabeza, por algo que ni siquiera creo que dé el resultado que buscamos.</p>
 <p>Con esto contestado, ¿arrancamos por el nuevo nivel 6 en la próxima entrada?”</p>
-<p id="articleClosing">Bueno, decidí compartir esto, pero por supuesto que hay muchísimo más (esto será aproximadamente la cuarta parte del trabajo que hice con los bots junto con Claude). Si alguien está leyendo esto y le interesa saber más, me puede escribir al mail (<a class="inline-link" href="mailto:ottohelmutb@gmail.com">ottohelmutb@gmail.com</a>) y con gusto le pasaré el resto.</p>
+<p id="articleClosing">Bueno, decidí compartir esto, pero por supuesto que hay muchísimo más (esto será aproximadamente la cuarta parte del trabajo que hice con los bots junto con Claude). Si alguien está leyendo esto y le interesa saber más, me puede escribir al mail (<a class="inline-link contact-email-link" href="#">contacto por email</a>) y con gusto le pasaré el resto.</p>
 <div id="articleFooter">© 2026 Otto Helmut. Damas Argentinas Online.</div>
     </div>
+
+    <script>
+        // El mail nunca aparece como texto plano en el HTML (ni siquiera
+        // partido en el propio código, más allá de "usuario" y "dominio"
+        // por separado) -- se arma recién acá, al cargar la página. Para
+        // una persona es exactamente igual: ve el link, lo clickea, se le
+        // abre su cliente de correo. Pero un rastreador que solo escanea
+        // el HTML crudo (la inmensa mayoría de los que juntan
+        // direcciones para mandar spam) nunca llega a ver el patrón
+        // "algo@algo.algo", porque no está ahí como texto.
+        (function () {
+            var user = 'ottohelmutb';
+            var domain = 'gmail.com';
+            var address = user + '@' + domain;
+            document.querySelectorAll('.contact-email-link').forEach(function (el) {
+                el.href = 'mailto:' + address;
+                el.textContent = address;
+            });
+        })();
+    </script>
 </body>
 
 </html>

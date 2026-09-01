@@ -927,7 +927,7 @@
                     <h3>10. Contacto</h3>
                     <p>Para consultas, reclamos vinculados a propiedad intelectual, reportes de mal uso del
                         chat, o cualquier otra comunicación relacionada con el Sitio:</p>
-                    <p><strong>Email:</strong> <a href="mailto:ottohelmutb@gmail.com">ottohelmutb@gmail.com</a>
+                    <p><strong>Email:</strong> <a class="contact-email-link" href="#">contacto por email</a>
                     </p>
 
                     <h3>11. Ley aplicable y jurisdicción</h3>
@@ -1520,6 +1520,20 @@
             }
             labChallengerId = null;
         }
+
+        // El mail de contacto (adentro de los Términos de Uso) nunca
+        // aparece como texto plano en el HTML -- se arma recién acá, al
+        // cargar la página. Mismo motivo y mismo mecanismo que en
+        // acerca-de.html/creacion-bots.html.
+        (function () {
+            var user = 'ottohelmutb';
+            var domain = 'gmail.com';
+            var address = user + '@' + domain;
+            document.querySelectorAll('.contact-email-link').forEach(function (el) {
+                el.href = 'mailto:' + address;
+                el.textContent = address;
+            });
+        })();
 
         function openTerms() {
             document.getElementById('termsModal').style.display = 'flex';

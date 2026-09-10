@@ -89,6 +89,37 @@
             filter: brightness(1.1);
         }
 
+        /* --- EL TRUJAMÁN: selector ES/EN (calcado de index.html) --- */
+        #langSwitcher {
+            display: flex;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 2px solid #7a5a24;
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .lang-btn {
+            background: transparent;
+            color: #d9c9a3;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 9px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            cursor: pointer;
+        }
+
+        .lang-btn:hover {
+            background: rgba(241, 196, 15, 0.2);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1c0a;
+        }
+
         /* --- EL ESCUDO FLUIDO, calcado de index.html --- */
         :root {
             --sq-size: clamp(26px, 5.95vw, 51px);
@@ -698,16 +729,20 @@
 <body>
 
     <footer id="siteFooter">
-        © 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.
-        <a href="#" onclick="openTerms(); return false;">Ver Términos de Uso</a>.
+        <span data-i18n="footerCopyright">© 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.</span>
+        <a href="#" onclick="openTerms(); return false;" data-i18n="footerTermsLink">Ver Términos de Uso</a>.
     </footer>
 
     <div id="topBar">
-        <button id="salirLobbyBtn" onclick="leaveAndGoTo('index.html')">🚪 Salir al Lobby</button>
+        <div id="langSwitcher">
+            <button class="lang-btn" data-lang="es" onclick="setLanguage('es')">🇦🇷 ES</button>
+            <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">🇬🇧 EN</button>
+        </div>
+        <button id="salirLobbyBtn" onclick="leaveAndGoTo('index.html')" data-i18n="salirLobbyBtn">🚪 Salir al Lobby</button>
     </div>
 
-    <h1>🧪 El Laboratorio</h1>
-    <p class="lab-subtitle">Estudiá jugadas, probá ataques y defensas, libremente y sin restricciones.</p>
+    <h1 data-i18n="labTitle">🧪 El Laboratorio</h1>
+    <p class="lab-subtitle" data-i18n="labSubtitle">Estudiá jugadas, probá ataques y defensas, libremente y sin restricciones.</p>
 
     <div id="labWrapper">
         <div id="boardColumnLab">
@@ -716,9 +751,9 @@
             </div>
 
             <div id="topControlsRow">
-                <button id="posicionInicialBtn" class="lab-btn">▶️ Posición inicial</button>
-                <button id="removerTodoBtn" class="lab-btn">🗑️ Remover todo</button>
-                <button id="deshacerBtn" class="lab-btn" disabled>↩️ Deshacer</button>
+                <button id="posicionInicialBtn" class="lab-btn" data-i18n="posicionInicialBtn">▶️ Posición inicial</button>
+                <button id="removerTodoBtn" class="lab-btn" data-i18n="removerTodoBtn">🗑️ Remover todo</button>
+                <button id="deshacerBtn" class="lab-btn" disabled data-i18n="deshacerBtn">↩️ Deshacer</button>
                 <span id="pieceCounter">⚪ 0 | ⚫ 0</span>
             </div>
 
@@ -726,18 +761,18 @@
         </div>
 
         <div id="pieceTypePanel">
-            <h3>Ficha a colocar<br>(clic derecho en el tablero)</h3>
+            <h3><span data-i18n="pieceTypePanelTitle">Ficha a colocar</span><br><span data-i18n="pieceTypePanelHint">(clic derecho en el tablero)</span></h3>
             <div id="pieceTypeGrid">
-                <button class="piece-type-btn" data-type="w" title="Peón blanco">
+                <button class="piece-type-btn" data-type="w" data-i18n-title="pieceWhitePawn" title="Peón blanco">
                     <div class="piece white"></div>
                 </button>
-                <button class="piece-type-btn" data-type="W" title="Dama blanca">
+                <button class="piece-type-btn" data-type="W" data-i18n-title="pieceWhiteKing" title="Dama blanca">
                     <div class="piece white king"></div>
                 </button>
-                <button class="piece-type-btn" data-type="b" title="Peón negro">
+                <button class="piece-type-btn" data-type="b" data-i18n-title="pieceBlackPawn" title="Peón negro">
                     <div class="piece black"></div>
                 </button>
-                <button class="piece-type-btn" data-type="B" title="Dama negra">
+                <button class="piece-type-btn" data-type="B" data-i18n-title="pieceBlackKing" title="Dama negra">
                     <div class="piece black king"></div>
                 </button>
             </div>
@@ -751,14 +786,14 @@
 
     <div id="chatPanel">
         <div id="chatPanelHeader">
-            <span>💬 Chat del Salón</span>
+            <span data-i18n="chatPanelTitle">💬 Chat del Salón</span>
             <button id="closeChatBtn" onclick="toggleChat()">✕</button>
         </div>
         <div id="chatMessages"></div>
         <div id="chatInputBar">
-            <input type="text" id="chatInput" placeholder="Escribí un mensaje..." maxlength="300"
+            <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="Escribí un mensaje..." maxlength="300"
                 onkeydown="handleChatKeydown(event)">
-            <button id="chatSendBtn" onclick="sendChatMessage()">Enviar</button>
+            <button id="chatSendBtn" onclick="sendChatMessage()" data-i18n="chatSendBtn">Enviar</button>
         </div>
     </div>
 
@@ -768,13 +803,13 @@
          real) -- manda a index.html, que sí sabe, cargando la aceptación
          en la propia dirección para que se complete sola al llegar. -->
     <div id="labChallengeModal">
-        <h3 id="labChallengeText" style="margin-top: 0;">¡Un caballero te desafía!</h3>
-        <p style="color: #f1c40f; font-size: 13px;">(si aceptás, salís del laboratorio)</p>
+        <h3 id="labChallengeText" style="margin-top: 0;" data-i18n="challengeDefaultText">¡Un caballero te desafía!</h3>
+        <p style="color: #f1c40f; font-size: 13px;" data-i18n="labChallengeSubtext">(si aceptás, salís del laboratorio)</p>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
             <button class="lab-btn" style="background: linear-gradient(180deg, #6fcf87, #27ae60); color: white;"
-                onclick="acceptLabChallenge()">Aceptar</button>
+                onclick="acceptLabChallenge()" data-i18n="acceptBtn">Aceptar</button>
             <button class="lab-btn" style="background: linear-gradient(180deg, #e77568, #c0392b); color: white;"
-                onclick="declineLabChallenge()">Rechazar</button>
+                onclick="declineLabChallenge()" data-i18n="declineBtn">Rechazar</button>
         </div>
     </div>
 
@@ -950,6 +985,156 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="rules-engine.js"></script>
     <script>
+        // ============================================================
+        //  EL TRUJAMÁN DE GODOFREDO (sistema de idiomas ES/EN)
+        // ============================================================
+        // Mismo mecanismo que index.html (ver los comentarios extensos
+        // ahí): data-i18n para texto estático, t('clave', valores...)
+        // para texto armado en JS con datos variables adentro. Se
+        // duplica acá porque el laboratorio es una página aparte, sin
+        // nada compartido del lado del cliente con index.html más que
+        // rules-engine.js -- pero comparte la MISMA clave de
+        // localStorage ('damas_lang'), así que el idioma elegido en
+        // cualquiera de las dos páginas es el mismo en ambas.
+        const TRANSLATIONS = {
+            es: {
+                salirLobbyBtn: "🚪 Salir al Lobby",
+                labTitle: "🧪 El Laboratorio",
+                labSubtitle: "Estudiá jugadas, probá ataques y defensas, libremente y sin restricciones.",
+                spectatorsNone: "Espectadores: -",
+                spectatorsList: "Espectadores: {0}",
+                posicionInicialBtn: "▶️ Posición inicial",
+                removerTodoBtn: "🗑️ Remover todo",
+                deshacerBtn: "↩️ Deshacer",
+                pieceTypePanelTitle: "Ficha a colocar",
+                pieceTypePanelHint: "(clic derecho en el tablero)",
+                pieceWhitePawn: "Peón blanco",
+                pieceWhiteKing: "Dama blanca",
+                pieceBlackPawn: "Peón negro",
+                pieceBlackKing: "Dama negra",
+                chatPanelTitle: "💬 Chat del Salón",
+                chatInputPlaceholder: "Escribí un mensaje...",
+                chatSendBtn: "Enviar",
+                challengeDefaultText: "¡Un caballero te desafía!",
+                labChallengeSubtext: "(si aceptás, salís del laboratorio)",
+                acceptBtn: "Aceptar",
+                declineBtn: "Rechazar",
+                challengeTimedText: "¡{0} te desafía a un duelo en MODO CONTRARRELOJ, con {1} por jugador!",
+                challengeNormalText: "¡{0} te desafía a un duelo!",
+                spectatingLabOf: "🔬 Espectando el laboratorio de {0}.",
+                spectatingLabOfSomeone: "alguien",
+                labNotFoundAlert: "Ese laboratorio ya no existe.",
+                labClosedAlert: "El dueño de este laboratorio se fue. Volvés al Salón de los Caballeros.",
+                pageTitle: "El Laboratorio - Damas Argentinas Online",
+                footerCopyright: "© 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.",
+                footerTermsLink: "Ver Términos de Uso",
+                sys_winByTimeout: "⏱️ {0} le ha ganado por tiempo a {1}",
+                sys_arrival: "🛡️ {0} ha llegado al Castillo",
+                sys_challengeAccepted: "⚔️ {0} desafía a {1} a duelo",
+                sys_spectatorJoined: "👀 {0} está espectando el duelo {1}",
+                sys_departure: "🚪 {0} se ha ido del Castillo",
+                sys_victory: "🏆 {0} ha derrotado a {1}",
+                sys_draw: "🤝 {0} y {1} han empatado",
+            },
+            en: {
+                salirLobbyBtn: "🚪 Leave to Lobby",
+                labTitle: "🧪 The Laboratory",
+                labSubtitle: "Study moves, try out attacks and defenses, freely and without restrictions.",
+                spectatorsNone: "Spectators: -",
+                spectatorsList: "Spectators: {0}",
+                posicionInicialBtn: "▶️ Starting position",
+                removerTodoBtn: "🗑️ Remove all",
+                deshacerBtn: "↩️ Undo",
+                pieceTypePanelTitle: "Piece to place",
+                pieceTypePanelHint: "(right-click on the board)",
+                pieceWhitePawn: "White pawn",
+                pieceWhiteKing: "White king",
+                pieceBlackPawn: "Black pawn",
+                pieceBlackKing: "Black king",
+                chatPanelTitle: "💬 Hall Chat",
+                chatInputPlaceholder: "Type a message...",
+                chatSendBtn: "Send",
+                challengeDefaultText: "A knight challenges you!",
+                labChallengeSubtext: "(if you accept, you leave the laboratory)",
+                acceptBtn: "Accept",
+                declineBtn: "Decline",
+                challengeTimedText: "{0} challenges you to a duel in TIMED MODE, with {1} per player!",
+                challengeNormalText: "{0} challenges you to a duel!",
+                spectatingLabOf: "🔬 Watching {0}'s laboratory.",
+                spectatingLabOfSomeone: "someone",
+                labNotFoundAlert: "That laboratory no longer exists.",
+                labClosedAlert: "The owner of this laboratory has left. You'll be taken back to the Knights' Hall.",
+                pageTitle: "The Laboratory - Damas Argentinas Online",
+                footerCopyright: "© 2026 Otto Helmut. Damas Argentinas Online. All rights reserved.",
+                footerTermsLink: "View Terms of Use",
+                sys_winByTimeout: "⏱️ {0} has beaten {1} on time",
+                sys_arrival: "🛡️ {0} has arrived at the Castle",
+                sys_challengeAccepted: "⚔️ {0} challenges {1} to a duel",
+                sys_spectatorJoined: "👀 {0} is watching the duel {1}",
+                sys_departure: "🚪 {0} has left the Castle",
+                sys_victory: "🏆 {0} has defeated {1}",
+                sys_draw: "🤝 {0} and {1} have drawn",
+            }
+        };
+
+        let currentLang = localStorage.getItem('damas_lang') || 'es';
+
+        function t(key, ...args) {
+            let str = (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key])
+                || TRANSLATIONS.es[key]
+                || key;
+            args.forEach((arg, i) => {
+                str = str.replace(`{${i}}`, arg);
+            });
+            return str;
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.textContent = t(el.getAttribute('data-i18n'));
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+            });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                el.title = t(el.getAttribute('data-i18n-title'));
+            });
+            document.documentElement.lang = currentLang;
+            document.title = t('pageTitle');
+        }
+
+        function updateLangSwitcherUI() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLang);
+            });
+        }
+
+        function setLanguage(lang) {
+            if (lang !== 'es' && lang !== 'en') return;
+            currentLang = lang;
+            localStorage.setItem('damas_lang', lang);
+            applyTranslations();
+            updateLangSwitcherUI();
+            renderSpectatorsDisplay(lastSpectatorsList);
+        }
+
+        // Se aplica ya mismo (no hace falta esperar a ningún evento de
+        // carga): todo el HTML de arriba de este <script> ya está
+        // parseado en este punto, así que los elementos [data-i18n] ya
+        // existen.
+        applyTranslations();
+        updateLangSwitcherUI();
+        // OJO: NO se puede llamar acá a renderSpectatorsDisplay() -- esa
+        // función lee/escribe lastSpectatorsList, que se declara con let
+        // más abajo en el archivo (junto al resto de la lógica del
+        // laboratorio). Llamarla ANTES de que el script llegue a esa
+        // declaración dispara un ReferenceError de "zona muerta
+        // temporal" que corta en seco TODO el resto del script -- así
+        // fue como se descubrió este problema, con media página
+        // rota en silencio. El texto inicial se pone directo acá, sin
+        // depender de esa variable.
+        document.getElementById('spectatorListDisplay').textContent = t('spectatorsNone');
+
         // ============================================================
         //  ESTADO
         // ============================================================
@@ -1402,12 +1587,22 @@
             if (socket) socket.emit('sync-lab-board', { board: board });
         }
 
+        // Guardamos la última lista real (o null si no hay nadie) para
+        // poder re-renderizarla al cambiar de idioma sin esperar al
+        // próximo evento del servidor -- mismo mecanismo que index.html.
+        let lastSpectatorsList = null;
+
+        function renderSpectatorsDisplay(names) {
+            lastSpectatorsList = (names && names.length > 0) ? names : null;
+            updateSpectatorsDisplay(lastSpectatorsList);
+        }
+
         function updateSpectatorsDisplay(names) {
             const el = document.getElementById('spectatorListDisplay');
             if (!el) return;
             el.textContent = (names && names.length > 0)
-                ? `Espectadores: ${names.join(', ')}`
-                : 'Espectadores: -';
+                ? t('spectatorsList', names.join(', '))
+                : t('spectatorsNone');
         }
 
         // Da una etiqueta legible para mostrar minutos con hasta 2
@@ -1438,7 +1633,7 @@
         socket.on('lab-init', (data) => {
             board = data.board;
             const subtitle = document.querySelector('.lab-subtitle');
-            if (subtitle) subtitle.textContent = `🔬 Espectando el laboratorio de ${data.ownerName || 'alguien'}.`;
+            if (subtitle) subtitle.textContent = t('spectatingLabOf', data.ownerName || t('spectatingLabOfSomeone'));
             renderBoard();
         });
 
@@ -1448,18 +1643,18 @@
         });
 
         socket.on('lab-not-found', () => {
-            alert('Ese laboratorio ya no existe.');
+            alert(t('labNotFoundAlert'));
             leaveAndGoTo('index.html');
         });
 
         socket.on('lab-closed', () => {
             if (!isSpectatorMode) return; // al dueño esto no le aplica
-            alert('El dueño de este laboratorio se fue. Volvés al Salón de los Caballeros.');
+            alert(t('labClosedAlert'));
             leaveAndGoTo('index.html');
         });
 
         socket.on('lab-spectators-update', (names) => {
-            updateSpectatorsDisplay(names);
+            renderSpectatorsDisplay(names);
         });
 
         socket.on('update-lobby', (data) => {
@@ -1489,10 +1684,9 @@
         socket.on('receive-challenge', (data) => {
             labChallengerId = data.fromId;
             labChallengeTimeControl = data.timeControl || null;
-            const label = labChallengeTimeControl
-                ? ` en MODO CONTRARRELOJ, con ${formatMinutesLabel(labChallengeTimeControl.initialMs)} por jugador`
-                : '';
-            document.getElementById('labChallengeText').textContent = `¡${data.fromName} te desafía a un duelo${label}!`;
+            document.getElementById('labChallengeText').textContent = labChallengeTimeControl
+                ? t('challengeTimedText', data.fromName, formatMinutesLabel(labChallengeTimeControl.initialMs))
+                : t('challengeNormalText', data.fromName);
             document.getElementById('labChallengeModal').style.display = 'block';
         });
 
@@ -1616,7 +1810,7 @@
 
             if (msg.type === 'system') {
                 div.className = "chat-msg chat-system";
-                div.textContent = `${msg.text} · ${timeStr}`;
+                div.textContent = `${t('sys_' + msg.eventCode, ...(msg.params || []))} · ${timeStr}`;
             } else {
                 const mentionsMe = messageJSMentionsMe(msg.text, myUsername);
                 div.className = "chat-msg" + (mentionsMe ? " chat-mentioned" : "");

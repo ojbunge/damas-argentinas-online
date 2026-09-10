@@ -37,70 +37,80 @@ const BOT_CHARACTERS = [
         level: 1,
         name: "Neanderthalius",
         image: "assets/bots/neanderthalius.jpg",
-        description: "Desde el albor de los tiempos llega nuestro más primitivo participante, un ejemplar de homínido que se preservó congelado en un glaciar durante 300.000 años. Junta palitos, golpea piedras y ahora también juega a las damas. Comele las fichas antes de que se las coma él. Si perdés contra él probablemente seas el eslabón perdido."
+        description: "Desde el albor de los tiempos llega nuestro más primitivo participante, un ejemplar de homínido que se preservó congelado en un glaciar durante 300.000 años. Junta palitos, golpea piedras y ahora también juega a las damas. Comele las fichas antes de que se las coma él. Si perdés contra él probablemente seas el eslabón perdido.",
+        description_en: "From the dawn of time comes our most primitive contender, a specimen of hominid preserved frozen in a glacier for 300,000 years. He gathers sticks, bangs rocks together, and now also plays checkers. Eat his pieces before he eats yours. If you lose to him, you're probably the missing link."
     },
     {
         id: "termidor",
         level: 2,
         name: "Monsieur Fisure Termidor",
         image: "assets/bots/termidor.jpg",
-        description: "Un jugador que sólo sirve para desafiar a altas horas de la madrugada cuando vas por el quinto fernet, como mínimo, para que la cosa sea pareja. Este desaliñado noble asegura con total convicción que juega mejor cuando está \u201cun poquito entonado\u201d, pero nunca lo sabremos ya que el estado de ebriedad en el que vive supera ampliamente esa medida. ¡Salud!"
+        description: "Un jugador que sólo sirve para desafiar a altas horas de la madrugada cuando vas por el quinto fernet, como mínimo, para que la cosa sea pareja. Este desaliñado noble asegura con total convicción que juega mejor cuando está \u201cun poquito entonado\u201d, pero nunca lo sabremos ya que el estado de ebriedad en el que vive supera ampliamente esa medida. ¡Salud!",
+        description_en: "A player only worth challenging in the small hours of the morning, once you're at least five fernets in, just to keep things even. This disheveled nobleman insists, with total conviction, that he plays better when \u201ca little tipsy,\u201d but we'll never know for sure, since the state of drunkenness he lives in far exceeds that measure. Cheers!"
     },
     {
         id: "aquitapia",
         level: 3,
         name: "Leonor de Aquitapia",
         image: "assets/bots/aquitapia.jpg",
-        description: "La tenebrosa reina del predio de Ezeiza y organizadora oficial de los torneos del reino, jura que todos ellos han sido perfectamente transparentes. Una dama con más asados que impedimentos morales; en días de calor aparecen siervos por detrás suyo y le secan la nuca. ¡Investigá sus habilidades!"
+        description: "La tenebrosa reina del predio de Ezeiza y organizadora oficial de los torneos del reino, jura que todos ellos han sido perfectamente transparentes. Una dama con más asados que impedimentos morales; en días de calor aparecen siervos por detrás suyo y le secan la nuca. ¡Investigá sus habilidades!",
+        description_en: "The fearsome queen of the Ezeiza grounds and official organizer of the kingdom's tournaments, who swears every single one of them has been perfectly transparent. A lady with more barbecues than moral qualms; on hot days, servants appear behind her to fan the back of her neck. Look into her skills!"
     },
     {
         id: "marolio",
         level: 4,
         name: "Fray Marolio",
         image: "assets/bots/marolio.jpg",
-        description: "Religioso encargado de la despensa de nuestro castillo, Marolio está desde el comienzo del día entrenando para las damas y apilando paté, caballa, arroz y arvejas, sardinas y atún, choclo y lentejas. Sus habilidades en el juego son como los productos que maneja: de bajo presupuesto."
+        description: "Religioso encargado de la despensa de nuestro castillo, Marolio está desde el comienzo del día entrenando para las damas y apilando paté, caballa, arroz y arvejas, sardinas y atún, choclo y lentejas. Sus habilidades en el juego son como los productos que maneja: de bajo presupuesto.",
+        description_en: "The friar in charge of our castle's pantry, Marolio has been training for checkers since the crack of dawn, all while stacking paté, mackerel, rice and peas, sardines and tuna, corn and lentils. His skills at the game are just like the products he stocks: bargain-bin."
     },
     {
         id: "icardio",
         level: 5,
         name: "Icardio de Milán",
         image: "assets/bots/icardio.jpg",
-        description: "Aficionado a las damas desde hace mucho tiempo (al juego de mesa lo acaba de descubrir), este agraciado juglar es experto en comer reinas ajenas y, apenas logres tener una, intentará arrebatártela sin escrúpulos — así que nunca te fíes de él. Ideal para jugar en el día del amigo."
+        description: "Aficionado a las damas desde hace mucho tiempo (al juego de mesa lo acaba de descubrir), este agraciado juglar es experto en comer reinas ajenas y, apenas logres tener una, intentará arrebatártela sin escrúpulos — así que nunca te fíes de él. Ideal para jugar en el día del amigo.",
+        description_en: "A longtime fan of the ladies — he only just discovered the board game. This charming minstrel is an expert at taking other men's queens, and the moment you manage to get one, he'll try to snatch her away without a shred of scruple — so never trust him. Perfect for playing on Friend's Day."
     },
     {
         id: "empecid",
         level: 6,
         name: "Empecid Campeador",
         image: "assets/bots/empecid.jpg",
-        description: "Aromático caballero que galopa por las planicies del reino en busca de rivales que no le huyan. Su olor a pata es tan abrumador que a veces se siente hasta por internet y provoca que las fichas se capturen solas intentando escapar de él. Intentará erradicarte del tablero como erradicó a los moros de España, aunque también se dice que huyeron ellos solos por el olor."
+        description: "Aromático caballero que galopa por las planicies del reino en busca de rivales que no le huyan. Su olor a pata es tan abrumador que a veces se siente hasta por internet y provoca que las fichas se capturen solas intentando escapar de él. Intentará erradicarte del tablero como erradicó a los moros de España, aunque también se dice que huyeron ellos solos por el olor.",
+        description_en: "A fragrant knight who gallops across the kingdom's plains in search of rivals who won't run from him. His foot odor is so overwhelming that it can sometimes be sensed even over the internet, causing pieces to capture themselves just trying to escape him. He'll try to wipe you off the board the way he wiped the Moors from Spain — though it's also said they simply fled on their own, on account of the smell."
     },
     {
         id: "myrthlagrande",
         level: 7,
-        name: "Myrth la Grande",
+        name: "Myrth La Grande",
         image: "assets/bots/myrthlagrande.jpg",
-        description: "Myrth la Grande es realmente muy grande, por no decir vieja. La reina madre de nuestro castillo, siempre sentada a la cabecera de su mesa, es culta y refinada, pero también mordaz e incisiva, lo que se muestra tanto es sus comentarios como en su juego. Hay quien dice que tuvo a un dinosaurio de mascota y que envenena a sus invitados ¡Desafiala en su propia me-sa-za!"
+        description: "Myrth La Grande es realmente muy grande, por no decir vieja. La reina madre de nuestro castillo, siempre sentada a la cabecera de su mesa, es culta y refinada, pero también mordaz e incisiva, lo que se muestra tanto en sus comentarios como en su juego. Hay quien dice que tuvo a un dinosaurio de mascota y que envenena a sus invitados. ¡Desafiala en su propia me-sa-za!",
+        description_en: "Myrth La Grande is, as her name suggests, great — as much as she is old. The queen mother of our castle, always seated at the head of her table, is cultured and refined, but also sharp-tongued and incisive, which comes through both in her remarks and in her play. Some say she once kept a dinosaur as a pet, and that she poisons her guests. Challenge her at her own giant table!"
     },
     {
         id: "godofredo",
         level: 8,
         name: "Godofredo",
         image: "assets/bots/godofredo.jpg",
-        description: "El mítico peón que fuera protagonista en la construcción de este castillo —encontrarás referencias a él a lo largo de todo el código del sitio— deja la pala y el martillo a un lado, se pone la armadura y empuña la espada, decidido a demostrar que él también sabe combatir y que conocer la arena como nadie le da una ventaja sobre otros participantes. ¡A la orden, mi señor!"
+        description: "El mítico peón que fuera protagonista en la construcción de este castillo —encontrarás referencias a él a lo largo de todo el código del sitio— deja la pala y el martillo a un lado, se pone la armadura y empuña la espada, decidido a demostrar que él también sabe combatir y que conocer la arena como nadie le da una ventaja sobre otros participantes. ¡A la orden, mi señor!",
+        description_en: "The legendary pawn who starred in the building of this very castle — you'll find references to him throughout the site's entire code — sets aside his shovel and hammer, dons his armor, and takes up his sword, determined to prove that he too knows how to fight, and that knowing the arena like no other gives him an edge over the other contenders. At your command, my lord!"
     },
     {
         id: "mariaeugenia",
         level: 9,
         name: "Princesa María Eugenia de China",
         image: "assets/bots/mariaeugenia.jpg",
-        description: "Esta avezada doncella china de sangre japonesa conoce a la perfección todos los movimientos que una dama debe realizar para que cualquier afamado caballero caiga en su trampa. No te distraigas con su belleza, o cuando te quieras acordar se habrá llevado la mitad de tus fichas."
+        description: "Esta avezada doncella china de sangre japonesa conoce a la perfección todos los movimientos que una dama debe realizar para que cualquier afamado caballero caiga en su trampa. No te distraigas con su belleza, o cuando te quieras acordar se habrá llevado la mitad de tus fichas.",
+        description_en: "This seasoned maiden, Chinese by nationality and Japanese by blood, knows to perfection every move a lady must make to lure even the most famous knight into her trap. Don't get distracted by her beauty, or before you know it she'll have carried off half your pieces."
     },
     {
         id: "carlosaulmagno",
         level: 10,
         name: "Carlosaúlmagno",
         image: "assets/bots/carlosaulmagno.jpg",
-        description: "Este carismático caballero proveniente del lejano reino de Anillaco parece invencible, pero tiene momentos en que su mente se remonta a la estratósfera, momentos que tendrás que aprovechar para ganar el 1 a 1. No dejes que su corta estatura te engañe: es capaz de todo con tal de ganar, y si no puede hacerlo privatizará el tablero. ¡Seguilo, no te va a defraudar!"
+        description: "Este carismático caballero proveniente del lejano reino de Anillaco parece invencible, pero tiene momentos en que su mente se remonta a la estratósfera, momentos que tendrás que aprovechar para ganar el 1 a 1. No dejes que su corta estatura te engañe: es capaz de todo con tal de ganar, y si no puede hacerlo privatizará el tablero. ¡Seguilo, no te va a defraudar!",
+        description_en: "This charismatic knight, hailing from the distant realm of Anillaco, seems unbeatable — but there are moments when his mind drifts off into the stratosphere, moments you'll need to seize to win it one-for-one. Don't let his short stature fool you: he's capable of anything to win, and if he can't, he'll privatize the board. Follow him, he won't let you down!"
     }
 ];
 
@@ -1034,8 +1044,9 @@ function getBotMove(boardForSearch, level, player = "b") {
 // Motor de DETECCIÓN de eventos "dignos de comentario" durante una
 // partida contra un bot (una captura múltiple, una coronación, un
 // marcador que se desnivela mucho y se sostiene, etc.) — para que cada
-// personaje pueda reaccionar con una frase propia (o, en el caso de la
-// Lora Prodigio, un sonido propio). Este archivo SOLO detecta qué pasó
+// personaje pueda reaccionar con una frase propia (algunos, incluso,
+// con un sonido propio en vez de texto -- ver bot-dialogue.js). Este
+// archivo SOLO detecta qué pasó
 // y le pone una etiqueta — no sabe nada de qué dice cada personaje ni
 // de cómo se muestra en pantalla; eso vive aparte, en bot-dialogue.js
 // (el contenido) e index.html (la presentación visual, todavía sin

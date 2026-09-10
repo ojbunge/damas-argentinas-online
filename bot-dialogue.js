@@ -37,114 +37,151 @@
 // como quieras. El resto de los niveles quedan con las listas vacías,
 // bien marcadas, para que las vayas llenando cuando tengas ganas.
 //
-// ¡OJO CON LA LORA PRODIGIO! (nivel 7, id "loraprodigio") — su entrada,
-// más abajo, no lleva frases de texto sino nombres de archivo de
-// sonido (por ejemplo "lora-captura-1.mp3") que después se van a
-// buscar en la carpeta de sonidos que definamos — está separada del
-// resto y marcada aparte para que no se mezcle con las demás, que sí
-// son texto.
+
 
 const BOT_DIALOGUE = {
 
-    // ---- Nivel 1: Neanderthalius (LLENO DE EJEMPLO, para probar) ----
+    // ---- Nivel 1: Neanderthalius ----
     neanderthalius: {
         VICTORIA: [
             "¡UGH! ¡Neanderthalius ganó! Neanderthalius mejor de todos.",
-            "Neanderthalius gana. Otro pierde. Así es vida."
+            "Neanderthalius gana. Otro pierde. Así es vida.",
+            "¡Neanderthalius fuerte! Otro débil. ¡Ugh!",
+            "Nadie poder con Neanderthalius. Ni siquiera Caballero Chiquito con sus trampas."
         ],
         DERROTA: [
             "Uh... Neanderthalius perdió. Otro bueno con fichas.",
-            "Neanderthalius triste. Pero Neanderthalius jugará de nuevo."
+            "Neanderthalius triste. Pero Neanderthalius jugará de nuevo.",
+            "Neanderthalius confundido. Fichas moverse solas, parecer magia de Hombre de la Cruz.",
+            "Neanderthalius perder. Muy triste. Neanderthalius ir más tarde con Señor del Vino para hacer chistes y beber, así Neanderthalius estar contento otra vez."
         ],
         EMPATE: [
             "Nadie gana, nadie pierde. Neanderthalius... confundido, pero bien.",
-            "Empate está bien. Neanderthalius no enojado."
+            "Empate está bien. Neanderthalius no enojado.",
+            "Tablero vacío. Empate. Como cuando Neanderthalius comer toda la comida y no quedar nada para Hombre de la Cruz.",
+            "Empate estar bien. Neanderthalius empatar una vez con Señor de la Música, ahora empatar con otro. Dos empates. Neanderthalius jugador muy fuerte."
         ],
         CORONACION_SUFRIDA: [
             "Uh... eso no bueno para Neanderthalius.",
-            "Ficha grande de otro. Neanderthalius no gusta."
+            "Ficha grande de otro. Neanderthalius no gusta.",
+            "¡Ugh! Ficha de otro llegar al fondo. Ahora ser reina poderosa, como Reina del Asado con su tenedor.",
+            "Ahora otro tener ficha grande. ¡Cuidado! Pega fuerte como mascota de Señora de la Mesa."
         ],
         CORONACION_PROPIA: [
             "¡UGH! ¡Ficha de Neanderthalius ahora GRANDE!",
-            "Neanderthalius tiene ficha poderosa. ¡Uh-uh!"
+            "Neanderthalius tiene ficha poderosa. ¡Uh-uh!",
+            "¡Ficha llegar al final! Ahora ser reina. ¡Mucha honra!",
+            "Ficha grande. Fuerte. Como corcel de Hombre de Pelo Amarillo."
         ],
         CAPTURA_MULTIPLE_SUFRIDA: [
             "Auu... muchas fichas se fueron. Neanderthalius triste.",
-            "Eso... eso dolió. Varias de una vez."
+            "Eso... eso dolió. Varias de una vez.",
+            "¡Ugh! Otro comer fichas de Neanderthalius. ¡Igual que Neanderthalius comer pata de pollo!",
+            "Muchas fichas menos. Neanderthalius pensar... ¿Quizás Caballero Chiquito mover fichas de otro?"
         ],
         CAPTURA_MULTIPLE_PROPIA: [
             "¡UNA, DOS, TRES! ¡Neanderthalius come mucho!",
-            "¡Ugh-ugh-ugh! Neanderthalius fuerte hoy."
+            "¡Ugh-ugh-ugh! Neanderthalius fuerte hoy.",
+            "¡Ñam, ñam, ñam! Muchas fichas de otro afuera.",
+            "¡Neanderthalius comer mucho! Como cuando Neanderthalius agarrar carne de la parrilla de Reina del Asado y correr."
         ],
         TODO_DAMAS: [
             "Ya no hay fichas chiquitas. Solo grandes. Raro.",
-            "Tablero lleno de fichas grandes ahora. Neanderthalius confundido."
+            "Tablero lleno de fichas grandes ahora. Neanderthalius confundido.",
+            "Solo haber fichas grandes ahora. Señor de la Música ser muy bueno con las fichas grandes. Él decirles reinas. Él ser muy inteligente y bueno con las reinas.",
+            "Muchas damas. Como mujeres en castillo. Princesa muy Linda, Reina del Asado y Señora de la Mesa. ¡Ugh! Muchas."
         ],
         POCAS_FICHAS_EN_DESVENTAJA: [
             "Neanderthalius tiene poquitas. Neanderthalius nervioso.",
-            "Esto... esto no va bien para Neanderthalius."
+            "Esto... esto no va bien para Neanderthalius.",
+            "Fichas casi no haber. Neanderthalius asustado. ¿Hombre de la Cruz dar comida si Neanderthalius no tener fichas?",
+            "Quedar poquitas. Necesitar ayuda de Hombre de Pelo Amarillo para romper hielo y escapar."
         ],
         DIFERENCIA_GRANDE_EN_CONTRA: [
             "Otro tiene muchas más. Neanderthalius no entiende cómo.",
-            "Uh-oh. Otro ganando mucho."
+            "Uh-oh. Otro ganando mucho.",
+            "¡Ugh, ugh! Otro comer mucho, igual que Reina del Asado.",
+            "Otro tener muchas fichas. Quizás usar magia de Señor de la Música para mover rápido."
         ],
         DIFERENCIA_GRANDE_A_FAVOR: [
             "¡Neanderthalius tiene MUCHAS fichas! ¡Uh!",
-            "Neanderthalius ganando mucho. Neanderthalius contento."
+            "Neanderthalius ganando mucho. Neanderthalius contento.",
+            "¡Mucho, mucho comer! Otro sin fichas.",
+            "Neanderthalius dominar tablero. Como Neanderthalius dominar cueva cuando encontrar oso."
         ],
         PARIDAD_POCAS_FICHAS: [
             "Pocas fichas para los dos ahora. Neanderthalius atento.",
-            "Casi terminando. Pocas fichas quedan."
+            "Casi terminando. Pocas fichas quedan.",
+            "Pocas fichas. Mover despacito. Como si Caballero Chiquito estuviera cerca.",
+            "Silencio en tablero. Solo pocas fichas. Raro."
         ],
         PARTIDO_LARGO: [
             "Esto lleva mucho tiempo. Neanderthalius cansado.",
-            "Partido largo. Sol ya se movió mucho en el cielo."
+            "Partido largo. Sol ya se movió mucho en el cielo.",
+            "¡Uo! ¡Uo! Partido muy largo. Neanderthalius querer ir a caverna de Hombre de la Cruz. Si no está Hombre, Neanderthalius poder comer mucha comida!",
+            "Uh, uh! ¡Partido muy largo! Pero no tan largo como tiempo que estar Neanderthalius en hielo. Por suerte Hombre de Pelo Amarillo ver a Neanderthalius, romper el hielo y traerlo al castillo."
         ],
         INICIO_HOSTILIDADES: [
             "¡Ahora sí! ¡Ya empezó pelea de fichas!",
-            "Uh-uh, ya no hay más espera. Ahora en serio."
+            "Uh-uh, ya no hay más espera. Ahora en serio.",
+            "¡Mover ficha! Pelea empieza.",
+            "Neanderthalius golpear piedra con piedra. ¡PUM! Juego empezar."
         ],
         COMENTARIO_ALEATORIO: [
             "Neanderthalius le gusta esta piedra plana con cuadraditos.",
             "¿Otro también piensa mucho para mover ficha?",
-            "Neanderthalius tiene hambre. Pero primero, ficha."
+            "Neanderthalius tiene hambre. Pero primero, ficha.",
+            "Señor del Vino ser muy divertido. Él dar vino a Neanderthalius, y Neanderthalius ponerse contento y reir.",
+            "Otro día Neanderthalius perseguir conejo por el campo, por el olfato. De golpe aparecer a lo lejos Señor del Olor. Neanderthalius perder rastro de conejo, olor a pata del Señor tapar todo!",
+            "Antes de quedar atrapado en hielo, Neanderthalius ver una señora. Ella no ser tan vieja entonces. Ahora misma señora estar sentada en mesa adentro del castillo.",
+            "¡Ugh! Hombres con ojos estirados de Princesa muy Linda dar miedo. Mejor mirar de lejos.",
+            "Caballero Chiquito parecer buena gente, pero mueve fichas muy rápido. Hacer trampa, seguro."
         ],
         INICIO_PARTIDA: [
             "Neanderthalius listo. Neanderthalius siempre listo.",
-            "¡Uh! Juego empieza. Neanderthalius contento."
+            "¡Uh! Juego empieza. Neanderthalius contento.",
+            "Neanderthalius jugar damas. ¿Por qué? No saber. Pero jugar.",
+            "¿Otro dar pata de pollo si Neanderthalius gana?"
         ]
     },
 
     // ---- Nivel 2: Monsieur Fisure Termidor ----
-
     termidor: {
 
         VICTORIA: [
             "¡Voilà! ¡La nobleza francesa vuelve a demostrar su superioridad! ¡Y el Termidor, por supuesto!",
             "¡Magnifique, mon ami! ¡Te he derrotado! Glup... sabía perfectamente lo que estaba haciendo.",
             "¡Victoria! ¡Sabía que esta partida estaba bajo mi control desde el principio! Bueno... casi desde el principio.",
-            "¡Ha sido un honor aplastarte, mon ami! Ahora permíteme celebrar como corresponde: ¡Termidor para todos!"
+            "¡Ha sido un honor aplastarte, mon ami! Ahora permíteme celebrar como corresponde: ¡Termidor para todos!",
+            "¡Sacre bleu! ¡Qué paliza te he dado! Pero no te preocupes, hasta el mismísimo Carlosaúlmagno perdería alguna vez... aunque claro, él juega mucho mejor con unas copas encima.",
+            "¡Ganó Francia! ¡Y pensar que algunos prefieren el agua o el vino de Burdeos! ¡Salud, mon ami, a tu salud!"
         ],
 
         DERROTA: [
             "Ah... me has derrotado. Bueno, mon ami, mientras quede Termidor en la caja, hay cosas peores.",
             "¡Me estás cagando a palos! Pero no importa... el próximo Tetra Brik seguramente me devuelva mi talento.",
             "He perdido... ¡hic! Pero no es grave. Grave sería que se acabara el Termidor.",
-            "Bueno, he sido derrotado. Mi honor ha sufrido un duro golpe... pero mi copa sigue llena, y eso es lo importante."
+            "Bueno, he sido derrotado. Mi honor ha sufrido un duro golpe... pero mi copa sigue llena, y eso es lo importante.",
+            "¡Sacre bleu! ¡Me has vencido! Felicitaciones, mon ami. Ésto me pone triste... pero no tan triste como la vida de Godofredo. Ese buen hombre nunca me ha aceptado una invitación a beber ¡A tu salud, mi vencedor!",
+            "¡Mon Dieu! ¡Me has ganado limpiamente! Quizás el Termidor de hoy estaba un poco picado... ¡hic! O quizás simplemente jugaste mejor. ¡Salud!"
         ],
 
         EMPATE: [
             "¡Un empate! Ni vencedor ni vencido, mon ami. Una partida digna de dos grandes caballeros... glup.",
             "¡Hemos quedado iguales! Magnifique. Aunque debo admitir que el Termidor me tenía preparado para la victoria.",
             "Empate honorable, mon ami. La próxima vez beberé un poco más y entonces veremos quién manda aquí.",
-            "¡Un empate! Brindo por ello. Bueno... en realidad brindo por cualquier cosa."
+            "¡Un empate! Brindo por ello. Bueno... en realidad brindo por cualquier cosa.",
+            "¡Hic! ¡Tablas! Empate, como podríamos ser Leonor de Aquitapia y yo si ella me dijera que sí ¡Combinamos tan bien como el asado y el vino!",
+            "Bueno, mon ami, un empate es como un vino joven: ni muy dulce ni muy fuerte. ¡Acepto el resultado!"
         ],
 
         CORONACION_SUFRIDA: [
             "¡Sacré bleu! ¡Ha conseguido una dama! Bueno, bueno... no pasa nada. Esto todavía se puede remontar.",
             "¡Mon Dieu! Esa ficha grande me ha complicado la existencia. Pero todavía tengo Termidor.",
-            "¡Una dama! ¡Qué insolencia! Hic... Tendré que ponerme serio ahora. O tomar otra copa.",
-            "Ah, has coronado. Muy bien, mon ami... disfrutá de tu pequeño triunfo mientras puedas."
+            "¡Una dama! ¡Qué insolencia! Hic... Tendré que ponerme serio ahora. Or tomar otra copa.",
+            "Ah, has coronado. Muy bien, mon ami... disfrutá de tu pequeño triunfo mientras puedas.",
+            "¡Una reina, mon ami! ¡Como Myrth La Grande! Hace poco esa señora me invitó a almorzar a su mesa... ¡hic!... pero se le acabó el vino y no tuve más opción que tomarme su alcohol medicinal.",
+            "¿Una dama? ¡Sacre bleu! ¡Me recuerdas a Icardio de Milán! Él siempre va detrás de las damas... y de los buenos vinos, ¡pobre iluso que no conoce el Termidor!"
         ],
 
         CORONACION_PROPIA: [
@@ -152,13 +189,17 @@ const BOT_DIALOGUE = {
             "¡Magnifique! ¡Ficha grande! Sabía que el Termidor tenía un plan.",
             "¡He coronado, mon ami! ¡Esto es lo que ocurre cuando uno juega ligeramente entonado!",
             "¡Una dama! ¡Hic! ¡Ahora sí que se acabó la cortesía!",
+            "¡Oh la la! ¡Ya tengo una reina! Ahora sí que me siento como un verdadero rey de Francia. ¡Glup!",
+            "¡Ficha grande! ¡Salud, mon ami! ¡Esta victoria (parcial) se la dedico a mi buen amigo Carlosaúlmagno, el rey de los lujos! ¡Hic!"
         ],
 
         CAPTURA_MULTIPLE_SUFRIDA: [
             "¡Oh là là! ¡Me has llevado varias fichas de una sola vez! Bueno... todavía queda vino.",
             "¡Mon Dieu, qué masacre! ¡Me has comido varias fichas! Esto no estaba en mis cálculos... aunque mis cálculos están un poquito borrosos.",
             "¡Eso ha sido una carnicería, mon ami! Pero tranquilo, que el Termidor todavía corre por mis venas.",
-            "¡Hic! ¡Me has hecho puré unas cuantas fichas! Bueno, bueno... ya vendrá mi revancha."
+            "¡Hic! ¡Me has hecho puré unas cuantas fichas! Bueno, bueno... ya vendrá mi revancha.",
+            "¡Ay, mis fichas! ¡Me has dejado el tablero más vacío que la bodega de un abstemio! ¡Glup!",
+            "¡Oh la la! ¡He perdido muchas fichas! Aunque eso no será nada comparado con lo que perderé si cedo a los encantos de la princesa María Eugenia. Ella se quiere quedar con mis castillos en el Loira y ya ni podré pagar el Termidor ¡Eso sí que sería perder!"
         ],
 
         CAPTURA_MULTIPLE_PROPIA: [
@@ -166,55 +207,71 @@ const BOT_DIALOGUE = {
             "¡Magnifique! ¡Me he comido varias de tus fichas de una sola vez! ¡Glup!",
             "¡Eso ha sido una captura digna de mi linaje! Bueno... o del Termidor.",
             "¡Ja! ¡Te he barrido varias fichas, mon ami! ¡Y todavía estoy jugando con una sola copa de ventaja!",
+            "¡Tantas fichas juntas! ¡Glup! ¡Esto es mejor que encontrar una caja de Termidor sellada en la despensa de Fray Marolio!",
+            "¡Zas, zas, zas! ¡Te he comido unas cuantas, mon ami! ¡El espíritu de batalla de Empecid Campeador ha poseído mi brazo... pero mi espíritu etílico sigue siendo 100% francés!"
         ],
 
         TODO_DAMAS: [
             "¡Oh là là! ¡Ahora sólo quedan damas! Esto ya parece una reunión de la corte.",
             "¡Todas fichas grandes! Magnifique. Ahora sí que empieza la verdadera fiesta.",
             "¡Sólo quedan damas, mon ami! Esto se ha puesto mucho más interesante... y mucho más elegante.",
-            "¡Hic! ¡Puras damas! Espero que sean más fáciles de manejar que las de la corte francesa."
+            "¡Hic! ¡Puras damas! Espero que sean más fáciles de manejar que las de la corte francesa.",
+            "¡Sólo hay damas en nuestra fiesta, monsieur! Glup, glup... Cómo se deleitaría mi amigo Icardio de Milán en esta situación. Aunque su buen gusto en mujeres no se refleja en su gusto en vinos ¡Prefiere un cabernet de Bordeaux a una caja de Termidor!",
+            "¡Puras reinas! ¡Salud, mon ami! ¡Esto parece la mesa de Myrth la Grande, pero con mucho más estilo y, por supuesto, mucho más vino! ¡Hic!"
         ],
 
         POCAS_FICHAS_EN_DESVENTAJA: [
             "Esto se está poniendo feo, mon ami... me quedan pocas fichas y muchas ganas de beber.",
             "¡Oh là là! ¡Estamos en las diez de última! Pero todavía puedo remontar. Creo.",
             "Me quedan muy pocas fichas... pero mientras quede Termidor, queda esperanza.",
-            "La situación es delicada, sí... pero jamás subestimes a un noble francés ligeramente entonado."
+            "La situación es delicada, sí... pero jamás subestimes a un noble francés ligeramente entonado.",
+            "¡Hic! ¡Casi no me quedan fichas! Estoy más seco que... bueno, más seco que el paladar de Neanderthalius después de una noche conmigo. ¡Glup!",
+            "¡Mon Dieu! ¡Me estás acorralando! Necesito otro Termidor... ¡hic! ...para pensar una estrategia de retirada. O de contraataque, ¡quién sabe!"
         ],
 
         DIFERENCIA_GRANDE_EN_CONTRA: [
-            "¡Mon Dieu! ¡Me llevas tres fichas! Esto se está poniendo complicado... pero todavía lo doy vuelta.",
+            "¡Mon Dieu! ¡Me llevas mucha ventaja! Esto se está poniendo complicado... pero todavía lo doy vuelta.",
             "Estás ganando por bastante, mon ami. Pero no te emociones: el Termidor todavía tiene algunas sorpresas.",
-            "¡Hic! ¡Tres fichas de diferencia! Bueno... eso es sólo una ventaja temporal.",
-            "La situación parece desfavorable, pero yo jamás me doy por vencido. Especialmente después de la tercera copa."
+            "¡Hic! ¡Me has sacado una gran diferencia! Bueno... eso es sólo una ventaja temporal.",
+            "La situación parece desfavorable, pero yo jamás me doy por vencido. Especialmente después de la tercera copa.",
+            "¡Mon Dieu, cómo estoy perdiendo! ¡Mis fichas parecen borrachas! Tan borrachas como quedó Domingo Caballo, el corcel de Carlosaúlmagno, cuando le di de beber varias cajas de Termidor.",
+            "¡Glup! ¡Me llevas montones de fichas! Esto ya parece la deuda externa de Francia... ¡hic! ...pero mucho más difícil de pagar."
         ],
 
         DIFERENCIA_GRANDE_A_FAVOR: [
-            "¡Voilà! ¡Tres fichas de ventaja! ¡La partida empieza a tomar el rumbo correcto!",
+            "¡Voilà! ¡Tengo mucha ventaja! ¡La partida empieza a tomar el rumbo correcto!",
             "¡Mon ami, esto está casi decidido! El Termidor y yo estamos haciendo un trabajo magnífico.",
             "¡Qué diferencia, por favor! ¡Estoy jugando como un auténtico maestro francés!",
             "¡Hic! ¡Mira cómo va esto! Te llevo varias fichas y todavía me siento perfectamente sobrio.",
+            "¡Glup! ¡Te estoy pasando el trapo, mon ami! ¡Esto demuestra que el vino francés, o el argentino económico, es el mejor combustible para el cerebro!",
+            "¡Voilà! ¡Ventaja considerable! Estoy jugando tan bien que hasta la princesa María Eugenia se fijaría en mí... aunque claro, ella solo mira mi castillo. ¡Hic!"
         ],
 
         PARIDAD_POCAS_FICHAS: [
-            "¡Oh là là! Cuatro contra cuatro... ahora sí, mon ami, el que se equivoque paga la ronda.",
+            "¡Oh là là! Esto está muy parejo y con pocas fichas... ahora sí, mon ami, el que se equivoque paga la ronda.",
             "Quedan pocas fichas y todo está igualado. ¡Esto se decide con elegancia y precisión!",
             "Estamos en la cornisa, mon ami. Un error y se acabó todo... aunque espero que no sea mío.",
-            "¡Cuatro contra cuatro! Esto está más tenso que una negociación entre dos grandes casas nobles. Glup."
+            "¡Qué paridad! Esto está más tenso que una negociación entre dos grandes casas nobles. Glup.",
+            "¡Hic! ¡Pocas fichas y todo igualado! ¡Esto es más estresante que elegir entre un Termidor del 98 y uno del 99! ¡Glup!",
+            "Estamos mano a mano, mon ami. ¡El próximo tetra decide quién es el verdadero rey de la noche! ¡Salud!"
         ],
 
         PARTIDO_LARGO: [
             "¡Por todos los santos! ¡Qué partida tan larga! Necesito una copa nueva para mantener la concentración.",
             "¡Más de ciento diez jugadas! Mon Dieu, esto ya parece un asedio medieval.",
             "¡Hic! ¿Todavía estamos jugando? Yo pensaba que ya habíamos terminado hace como tres copas.",
-            "Este partido está durando tanto que temo que mi familia empiece a preguntarse dónde estoy. ¡Otra copa!"
+            "Este partido está durando tanto que temo que mi familia empiece a preguntarse dónde estoy. ¡Otra copa!",
+            "¡Glup! ¡Llevamos una eternidad! ¡Esto es más largo que la fila para comprar pan en tiempos de hambruna... aunque aquí, por suerte, hay vino!",
+            "¡Hic! ¡Mis ojos ya no pueden distinguir las fichas! ¿O son dos tableros? ¡Mon Dieu, qué mareo!"
         ],
 
         INICIO_HOSTILIDADES: [
             "¡Ah, voilà! ¡Por fin sangre en el tablero! Ahora comienza el verdadero combate.",
             "¡Primera captura! Magnifique, mon ami. Ahora sí estamos jugando a las damas.",
             "¡Hic! ¡Ya cayó la primera ficha! Que empiece la fiesta.",
-            "¡Por fin! Se acabó la cortesía. Ahora cada ficha cuenta... y cada copa también."
+            "¡Por fin! Se acabó la cortesía. Ahora cada ficha cuenta... y cada copa también.",
+            "¡Ahora sí comenzaron las hostilidades, Monsieur! Como las hostilidades entre españoles y franceses, y entre Empecid y yo. Pronto acometeré a ese caballero, tetra brik en mano, y le daré de palos ¡Montjoie Saint-Denis!",
+            "¡Glup! ¡Empezamos! Que gane el mejor... o el que aguante más tiempo bebiendo. ¡Hic!"
         ],
 
         COMENTARIO_ALEATORIO: [
@@ -222,16 +279,20 @@ const BOT_DIALOGUE = {
             "Glup, glup, glup, glup, glup... Ahhh. Ahora sí. Ya estoy pensando con claridad.",
             "En mi familia tenemos castillos, viñedos y una genealogía de siglos... y yo tengo Termidor. Cada uno elige su camino.",
             "Una noche sin vino, sin música y sin alguna decisión cuestionable es una noche desperdiciada, mon ami.",
-            "Hic! ¿Sabes qué me enseñó la vida? Que casi cualquier problema puede esperar hasta mañana."
+            "Hic! ¿Sabes qué me enseñó la vida? Que casi cualquier problema puede esperar hasta mañana.",
+            "¡Glup! ¡A mi buen amigo Neanderthalius nunca le falta un trago! Es un tipo simple, sin las complicaciones de la nobleza. ¡Salud por él!",
+            "El único momento interesante de las misas de Fray Marolio es cuando levanta esa copa llena de vino ¡Glup, glup, glup!",
+            "Carlosaúlmagno podrá ser un poco turbio, pero ¡sacre bleu! ¡Qué vida de lujos que se da! No puedo evitar que otro hedonista como yo me caiga bien."
         ],
 
         INICIO_PARTIDA: [
             "Ah, mon ami... ¿una partida de damas? ¡Por supuesto! Dame un momento para terminar mi copa... glup.",
             "¡Voilà! ¡Comencemos! Aunque debo advertirte que hoy estoy apenas un poquito entonado.",
             "¿Qué mejor manera de pasar la noche que jugando contra un honorable adversario? ¡Traigan el tablero y otro tetra!",
-            "Muy bien, mon ami. Comencemos la partida. Hoy me siento particularmente inspirado... probablemente sea el Termidor."
+            "Muy bien, mon ami. Comencemos la partida. Hoy me siento particularmente inspirado... probablemente sea el Termidor.",
+            "¡Hic! ¡Salud, mon ami! ¿Jugar a las damas? ¡Claro que sí! Pero advierto que mi estrategia puede ser un tanto... impredecible. ¡Glup!",
+            "¡Voilà! ¡El tablero está listo! Y mi copa también. ¡Que comience el duelo, y que gane el mejor... o el que tenga más aguante!"
         ]
-
     },
 
     // ---- Nivel 3: Leonor de Aquitapia ----

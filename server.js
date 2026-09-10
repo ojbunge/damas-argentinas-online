@@ -135,8 +135,18 @@ function pushChatMessage(io, msg) {
     io.emit('chat-message', msg);
 }
 
-function pushSystemMessage(io, text) {
-    pushChatMessage(io, { type: 'system', text: text, time: Date.now() });
+// pushSystemMessage ya NO arma el texto final en español -- manda el
+// código del evento ("arrival", "victory", etc.) más los datos crudos
+// (nombres, en el orden que a cada plantilla le corresponde). Cada
+// cliente conectado arma el texto final solo, en SU propio idioma,
+// usando el mismo diccionario de traducciones que ya usa para el resto
+// de la interfaz. Antes, el servidor mandaba un string ya armado en
+// español, así que alguien viendo el sitio en inglés igual veía
+// "Fulano ha llegado al Castillo" en el chat -- ahora ve "Fulano has
+// arrived at the Castle", sin que el servidor sepa ni le importe qué
+// idioma tiene puesto cada uno.
+function pushSystemMessage(io, eventCode, params) {
+    pushChatMessage(io, { type: 'system', eventCode: eventCode, params: params || [], time: Date.now() });
 }
 
 // Mandamos a TODOS los conectados con su status (lobby / spectating /
@@ -244,7 +254,7 @@ function handleTimeExpired(room, color) {
     io.to(room).emit('game-over-by-time', { winnerColor, winnerName, loserName });
 
     if (winnerName && loserName) {
-        pushSystemMessage(io, `⏱️ ${winnerName} le ha ganado por tiempo a ${loserName}`);
+        pushSystemMessage(io, 'winByTimeout', [winnerName, loserName]);
     }
 
     // --- GODOFREDO LOS DEVUELVE AL SALÓN --- (mismo patrón que surrender/game-over)
@@ -280,7 +290,7 @@ io.on('connection', (socket) => {
         // partida, no corresponde anunciarlo de nuevo -- eso pasaba
         // todo el tiempo y llenaba el chat de avisos poco relevantes.
         if (data.isFirstArrival) {
-            pushSystemMessage(io, `🛡️ ${username} ha llegado al Castillo`);
+            pushSystemMessage(io, 'arrival', [username]);
         }
 
         broadcastStatus();
@@ -401,7 +411,7 @@ io.on('connection', (socket) => {
             io.to(socket.id).emit('assign-role', 'b');
             io.to(roomName).emit('start-game', gameInfo);
 
-            pushSystemMessage(io, `⚔️ ${gameInfo.white} desafía a ${gameInfo.black} a duelo`);
+            pushSystemMessage(io, 'challengeAccepted', [gameInfo.white, gameInfo.black]);
 
             broadcastStatus();
         } else {
@@ -455,7 +465,7 @@ io.on('connection', (socket) => {
             // Avisamos a todos en la sala (incluidos jugadores) que la lista cambió
             io.to(roomName).emit('update-spectators-list', game.spectators);
 
-            pushSystemMessage(io, `👀 ${username} está espectando el duelo ${game.name}`);
+            pushSystemMessage(io, 'spectatorJoined', [username, game.name]);
 
             broadcastStatus();
         }
@@ -702,7 +712,7 @@ io.on('connection', (socket) => {
             }
             if (pendingDepartureTimers[user.username]) clearTimeout(pendingDepartureTimers[user.username]);
             pendingDepartureTimers[user.username] = setTimeout(() => {
-                pushSystemMessage(io, `🚪 ${user.username} se ha ido del Castillo`);
+                pushSystemMessage(io, 'departure', [user.username]);
                 delete pendingDepartureTimers[user.username];
             }, DEPARTURE_GRACE_MS);
             delete connectedUsers[socket.id];
@@ -739,7 +749,7 @@ io.on('connection', (socket) => {
                 const winnerId = (user.role === 'w') ? game.b : game.w;
                 const winnerName = connectedUsers[winnerId]?.username;
                 if (winnerName) {
-                    pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${user.username}`);
+                    pushSystemMessage(io, 'victory', [winnerName, user.username]);
                 }
 
                 // --- GODOFREDO LOS DEVUELVE AL SALÓN ---
@@ -776,7 +786,7 @@ io.on('connection', (socket) => {
                 const whiteName = connectedUsers[game.w]?.username;
                 const blackName = connectedUsers[game.b]?.username;
                 if (whiteName && blackName) {
-                    pushSystemMessage(io, `🤝 ${whiteName} y ${blackName} han empatado`);
+                    pushSystemMessage(io, 'draw', [whiteName, blackName]);
                 }
             } else {
                 const winnerId = (data.winner === 'w') ? game.w : game.b;
@@ -784,7 +794,7 @@ io.on('connection', (socket) => {
                 const winnerName = connectedUsers[winnerId]?.username;
                 const loserName = connectedUsers[loserId]?.username;
                 if (winnerName && loserName) {
-                    pushSystemMessage(io, `🏆 ${winnerName} ha derrotado a ${loserName}`);
+                    pushSystemMessage(io, 'victory', [winnerName, loserName]);
                 }
             }
 

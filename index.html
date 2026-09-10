@@ -775,6 +775,37 @@
             transform: translateY(-1px);
         }
 
+        /* --- EL TRUJAMÁN: selector ES/EN --- */
+        #langSwitcher {
+            display: flex;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 2px solid #7a5a24;
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .lang-btn {
+            background: transparent;
+            color: #d9c9a3;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 9px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            cursor: pointer;
+        }
+
+        .lang-btn:hover {
+            background: rgba(241, 196, 15, 0.2);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1c0a;
+        }
+
         #aboutButtonBar {
             position: fixed;
             top: 14px;
@@ -1765,22 +1796,25 @@
 <body>
 
     <footer id="siteFooter">
-        © 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.
-        <a href="#" onclick="openTerms(); return false;">Ver Términos de Uso</a>.
+        <span data-i18n="footerCopyright">© 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.</span>
+        <a href="#" onclick="openTerms(); return false;" data-i18n="footerTermsLink">Ver Términos de Uso</a>.
     </footer>
 
     <!-- La Barra de Godofredo: botones de Reglas y sonido, flotando siempre visibles -->
     <div id="aboutButtonBar">
-        <button class="rules-btn" onclick="openAbout()">📖 Acerca de</button>
+        <button class="rules-btn" onclick="openAbout()" data-i18n="aboutBtn">📖 Acerca de</button>
     </div>
 
     <div id="rulesButtonsBar">
-        <button class="rules-btn" onclick="openRules('es')">📜 Reglas 🇦🇷</button>
-        <button class="rules-btn" onclick="openRules('en')">📜 Rules 🇬🇧</button>
-        <button id="muteBtn" class="rules-btn" onclick="toggleMute()" title="Silenciar / activar sonido">🔊</button>
+        <div id="langSwitcher">
+            <button class="lang-btn" data-lang="es" onclick="setLanguage('es')">🇦🇷 ES</button>
+            <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">🇬🇧 EN</button>
+        </div>
+        <button class="rules-btn" onclick="openRules()" data-i18n="rulesBtn">📜 Reglas</button>
+        <button id="muteBtn" class="rules-btn" onclick="toggleMute()" data-i18n-title="muteTitle" title="Silenciar / activar sonido">🔊</button>
     </div>
 
-    <h1 class="hidden-before-game">Damas Argentinas</h1>
+    <h1 class="hidden-before-game" data-i18n="gameTitle">Damas Argentinas</h1>
 
     <div class="status-container hidden-before-game">
         <div>
@@ -1790,12 +1824,13 @@
             ⚪ <span id="whiteCount">15</span> | ⚫ <span id="blackCount">15</span>
         </div>
         <!-- Solo queda el botón de Rendición -->
-        <button id="surrenderBtn" onclick="surrender()">Rendirse</button>
-        <button id="muteDialogueBtn" onclick="toggleDialogueMute()" title="Silenciar diálogos de los personajes">🗣️</button>
-        <button id="leaveLobbyBtn" onclick="leaveAndReload()"
+        <button id="surrenderBtn" onclick="surrender()" data-i18n="surrenderBtn">Rendirse</button>
+        <button id="muteDialogueBtn" onclick="toggleDialogueMute()" data-i18n-title="muteDialogueTitle" title="Silenciar diálogos de los personajes">🗣️</button>
+        <button id="leaveLobbyBtn" onclick="leaveAndReload()" data-i18n="leaveLobbyBtn"
             style="display: none; padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Salir
             al Lobby</button>
     </div>
+
 
     <!-- El Mirador de Godofredo (Lista de Espectadores) -->
     <div id="spectatorsBox" class="hidden-before-game">
@@ -1814,7 +1849,7 @@
 
         <!-- El Mensajero de Godofredo: crónica de jugadas de la partida -->
         <div id="moveHistoryPanel">
-            <h3>📜 Crónica</h3>
+            <h3 data-i18n="cronicaTitle">📜 Crónica</h3>
             <div id="moveHistoryList"></div>
         </div>
     </div>
@@ -1822,39 +1857,41 @@
     <!-- La Puerta de Entrada y el Lobby de Godofredo -->
     <div id="waitingOverlay" class="entrance-bg">
         <div id="entranceSection">
-            <h1>🇦🇷 Damas Argentinas 🇦🇷</h1>
-            <h3>Identifíquese, noble Caballero</h3>
-            <input type="text" id="usernameInput" placeholder="Tu nombre o apodo..." maxlength="15">
+            <h1 data-i18n="entranceTitle">🇦🇷 Damas Argentinas 🇦🇷</h1>
+            <h3 data-i18n="entranceSubtitle">Identifíquese, noble Caballero</h3>
+            <input type="text" id="usernameInput" data-i18n-placeholder="usernamePlaceholder" placeholder="Tu nombre o apodo..." maxlength="15">
             <label id="termsCheckboxLabel">
                 <input type="checkbox" id="termsCheckbox" onchange="updateEnterButtonState()">
-                Acepto los <a href="#" onclick="openTerms(); return false;">Términos de Uso</a>
+                <span data-i18n="acceptTermsPrefix">Acepto los</span>
+                <a href="#" onclick="openTerms(); return false;" data-i18n="termsLinkText">Términos de Uso</a>
             </label>
-            <button id="enterBtn" onclick="registerUser()" disabled>Entrar al Castillo</button>
+            <button id="enterBtn" onclick="registerUser()" disabled data-i18n="enterCastleBtn">Entrar al Castillo</button>
         </div>
 
         <div id="lobbySection" style="display: none;">
             <div class="lobby-header-group">
-                <h2>Salón de los Caballeros</h2>
-                <p>Seleccione un oponente o espere un desafío...</p>
+                <h2 data-i18n="salonTitle">Salón de los Caballeros</h2>
+                <p data-i18n="salonSubtitle">Seleccione un oponente o espere un desafío...</p>
             </div>
-            <p class="bots-hint-text">¿No hay otros humanos para jugar? Entrá a la Sala de Armas y jugá
+            <p class="bots-hint-text" data-i18n="botsHintText">¿No hay otros humanos para jugar? Entrá a la Sala de Armas y jugá
                 contra uno de nuestros bots ¡Tenemos para todos los niveles!</p>
-            <button class="bots-lobby-btn" onclick="openArmsRoom()">🗡️ Jugar contra un Bot</button>
+            <button class="bots-lobby-btn" onclick="openArmsRoom()" data-i18n="playBotBtn">🗡️ Jugar contra un Bot</button>
             <div id="userList">
                 <!-- Aquí aparecerán los nombres -->
             </div>
-            <p id="waitingStatus">Buscando oponentes en la red...</p>
-            <button id="cancelChallengeBtn" onclick="cancelPendingChallenge()"
+            <p id="waitingStatus" data-i18n="waitingStatus">Buscando oponentes en la red...</p>
+            <button id="cancelChallengeBtn" onclick="cancelPendingChallenge()" data-i18n="cancelChallengeBtn"
                 style="display: none; padding: 8px 15px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar
                 desafío</button>
 
-            <p class="bots-hint-text" style="margin-top: 54px;">¿Querés estudiar jugadas? ¿Probar ataques y
+            <p class="bots-hint-text" style="margin-top: 54px;" data-i18n="labHintText">¿Querés estudiar jugadas? ¿Probar ataques y
                 defensas? ¿Mostrarle algo a alguien? Entrá a nuestro laboratorio y experimentá en el tablero
                 libremente y sin restricciones.</p>
-            <button class="bots-lobby-btn" onclick="leaveAndGoTo('laboratorio.html')">🧪 Entrar al Laboratorio</button>
+            <button class="bots-lobby-btn" onclick="leaveAndGoTo('laboratorio.html')" data-i18n="enterLabBtn">🧪 Entrar al Laboratorio</button>
         </div>
 
     </div>
+
 
     <!-- El Pop-up de Desafío de Godofredo -->
     <!-- GODOFREDO LO LIBERÓ DE LA TORRE: antes vivía adentro de #waitingOverlay,
@@ -1864,11 +1901,11 @@
          flotando sobre el tablero en cualquier momento. -->
     <div id="challengeModal"
         style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100;">
-        <h3 id="challengeText">¡Un caballero te desafía!</h3>
+        <h3 id="challengeText" data-i18n="challengeDefaultText">¡Un caballero te desafía!</h3>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-            <button id="acceptBtn"
+            <button id="acceptBtn" data-i18n="acceptBtn"
                 style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">Aceptar</button>
-            <button id="declineBtn"
+            <button id="declineBtn" data-i18n="declineBtn"
                 style="padding: 10px 20px; background: #c0392b; color: white; border: none; border-radius: 5px; cursor: pointer;">Rechazar</button>
         </div>
     </div>
@@ -1880,11 +1917,11 @@
         style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100; max-width: min(420px, 90vw); text-align: center;">
         <h3 id="challengeModalityText" style="margin-top: 0;">¿Bajo qué modalidad desea desafiar a Fulano?</h3>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
-            <button id="modalityNormalBtn"
+            <button id="modalityNormalBtn" data-i18n="modeNormalBtn"
                 style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">Modo Normal</button>
-            <button id="modalityTimedBtn"
+            <button id="modalityTimedBtn" data-i18n="modeTimedBtn"
                 style="padding: 10px 20px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer;">⏱️ Modo Contrarreloj</button>
-            <button id="cancelModalityBtn"
+            <button id="cancelModalityBtn" data-i18n="cancelBtn"
                 style="padding: 10px 20px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar</button>
         </div>
     </div>
@@ -1896,8 +1933,8 @@
          fijos como para un valor manual. -->
     <div id="timeControlModal"
         style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100; max-width: min(420px, 90vw); text-align: center;">
-        <h3 style="margin-top: 0; margin-bottom: 2px;">Cantidad de minutos:</h3>
-        <p style="color: #f1c40f; font-size: 13px; margin: 0 0 14px 0;">(entre 1 y 15 minutos por jugador)</p>
+        <h3 style="margin-top: 0; margin-bottom: 2px;" data-i18n="minutesTitle">Cantidad de minutos:</h3>
+        <p style="color: #f1c40f; font-size: 13px; margin: 0 0 14px 0;" data-i18n="minutesHint">(entre 1 y 15 minutos por jugador)</p>
         <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px;">
             <button class="tc-preset-btn" data-minutes="2"
                 style="padding: 8px 14px; background: #34495e; color: white; border: 1px solid #f1c40f; border-radius: 5px; cursor: pointer;">2</button>
@@ -1913,18 +1950,19 @@
                 style="padding: 8px 14px; background: #34495e; color: white; border: 1px solid #f1c40f; border-radius: 5px; cursor: pointer;">15</button>
         </div>
         <div>
-            <input type="number" id="timeControlInput" step="0.25" min="1" max="15" placeholder="minutos"
+            <input type="number" id="timeControlInput" step="0.25" min="1" max="15" data-i18n-placeholder="minutesPlaceholder" placeholder="minutos"
                 style="width: 110px; padding: 8px; border-radius: 5px; border: 1px solid #f1c40f; text-align: center; font-size: 16px; background: #1c2833; color: white;">
         </div>
         <p id="timeControlError" style="color: #e74c3c; font-size: 13px; min-height: 16px; margin: 8px 0 0 0;"></p>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
-            <button id="sendTimedChallengeBtn"
+            <button id="sendTimedChallengeBtn" data-i18n="sendChallengeBtn"
                 style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">⚔️
                 Enviar desafío</button>
-            <button id="backToModalityBtn"
+            <button id="backToModalityBtn" data-i18n="backBtn"
                 style="padding: 10px 20px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Volver</button>
         </div>
     </div>
+
 
     <!-- El Cartel de la Doble Puerta: aparece cuando clickeás a alguien que
          está jugando contra un bot. Dos caminos posibles: desafiarlo a un
@@ -1943,7 +1981,7 @@
             <div id="aboutModalHeader">
                 <button id="closeAboutBtn" onclick="closeAbout()">✕</button>
             </div>
-            <iframe id="aboutFrame" src="about:blank" title="Acerca de"></iframe>
+            <iframe id="aboutFrame" src="about:blank" data-i18n-title="aboutIframeTitle" title="Acerca de"></iframe>
         </div>
     </div>
 
@@ -2116,11 +2154,11 @@
         style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100; max-width: min(420px, 90vw); text-align: center;">
         <h3 id="challengeOrSpectateText" style="margin-top: 0;">¿Desea desafiar a Fulano o espectar su partida contra el Bot?</h3>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
-            <button id="challengeInsteadBtn"
+            <button id="challengeInsteadBtn" data-i18n="challengeInsteadBtn"
                 style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">⚔️ Desafiar</button>
-            <button id="spectateInsteadBtn"
+            <button id="spectateInsteadBtn" data-i18n="spectateInsteadBtn"
                 style="padding: 10px 20px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer;">👀 Espectar</button>
-            <button id="cancelChallengeOrSpectateBtn"
+            <button id="cancelChallengeOrSpectateBtn" data-i18n="cancelBtn"
                 style="padding: 10px 20px; background: #7f8c8d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar</button>
         </div>
     </div>
@@ -2132,7 +2170,7 @@
     <div id="armsRoomModal">
         <div id="armsRoomFrame">
             <div id="armsRoomHeader">
-                <h2>🗡️ La Sala de Armas</h2>
+                <h2 data-i18n="armsRoomTitle">🗡️ La Sala de Armas</h2>
                 <button id="closeArmsRoomBtn" onclick="closeArmsRoom()">✕</button>
             </div>
             <div id="armsRoomScrollArea">
@@ -2155,10 +2193,10 @@
                     </colgroup>
                     <thead>
                         <tr>
-                            <th>Nombre</th>
-                            <th>Nivel</th>
-                            <th>Imagen</th>
-                            <th>Descripción</th>
+                            <th data-i18n="tableName">Nombre</th>
+                            <th data-i18n="tableLevel">Nivel</th>
+                            <th data-i18n="tableImage">Imagen</th>
+                            <th data-i18n="tableDescription">Descripción</th>
                         </tr>
                     </thead>
                     <tbody id="botsTableBody">
@@ -2167,12 +2205,13 @@
                 </table>
             </div>
             <div id="armsRoomFooter">
-                <p class="arms-room-hint">Si querés observar mejor a tus potenciales oponentes hacé click derecho
+                <p class="arms-room-hint" data-i18n="armsRoomHint">Si querés observar mejor a tus potenciales oponentes hacé click derecho
                     sobre la foto + "abrir imagen en una pestaña nueva".</p>
-                <button id="startBotGameBtn" onclick="startBotGame()">⚔️ Jugar contra este Bot</button>
+                <button id="startBotGameBtn" onclick="startBotGame()" data-i18n="playThisBotBtn">⚔️ Jugar contra este Bot</button>
             </div>
         </div>
     </div>
+
 
     <!-- El Pergamino de Godofredo: modal de Reglas, en español e inglés -->
     <div id="rulesModal">
@@ -2486,14 +2525,14 @@
 
     <div id="chatPanel">
         <div id="chatPanelHeader">
-            <span>💬 Chat del Salón</span>
+            <span data-i18n="chatPanelTitle">💬 Chat del Salón</span>
             <button id="closeChatBtn" onclick="toggleChat()">✕</button>
         </div>
         <div id="chatMessages"></div>
         <div id="chatInputBar">
-            <input type="text" id="chatInput" placeholder="Escribí un mensaje..." maxlength="300"
+            <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="Escribí un mensaje..." maxlength="300"
                 onkeydown="handleChatKeydown(event)">
-            <button id="chatSendBtn" onclick="sendChatMessage()">Enviar</button>
+            <button id="chatSendBtn" onclick="sendChatMessage()" data-i18n="chatSendBtn">Enviar</button>
         </div>
     </div>
 
@@ -2503,6 +2542,381 @@
     <script src="bot-dialogue.js"></script>
 
     <script>
+
+        // ============================================================
+        //  EL TRUJAMÁN DE GODOFREDO (sistema de idiomas ES/EN)
+        // ============================================================
+        // Un solo conjunto de archivos, nunca duplicados: cambiar de
+        // idioma no navega a ningún lado, solo reemplaza el texto en
+        // pantalla -- así todos los jugadores, sin importar su idioma,
+        // siguen compartiendo el mismo Salón, el mismo servidor, las
+        // mismas partidas. Dos mecanismos, según el tipo de texto:
+        //
+        // 1) Texto ESTÁTICO (no cambia según datos): el elemento HTML
+        //    lleva un atributo data-i18n="clave" (o data-i18n-placeholder
+        //    / data-i18n-title para esos atributos puntuales), y
+        //    applyTranslations() los barre a todos de una sola vez.
+        //
+        // 2) Texto DINÁMICO (construido en JS, con nombres de jugadores,
+        //    cantidades, etc. insertados adentro): se arma llamando a
+        //    t('clave', valor1, valor2...), que reemplaza {0}, {1}... en
+        //    la cadena traducida por esos valores.
+        //
+        // Los nombres de los personajes de los bots (Neanderthalius,
+        // Leonor de Aquitapia, etc.) NUNCA se traducen -- son nombres
+        // propios, quedan iguales en los dos idiomas.
+        const TRANSLATIONS = {
+            es: {
+                // --- Barra superior / pie de página ---
+                footerCopyright: "© 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.",
+                footerTermsLink: "Ver Términos de Uso",
+                aboutBtn: "📖 Acerca de",
+                rulesBtn: "📜 Reglas",
+                muteTitle: "Silenciar / activar sonido",
+
+                // --- Vista de partida (título + barra de estado) ---
+                gameTitle: "Damas Argentinas",
+                turnLabel: "Turno: {0}",
+                colorWhite: "Blancas",
+                colorBlack: "Negras",
+                surrenderBtn: "Rendirse",
+                muteDialogueTitle: "Silenciar diálogos de los personajes",
+                leaveLobbyBtn: "Salir al Lobby",
+
+                // --- Espectadores / crónica ---
+                spectatorsNone: "Espectadores: -",
+                spectatorsList: "Espectadores: {0}",
+                cronicaTitle: "📜 Crónica",
+
+                // --- Entrada al castillo ---
+                entranceTitle: "🇦🇷 Damas Argentinas 🇦🇷",
+                entranceSubtitle: "Identifíquese, noble Caballero",
+                usernamePlaceholder: "Tu nombre o apodo...",
+                acceptTermsPrefix: "Acepto los",
+                termsLinkText: "Términos de Uso",
+                enterCastleBtn: "Entrar al Castillo",
+
+                // --- Salón de los Caballeros ---
+                salonTitle: "Salón de los Caballeros",
+                salonSubtitle: "Seleccione un oponente o espere un desafío...",
+                botsHintText: "¿No hay otros humanos para jugar? Entrá a la Sala de Armas y jugá contra uno de nuestros bots ¡Tenemos para todos los niveles!",
+                playBotBtn: "🗡️ Jugar contra un Bot",
+                caballerosLibres: "Caballeros Libres:",
+                waitingStatus: "Buscando oponentes en la red...",
+                cancelChallengeBtn: "Cancelar desafío",
+                labHintText: "¿Querés estudiar jugadas? ¿Probar ataques y defensas? ¿Mostrarle algo a alguien? Entrá a nuestro laboratorio y experimentá en el tablero libremente y sin restricciones.",
+                enterLabBtn: "🧪 Entrar al Laboratorio",
+
+                // --- Modal: desafío entrante ---
+                challengeDefaultText: "¡Un caballero te desafía!",
+                acceptBtn: "Aceptar",
+                declineBtn: "Rechazar",
+
+                // --- Modal: elegir modalidad ---
+                modalityQuestion: "¿Bajo qué modalidad desea desafiar a {0}?",
+                modeNormalBtn: "Modo Normal",
+                modeTimedBtn: "⏱️ Modo Contrarreloj",
+                cancelBtn: "Cancelar",
+
+                // --- Modal: minutos del contrarreloj ---
+                minutesTitle: "Cantidad de minutos:",
+                minutesHint: "(entre 1 y 15 minutos por jugador)",
+                minutesPlaceholder: "minutos",
+                invalidMinutesError: "Ingresá un valor válido entre 1 y 15 minutos.",
+                sendChallengeBtn: "⚔️ Enviar desafío",
+                backBtn: "Volver",
+
+                // --- Modal: desafiar o espectar ---
+                challengeInsteadBtn: "⚔️ Desafiar",
+                spectateInsteadBtn: "👀 Espectar",
+
+                // --- Sala de Armas ---
+                armsRoomTitle: "🗡️ La Sala de Armas",
+                tableName: "Nombre",
+                tableLevel: "Nivel",
+                tableImage: "Imagen",
+                tableDescription: "Descripción",
+                armsRoomHint: "Si querés observar mejor a tus potenciales oponentes hacé click derecho sobre la foto + \"abrir imagen en una pestaña nueva\".",
+                playThisBotBtn: "⚔️ Jugar contra este Bot",
+
+                // --- Chat ---
+                chatPanelTitle: "💬 Chat del Salón",
+                chatInputPlaceholder: "Escribí un mensaje...",
+                chatSendBtn: "Enviar",
+
+                // --- Lista del lobby (dinámica) ---
+                vsSuffix: " (vs. {0})",
+                labSuffix: " (laboratorio)",
+                spectatingSuffix: " (espectando)",
+                challengeSuffix: " (Desafiar)",
+                tournamentsInProgress: "Torneos en Curso:",
+                spectateSuffix: " (Espectar)",
+                confirmSpectateGame: "¿Deseas observar la partida {0}?",
+
+                // --- Validaciones y confirmaciones ---
+                termsRequiredAlert: "Noble Caballero, para ingresar primero debe aceptar los Términos de Uso.",
+                nameTooShortAlert: "Noble Caballero, su nombre es demasiado corto.",
+                confirmSurrender: "¿Noble Caballero, realmente desea entregar sus armas y rendirse?",
+                waitingForOpponent: "Esperando a {0}...",
+
+                // --- Cartel de fin de partida ---
+                playAgainBtn: "🔁 Jugar de nuevo",
+                rematchBtnLabel: "⚔️ Revancha",
+                endOfDuelTitle: "¡FIN DEL DUELO!",
+                leaveLobbyCaps: "SALIR AL LOBBY",
+                winCapturedAll: "¡{0} ha aniquilado a {1}!",
+                winBlocked: "¡{0} ha bloqueado a {1}!",
+                drawMessage: "{0} y {1} han empatado.",
+                youSurrendered: "TE HAS RENDIDO.<br>VICTORIA PARA {0}",
+                opponentFledYouWin: "¡{0} ha huido de la contienda!<br>Ganás por abandono.",
+                opponentFledGeneric: "¡TU RIVAL HA HUIDO!<br>La partida ha terminado por abandono.",
+                spectatorGameAbandonedVsBot: "{0} se ha retirado de su partida contra {1}.",
+                spectatorGameAbandoned: "{0} se ha retirado de la partida.<br>{1} gana por abandono.",
+                bothContendersLeft: "LOS CONTENDIENTES SE HAN IDO.<br>La partida ha finalizado.",
+                opponentSurrendered: "¡{0} se ha rendido!<br>LA VICTORIA ES PARA {1}",
+                winByTimeout: "¡{0} gana la partida!<br>{1} se quedó sin tiempo",
+                someoneTimedOut: "Uno de los jugadores se quedó sin tiempo.<br>La partida ha finalizado.",
+
+                // --- Desafíos entrantes / rechazos ---
+                challengeTimedText: "¡{0} te desafía a un duelo en MODO CONTRARRELOJ, con {1} por jugador!",
+                challengeNormalText: "¡{0} te desafía a un duelo!",
+                declinedAlert: "{0} ha declinado el duelo. ¡Quizás en otra ocasión!",
+                challengeOrSpectateLab: "¿Desea desafiar a {0} o espectar su laboratorio?",
+                challengeOrSpectateBot: "¿Desea desafiar a {0} o espectar su partida contra {1}?",
+
+                // --- Sala de Armas (dinámico) ---
+                playAgainstBotBtn: "⚔️ Jugar contra {0}",
+
+                // --- Título de la pestaña del navegador ---
+                pageTitle: "Damas Argentinas",
+                yourTurnTitle: "¡Tu turno! – Damas Argentinas",
+                aboutIframeTitle: "Acerca de",
+
+                // --- Mensajes de sistema del chat (los arma cada cliente
+                // en su propio idioma; el servidor solo manda el código
+                // de evento y los datos crudos, nunca texto ya armado) ---
+                sys_winByTimeout: "⏱️ {0} le ha ganado por tiempo a {1}",
+                sys_arrival: "🛡️ {0} ha llegado al Castillo",
+                sys_challengeAccepted: "⚔️ {0} desafía a {1} a duelo",
+                sys_spectatorJoined: "👀 {0} está espectando el duelo {1}",
+                sys_departure: "🚪 {0} se ha ido del Castillo",
+                sys_victory: "🏆 {0} ha derrotado a {1}",
+                sys_draw: "🤝 {0} y {1} han empatado",
+            },
+            en: {
+                // --- Top bar / footer ---
+                footerCopyright: "© 2026 Otto Helmut. Damas Argentinas Online. All rights reserved.",
+                footerTermsLink: "View Terms of Use",
+                aboutBtn: "📖 About",
+                rulesBtn: "📜 Rules",
+                muteTitle: "Mute / unmute sound",
+
+                // --- Game view (title + status bar) ---
+                gameTitle: "Argentine Checkers",
+                turnLabel: "Turn: {0}",
+                colorWhite: "White",
+                colorBlack: "Black",
+                surrenderBtn: "Resign",
+                muteDialogueTitle: "Mute character dialogue",
+                leaveLobbyBtn: "Leave to Lobby",
+
+                // --- Spectators / chronicle ---
+                spectatorsNone: "Spectators: -",
+                spectatorsList: "Spectators: {0}",
+                cronicaTitle: "📜 Chronicle",
+
+                // --- Castle entrance ---
+                entranceTitle: "🇦🇷 Argentine Checkers 🇦🇷",
+                entranceSubtitle: "Identify yourself, noble Knight",
+                usernamePlaceholder: "Your name or nickname...",
+                acceptTermsPrefix: "I accept the",
+                termsLinkText: "Terms of Use",
+                enterCastleBtn: "Enter the Castle",
+
+                // --- Knights' Hall ---
+                salonTitle: "The Knights' Hall",
+                salonSubtitle: "Select an opponent or wait for a challenge...",
+                botsHintText: "No other humans around to play with? Head into the Armory and play against one of our bots — we've got every level covered!",
+                playBotBtn: "🗡️ Play against a Bot",
+                caballerosLibres: "Free Knights:",
+                waitingStatus: "Looking for opponents online...",
+                cancelChallengeBtn: "Cancel challenge",
+                labHintText: "Want to study moves? Try out attacks and defenses? Show something to someone? Step into our laboratory and experiment on the board freely, with no restrictions.",
+                enterLabBtn: "🧪 Enter the Laboratory",
+
+                // --- Modal: incoming challenge ---
+                challengeDefaultText: "A knight challenges you!",
+                acceptBtn: "Accept",
+                declineBtn: "Decline",
+
+                // --- Modal: choose mode ---
+                modalityQuestion: "Under which mode would you like to challenge {0}?",
+                modeNormalBtn: "Normal Mode",
+                modeTimedBtn: "⏱️ Timed Mode",
+                cancelBtn: "Cancel",
+
+                // --- Modal: timed mode minutes ---
+                minutesTitle: "Number of minutes:",
+                minutesHint: "(between 1 and 15 minutes per player)",
+                minutesPlaceholder: "minutes",
+                invalidMinutesError: "Enter a valid value between 1 and 15 minutes.",
+                sendChallengeBtn: "⚔️ Send challenge",
+                backBtn: "Back",
+
+                // --- Modal: challenge or spectate ---
+                challengeInsteadBtn: "⚔️ Challenge",
+                spectateInsteadBtn: "👀 Spectate",
+
+                // --- Armory ---
+                armsRoomTitle: "🗡️ The Armory",
+                tableName: "Name",
+                tableLevel: "Level",
+                tableImage: "Image",
+                tableDescription: "Description",
+                armsRoomHint: "If you'd like a closer look at your potential opponents, right-click their photo and choose \"open image in new tab\".",
+                playThisBotBtn: "⚔️ Play against this Bot",
+
+                // --- Chat ---
+                chatPanelTitle: "💬 Hall Chat",
+                chatInputPlaceholder: "Type a message...",
+                chatSendBtn: "Send",
+
+                // --- Lobby list (dynamic) ---
+                vsSuffix: " (vs. {0})",
+                labSuffix: " (laboratory)",
+                spectatingSuffix: " (spectating)",
+                challengeSuffix: " (Challenge)",
+                tournamentsInProgress: "Games in Progress:",
+                spectateSuffix: " (Spectate)",
+                confirmSpectateGame: "Would you like to watch the game {0}?",
+
+                // --- Validations and confirmations ---
+                termsRequiredAlert: "Noble Knight, you must accept the Terms of Use before entering.",
+                nameTooShortAlert: "Noble Knight, your name is too short.",
+                confirmSurrender: "Noble Knight, do you really wish to lay down your arms and surrender?",
+                waitingForOpponent: "Waiting for {0}...",
+
+                // --- End-of-game banner ---
+                playAgainBtn: "🔁 Play again",
+                rematchBtnLabel: "⚔️ Rematch",
+                endOfDuelTitle: "DUEL OVER!",
+                leaveLobbyCaps: "LEAVE TO LOBBY",
+                winCapturedAll: "{0} has wiped out {1}!",
+                winBlocked: "{0} has blocked {1}!",
+                drawMessage: "{0} and {1} have drawn.",
+                youSurrendered: "YOU HAVE SURRENDERED.<br>VICTORY FOR {0}",
+                opponentFledYouWin: "{0} has fled the battle!<br>You win by abandonment.",
+                opponentFledGeneric: "YOUR OPPONENT HAS FLED!<br>The game has ended by abandonment.",
+                spectatorGameAbandonedVsBot: "{0} has withdrawn from their game against {1}.",
+                spectatorGameAbandoned: "{0} has withdrawn from the game.<br>{1} wins by abandonment.",
+                bothContendersLeft: "THE CONTENDERS HAVE LEFT.<br>The game has ended.",
+                opponentSurrendered: "{0} has surrendered!<br>VICTORY GOES TO {1}",
+                winByTimeout: "{0} wins the game!<br>{1} ran out of time",
+                someoneTimedOut: "One of the players ran out of time.<br>The game has ended.",
+
+                // --- Incoming challenges / declines ---
+                challengeTimedText: "{0} challenges you to a duel in TIMED MODE, with {1} per player!",
+                challengeNormalText: "{0} challenges you to a duel!",
+                declinedAlert: "{0} has declined the duel. Maybe next time!",
+                challengeOrSpectateLab: "Would you like to challenge {0} or watch their laboratory?",
+                challengeOrSpectateBot: "Would you like to challenge {0} or watch their game against {1}?",
+
+                // --- Armory (dynamic) ---
+                playAgainstBotBtn: "⚔️ Play against {0}",
+
+                // --- Browser tab title ---
+                pageTitle: "Argentine Checkers",
+                yourTurnTitle: "Your turn! – Argentine Checkers",
+                aboutIframeTitle: "About",
+
+                // --- Chat system messages ---
+                sys_winByTimeout: "⏱️ {0} has beaten {1} on time",
+                sys_arrival: "🛡️ {0} has arrived at the Castle",
+                sys_challengeAccepted: "⚔️ {0} challenges {1} to a duel",
+                sys_spectatorJoined: "👀 {0} is watching the duel {1}",
+                sys_departure: "🚪 {0} has left the Castle",
+                sys_victory: "🏆 {0} has defeated {1}",
+                sys_draw: "🤝 {0} and {1} have drawn",
+            }
+        };
+
+        // Idioma actual: se recuerda entre visitas en localStorage (no
+        // sessionStorage, que ya usamos para el nombre de usuario -- el
+        // idioma es una preferencia de más largo plazo que una sesión de
+        // juego puntual). Por defecto, español.
+        let currentLang = localStorage.getItem('damas_lang') || 'es';
+
+        // Busca la clave en el idioma actual; si no está, cae al español
+        // (para que nunca aparezca en blanco mientras vamos completando
+        // el diccionario); si tampoco está ahí, devuelve la clave misma
+        // (para notar rápido, en desarrollo, si algo quedó sin cargar).
+        // Los argumentos extra reemplazan {0}, {1}... dentro de la cadena.
+        function t(key, ...args) {
+            let str = (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key])
+                || TRANSLATIONS.es[key]
+                || key;
+            args.forEach((arg, i) => {
+                str = str.replace(`{${i}}`, arg);
+            });
+            return str;
+        }
+
+        // Recorre todo el DOM buscando los tres atributos de marcado y
+        // vuelca la traducción correspondiente. Se llama una vez al
+        // cargar la página, y de nuevo cada vez que se cambia de idioma.
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.textContent = t(el.getAttribute('data-i18n'));
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+            });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                el.title = t(el.getAttribute('data-i18n-title'));
+            });
+            document.documentElement.lang = currentLang;
+            // El título "de reposo" de la pestaña también se actualiza acá
+            // (y ORIGINAL_TITLE con él, para que el aviso de "¡Tu turno!"
+            // sepa a qué volver después).
+            document.title = t('pageTitle');
+            ORIGINAL_TITLE = document.title;
+        }
+
+        function updateLangSwitcherUI() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLang);
+            });
+        }
+
+        function setLanguage(lang) {
+            if (lang !== 'es' && lang !== 'en') return;
+            currentLang = lang;
+            localStorage.setItem('damas_lang', lang);
+            applyTranslations();
+            updateLangSwitcherUI();
+            // Si el pergamino de Reglas está abierto en este momento,
+            // seguimos el idioma nuevo ahí también.
+            if (getComputedStyle(document.getElementById("rulesModal")).display !== "none") {
+                showRulesLang(lang);
+            }
+            // Estos tres elementos se escriben una sola vez por evento (no
+            // tienen data-i18n, porque llevan datos variables adentro) --
+            // sin refrescarlos acá, quedarían en el idioma viejo hasta el
+            // próximo cambio de turno / espectador / lobby, que podría
+            // tardar. Los volvemos a pintar ya mismo, con el idioma nuevo.
+            if (typeof currentPlayer !== 'undefined' && currentPlayer) {
+                updateTurnIndicator();
+            }
+            renderSpectatorsDisplay(lastSpectatorsList);
+            renderLobbyList(lastLobbyData);
+            // Si la Sala de Armas está abierta en este momento, la
+            // repintamos también -- si no, la próxima vez que se abra ya
+            // va a usar renderBotsTable() con el idioma nuevo solo.
+            if (getComputedStyle(document.getElementById("armsRoomModal")).display !== "none") {
+                renderBotsTable();
+                updateStartBotGameBtnLabel();
+            }
+        }
 
         // --- LA ORQUESTA DE GODOFREDO ---
         const soundMove = new Audio('assets/move.mp3');
@@ -2595,7 +3009,10 @@
         let moveHistory = []; // Mezcla de jugadas {color, from, to, captured, crowned} y separadores {type:'divider', label}
 
         // --- EL PREGONERO DE GODOFREDO (aviso de turno en la pestaña) ---
-        const ORIGINAL_TITLE = document.title;
+        // let (no const): se reasigna en setLanguage(), para que el título
+        // "de reposo" de la pestaña también seas el correcto en el idioma
+        // nuevo, no el que había cuando cargó la página.
+        let ORIGINAL_TITLE = document.title;
 
         // --- EL DESAFÍO QUE PUEDE ARREPENTIRSE (cancelar / timeout) ---
         let pendingChallengeTarget = null;
@@ -2721,11 +3138,11 @@
             if (!turnIndicator) return;
 
             if (currentPlayer === "w") {
-                turnIndicator.textContent = "Turno: Blancas";
+                turnIndicator.textContent = t('turnLabel', t('colorWhite'));
                 turnIndicator.style.color = "white";
                 turnIndicator.style.textShadow = "0 0 10px rgba(255,255,255,0.5)";
             } else {
-                turnIndicator.textContent = "Turno: Negras";
+                turnIndicator.textContent = t('turnLabel', t('colorBlack'));
                 turnIndicator.style.color = "#aaa"; // Un gris clarito para que resalte en el fondo oscuro
                 turnIndicator.style.textShadow = "none";
             }
@@ -2741,7 +3158,7 @@
                 return;
             }
             const isMyTurn = (currentPlayer === myColor);
-            document.title = (isMyTurn && document.hidden) ? "¡Tu turno! – Damas Argentinas" : ORIGINAL_TITLE;
+            document.title = (isMyTurn && document.hidden) ? t('yourTurnTitle') : ORIGINAL_TITLE;
         }
 
         // Al volver a la pestaña, el pregón se calla. Al irte en tu turno, puede
@@ -3362,12 +3779,12 @@
 
             // 1. Victoria por aniquilación
             if (whitePieces === 0) {
-                announceGameEnd(`¡${blackPlayerName} ha aniquilado a ${whitePlayerName}!`, { allowRematch: true });
+                announceGameEnd(t('winCapturedAll', blackPlayerName, whitePlayerName), { allowRematch: true });
                 socket.emit('game-over', { winner: 'b' });
                 return { ended: true, winner: 'b' };
             }
             if (blackPieces === 0) {
-                announceGameEnd(`¡${whitePlayerName} ha aniquilado a ${blackPlayerName}!`, { allowRematch: true });
+                announceGameEnd(t('winCapturedAll', whitePlayerName, blackPlayerName), { allowRematch: true });
                 socket.emit('game-over', { winner: 'w' });
                 return { ended: true, winner: 'w' };
             }
@@ -3395,7 +3812,7 @@
                 const winnerColor = (currentPlayer === 'w') ? 'b' : 'w';
                 const winnerName = (currentPlayer === 'w') ? blackPlayerName : whitePlayerName;
                 const loserName = (currentPlayer === 'w') ? whitePlayerName : blackPlayerName;
-                announceGameEnd(`¡${winnerName} ha bloqueado a ${loserName}!`, { allowRematch: true });
+                announceGameEnd(t('winBlocked', winnerName, loserName), { allowRematch: true });
                 socket.emit('game-over', { winner: winnerColor });
                 return { ended: true, winner: winnerColor };
             }
@@ -3406,7 +3823,7 @@
             if (whitePieces === 1 && blackPieces === 1 && whiteIsLoneKing && blackIsLoneKing) {
                 oneKingEachStreak++;
                 if (oneKingEachStreak >= EMPATE_DAMAS_SOLITARIAS_JUGADAS_ESPERA) {
-                    announceGameEnd(`${whitePlayerName} y ${blackPlayerName} han empatado.`, { allowRematch: true });
+                    announceGameEnd(t('drawMessage', whitePlayerName, blackPlayerName), { allowRematch: true });
                     socket.emit('game-over', { winner: 'draw' });
                     return { ended: true, winner: 'draw' };
                 }
@@ -3463,19 +3880,19 @@
             // que el rival directamente se fue (opponent-left no manda allowRematch).
             // Contra un bot la etiqueta cambia: no hay "revancha" real posible
             // contra algo sin ego, así que decimos simplemente "jugar de nuevo".
-            const rematchLabel = currentBotId ? "🔁 Jugar de nuevo" : "⚔️ Revancha";
+            const rematchLabel = currentBotId ? t('playAgainBtn') : t('rematchBtnLabel');
             const rematchButtonHtml = (allowRematch && myColor !== 'spectator')
                 ? `<button id="rematchBtn" onclick="requestRematch()" style="padding:15px 25px; font-size: 18px; cursor:pointer; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold;">${rematchLabel}</button>`
                 : '';
 
             // El mensaje ahora es dinámico y los botones nos dan la opción de revancha o de salir
             banner.innerHTML = `
-        <h1 style="font-size: 40px; color: gold; border: none;">¡FIN DEL DUELO!</h1>
+        <h1 style="font-size: 40px; color: gold; border: none;">${t('endOfDuelTitle')}</h1>
         <p style="margin-bottom: 20px;">${message}</p>
         <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
             ${rematchButtonHtml}
             <button onclick="leaveAndReload()" style="padding:15px 30px; font-size: 20px; cursor:pointer; background: #f1c40f; border: none; border-radius: 10px; font-weight: bold;">
-                SALIR AL LOBBY
+                ${t('leaveLobbyCaps')}
             </button>
         </div>
         `;
@@ -3507,13 +3924,13 @@
                 btn.disabled = true;
                 btn.style.opacity = "0.6";
                 btn.style.cursor = "default";
-                btn.textContent = `Esperando a ${opponentName}...`;
+                btn.textContent = t('waitingForOpponent', opponentName);
             }
         }
 
         function surrender() {
             // 1. Pedir confirmación (Art. de Godofredo)
-            if (!confirm("¿Noble Caballero, realmente desea entregar sus armas y rendirse?")) {
+            if (!confirm(t('confirmSurrender'))) {
                 return; // Si cancela, no pasa nada
             }
 
@@ -3522,7 +3939,7 @@
 
             // 3. Mostrar el mensaje localmente
             const winnerName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
-            announceGameEnd(`TE HAS RENDIDO.<br>VICTORIA PARA ${winnerName}`, { allowRematch: true });
+            announceGameEnd(t('youSurrendered', winnerName), { allowRematch: true });
         }
 
         // Escuchar movimientos que vienen del servidor
@@ -3573,7 +3990,7 @@
                 pieceMustContinueCapturing = null;
                 lastMoveCoords = null;
                 const spectatorDisplay = document.getElementById("spectatorListDisplay");
-                if (spectatorDisplay) spectatorDisplay.textContent = "Espectadores: -";
+                if (spectatorDisplay) renderSpectatorsDisplay(null);
 
                 // Si esta partida arrancó porque nosotros mismos disparamos un
                 // desafío (por ejemplo, una Revancha), soltamos cualquier rastro
@@ -3728,8 +4145,8 @@
             if (myColor !== 'spectator') {
                 // Si soy jugador, aviso que el rival huyó y doy opción de salir
                 const msg = leaverName
-                    ? `¡${leaverName} ha huido de la contienda!<br>Ganás por abandono.`
-                    : "¡TU RIVAL HA HUIDO!<br>La partida ha terminado por abandono.";
+                    ? t('opponentFledYouWin', leaverName)
+                    : t('opponentFledGeneric');
                 announceGameEnd(msg);
             } else {
                 // --- EL PREGÓN DEL MENSAJERO ---
@@ -3741,11 +4158,11 @@
                     // acá — simplemente la partida quedó sin nadie del lado
                     // humano. blackPlayerName es el nombre del bot: en toda
                     // partida vs. bot, el bot siempre figura como "Negras".
-                    msg = `${leaverName} se ha retirado de su partida contra ${blackPlayerName}.`;
+                    msg = t('spectatorGameAbandonedVsBot', leaverName, blackPlayerName);
                 } else if (leaverName && winnerName) {
-                    msg = `${leaverName} se ha retirado de la partida.<br>${winnerName} gana por abandono.`;
+                    msg = t('spectatorGameAbandoned', leaverName, winnerName);
                 } else {
-                    msg = "LOS CONTENDIENTES SE HAN IDO.<br>La partida ha finalizado.";
+                    msg = t('bothContendersLeft');
                 }
                 announceGameEnd(msg);
             }
@@ -3767,7 +4184,7 @@
                 || sessionStorage.getItem('damas_terms_accepted') === 'true';
 
             if (!termsAccepted) {
-                alert("Noble Caballero, para ingresar primero debe aceptar los Términos de Uso.");
+                alert(t('termsRequiredAlert'));
                 return;
             }
             sessionStorage.setItem('damas_terms_accepted', 'true');
@@ -3776,7 +4193,7 @@
             const name = input.value.trim();
 
             if (name.length < 2) {
-                alert("Noble Caballero, su nombre es demasiado corto.");
+                alert(t('nameTooShortAlert'));
                 return;
             }
 
@@ -3809,9 +4226,9 @@
 
         // --- LOS PERGAMINOS DE GODOFREDO (Reglas) ---
 
-        function openRules(lang) {
+        function openRules() {
             document.getElementById("rulesModal").style.display = "flex";
-            showRulesLang(lang);
+            showRulesLang(currentLang);
         }
 
         function closeRules() {
@@ -4043,7 +4460,7 @@
 
                 const descCell = document.createElement("td");
                 descCell.className = "bot-desc-cell";
-                descCell.textContent = bot.description;
+                descCell.textContent = (currentLang === 'en' && bot.description_en) ? bot.description_en : bot.description;
 
                 row.appendChild(nameCell);
                 row.appendChild(levelCell);
@@ -4106,7 +4523,7 @@
         function updateStartBotGameBtnLabel() {
             const bot = getBotById(selectedBotId);
             const btn = document.getElementById("startBotGameBtn");
-            if (btn && bot) btn.textContent = `⚔️ Jugar contra ${bot.name}`;
+            if (btn && bot) btn.textContent = t('playAgainstBotBtn', bot.name);
         }
 
         function openArmsRoom() {
@@ -4318,8 +4735,8 @@
             challengeOrSpectateTargetRoom = room;
             challengeOrSpectateKind = kind;
             document.getElementById("challengeOrSpectateText").textContent = (kind === 'lab')
-                ? `¿Desea desafiar a ${username} o espectar su laboratorio?`
-                : `¿Desea desafiar a ${username} o espectar su partida contra ${botName}?`;
+                ? t('challengeOrSpectateLab', username)
+                : t('challengeOrSpectateBot', username, botName);
             document.getElementById("challengeOrSpectateModal").style.display = "block";
         }
 
@@ -4429,7 +4846,7 @@
 
             if (msg.type === 'system') {
                 div.className = "chat-msg chat-system";
-                div.textContent = `${msg.text} · ${timeStr}`;
+                div.textContent = `${t('sys_' + msg.eventCode, ...(msg.params || []))} · ${timeStr}`;
             } else {
                 const myUsername = document.getElementById("usernameInput").value;
                 const mentionsMe = messageJSMentionsMe(msg.text, myUsername);
@@ -4482,7 +4899,30 @@
         });
 
         // Escuchar la lista de usuarios actualizada
-        socket.on('update-lobby', (data) => {
+        // Guardamos el último dato recibido del lobby para poder
+        // re-renderizarlo al cambiar de idioma, sin esperar a que el
+        // servidor mande un update-lobby nuevo por su cuenta.
+        let lastLobbyData = null;
+
+        // Mismo motivo que lastLobbyData de arriba: guardamos la última
+        // lista REAL de espectadores (o null si no hay ninguno) para
+        // poder re-renderizarla al cambiar de idioma, sin esperar al
+        // próximo evento del servidor.
+        let lastSpectatorsList = null;
+
+        function renderSpectatorsDisplay(spectators) {
+            lastSpectatorsList = (spectators && spectators.length > 0) ? spectators : null;
+            const display = document.getElementById("spectatorListDisplay");
+            if (!display) return;
+            display.textContent = lastSpectatorsList
+                ? t('spectatorsList', lastSpectatorsList.join(", "))
+                : t('spectatorsNone');
+        }
+
+        function renderLobbyList(data) {
+            if (!data) return;
+            lastLobbyData = data;
+
             // Guardamos todos los nombres conocidos (jugando, espectando o
             // libres) para poder resaltar @menciones de cualquiera en el chat.
             knownUsernames = data.users.map(u => u.username);
@@ -4494,7 +4934,7 @@
             const freeUsers = data.users.filter(u => u.status !== "playing");
             if (freeUsers.length > 0) {
                 const header = document.createElement("div");
-                header.innerHTML = "<strong>Caballeros Libres:</strong>";
+                header.innerHTML = `<strong>${t('caballerosLibres')}</strong>`;
                 listElement.appendChild(header);
 
                 freeUsers.forEach(u => {
@@ -4503,14 +4943,14 @@
                     item.className = "user-item";
 
                     if (u.status === "vsbot") {
-                        item.textContent = `🛡️ ${u.username} (vs. ${u.botName})`;
+                        item.textContent = `🛡️ ${u.username}${t('vsSuffix', u.botName)}`;
                         item.onclick = () => openChallengeOrSpectateModal(u.username, u.botName, u.room, 'bot');
                     } else if (u.status === "inlab") {
-                        item.textContent = `🔬 ${u.username} (laboratorio)`;
+                        item.textContent = `🔬 ${u.username}${t('labSuffix')}`;
                         item.onclick = () => openChallengeOrSpectateModal(u.username, null, u.room, 'lab');
                     } else {
-                        const etiqueta = (u.status === "spectating") ? " (espectando)" : "";
-                        item.textContent = `🛡️ ${u.username}${etiqueta} (Desafiar)`;
+                        const etiqueta = (u.status === "spectating") ? t('spectatingSuffix') : "";
+                        item.textContent = `🛡️ ${u.username}${etiqueta}${t('challengeSuffix')}`;
                         item.onclick = () => openChallengeModalityModal(u.username);
                     }
                     listElement.appendChild(item);
@@ -4520,23 +4960,25 @@
             // SECCIÓN 2: Partidas en Curso (Estandartes)
             if (data.games.length > 0) {
                 const header = document.createElement("div");
-                header.innerHTML = "<br><strong>Torneos en Curso:</strong>";
+                header.innerHTML = `<br><strong>${t('tournamentsInProgress')}</strong>`;
                 listElement.appendChild(header);
 
                 data.games.forEach(game => {
                     const item = document.createElement("div");
                     item.className = "user-item";
                     item.style.borderColor = "#27ae60"; // Verde para partidas
-                    item.textContent = `⚔️ ${game.name} (Espectar)`;
+                    item.textContent = `⚔️ ${game.name}${t('spectateSuffix')}`;
                     item.onclick = () => {
-                        if (confirm(`¿Deseas observar la partida ${game.name}?`)) {
+                        if (confirm(t('confirmSpectateGame', game.name))) {
                             socket.emit('join-as-spectator', game.id);
                         }
                     };
                     listElement.appendChild(item);
                 });
             }
-        });
+        }
+
+        socket.on('update-lobby', renderLobbyList);
 
         // --- EL DESAFÍO QUE PUEDE ARREPENTIRSE ---
         // Un solo desafío pendiente a la vez (igual que el resto del lobby, que
@@ -4564,7 +5006,7 @@
 
         function openChallengeModalityModal(username) {
             pendingModalityTargetUsername = username;
-            document.getElementById("challengeModalityText").textContent = `¿Bajo qué modalidad desea desafiar a ${username}?`;
+            document.getElementById("challengeModalityText").textContent = t('modalityQuestion', username);
             document.getElementById("challengeModalityModal").style.display = "block";
         }
 
@@ -4624,7 +5066,7 @@
             const errorEl = document.getElementById("timeControlError");
 
             if (raw === "" || isNaN(minutes) || minutes < 1 || minutes > 15) {
-                errorEl.textContent = "Ingresá un valor válido entre 1 y 15 minutos.";
+                errorEl.textContent = t('invalidMinutesError');
                 return;
             }
 
@@ -4652,7 +5094,7 @@
 
             const status = document.getElementById("waitingStatus");
             const cancelBtn = document.getElementById("cancelChallengeBtn");
-            if (status) status.textContent = "Buscando oponentes en la red...";
+            if (status) status.textContent = t('waitingStatus');
             if (cancelBtn) cancelBtn.style.display = "none";
         }
 
@@ -4664,9 +5106,9 @@
             currentChallengeTimeControl = data.timeControl || null;
             if (currentChallengeTimeControl) {
                 const label = formatMinutesLabel(currentChallengeTimeControl.initialMs);
-                document.getElementById("challengeText").textContent = `¡${data.fromName} te desafía a un duelo en MODO CONTRARRELOJ, con ${label} por jugador!`;
+                document.getElementById("challengeText").textContent = t('challengeTimedText', data.fromName, label);
             } else {
-                document.getElementById("challengeText").textContent = `¡${data.fromName} te desafía a un duelo!`;
+                document.getElementById("challengeText").textContent = t('challengeNormalText', data.fromName);
             }
             document.getElementById("challengeModal").style.display = "block";
             playSound(soundChallenge);
@@ -4710,11 +5152,11 @@
                 rematchBtn.disabled = false;
                 rematchBtn.style.opacity = "1";
                 rematchBtn.style.cursor = "pointer";
-                rematchBtn.textContent = "⚔️ Revancha";
+                rematchBtn.textContent = t('rematchBtnLabel');
             }
 
-            alert(`${name} ha declinado el duelo. ¡Quizás en otra ocasión!`);
-            document.getElementById("waitingStatus").textContent = "Buscando oponentes en la red...";
+            alert(t('declinedAlert', name));
+            document.getElementById("waitingStatus").textContent = t('waitingStatus');
         });
 
         socket.on('opponent-surrendered', (data) => {
@@ -4732,7 +5174,7 @@
                 winnerName = (myColor === 'w') ? whitePlayerName : blackPlayerName;
                 finalLoserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
             }
-            announceGameEnd(`¡${finalLoserName} se ha rendido!<br>LA VICTORIA ES PARA ${winnerName}`, { allowRematch: true });
+            announceGameEnd(t('opponentSurrendered', finalLoserName, winnerName), { allowRematch: true });
         });
 
         // El servidor manda esto cada vez que el turno REALMENTE pasa de
@@ -4753,15 +5195,27 @@
             const winnerName = data?.winnerName;
             const loserName = data?.loserName;
             if (winnerName && loserName) {
-                announceGameEnd(`¡${winnerName} gana la partida!<br>${loserName} se quedó sin tiempo`, { allowRematch: true });
+                announceGameEnd(t('winByTimeout', winnerName, loserName), { allowRematch: true });
             } else {
                 // Fallback defensivo (no debería pasar nunca en la práctica)
-                announceGameEnd(`Uno de los jugadores se quedó sin tiempo.<br>La partida ha finalizado.`, { allowRematch: true });
+                announceGameEnd(t('someoneTimedOut'), { allowRematch: true });
             }
         });
 
         // --- AUTO-LOGIN DE GODOFREDO ---
         window.onload = () => {
+            // Primero de todo: idioma. Así la página arranca directo en el
+            // idioma guardado, sin parpadeo de español antes de pasar a inglés.
+            applyTranslations();
+            updateLangSwitcherUI();
+            // Este elemento en particular NO lleva data-i18n a propósito:
+            // en cuanto arranca una partida o cambia la lista real de
+            // espectadores, el JS lo pisa con datos dinámicos -- si
+            // tuviera data-i18n, cada cambio de idioma volvería a pisar
+            // esos datos reales con el texto genérico. Por eso el valor
+            // inicial se pone acá, una sola vez, a mano.
+            renderSpectatorsDisplay(null);
+
             const savedName = sessionStorage.getItem('damas_username');
             if (savedName) {
                 // Si el nombre ya existe, lo ponemos en el input y entramos solos
@@ -4793,12 +5247,7 @@
 
         // --- EL PREGÓN DE GODOFREDO (Actualizar lista visual) ---
         socket.on('update-spectators-list', (spectators) => {
-            const display = document.getElementById("spectatorListDisplay");
-            if (spectators.length > 0) {
-                display.textContent = "Espectadores: " + spectators.join(", ");
-            } else {
-                display.textContent = "Espectadores: -";
-            }
+            renderSpectatorsDisplay(spectators);
         });
 
     </script>

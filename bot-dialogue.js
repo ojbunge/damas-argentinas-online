@@ -1,13 +1,24 @@
 // ============================================================
 //  BOT-DIALOGUE.JS — lo que dice (o suena) cada personaje
 // ============================================================
-// Diccionario: botId -> código de evento -> lista de frases. Cuando el
-// motor de bots.js (ver detectCommentaryEvent, al final del archivo)
-// detecta un evento, el que muestra el cartel en pantalla (todavía sin
-// construir — eso viene después, cuando se defina el nuevo lugar en el
-// layout) busca acá la lista correspondiente al bot y al evento, y
-// elige UNA frase al azar entre las que haya, con la misma probabilidad
-// para cada una — no importa si hay 1, 3 o 10 frases cargadas.
+// Diccionario de DOS niveles de idioma primero (es / en), y adentro de
+// cada uno: botId -> código de evento -> lista de frases. Cuando el
+// motor de bots.js (ver detectCommentaryEvent) detecta un evento,
+// pickBotDialogueLine(botId, eventCode) busca la lista correspondiente
+// DENTRO DEL IDIOMA ACTUAL (la variable global currentLang, definida en
+// index.html) y elige UNA frase al azar entre las que haya, con la
+// misma probabilidad para cada una — no importa si hay 1, 3 o 10
+// frases cargadas.
+//
+// Las frases en español y en inglés son traducciones fieles unas de
+// otras, en el mismo orden -- pero cada elección al azar es
+// independiente por idioma, así que no hace falta (ni tiene sentido)
+// que el índice elegido coincida entre ambos: cada jugador ve una
+// frase traducida al azar en SU propio idioma, nada más.
+//
+// Los nombres propios de los personajes (Neanderthalius, Leonor de
+// Aquitapia, Carlosaúlmagno, etc.) NUNCA se traducen -- son los mismos
+// en los dos idiomas, tal como pidió Otto.
 //
 // Los dieciséis códigos de evento posibles (deben coincidir EXACTO con
 // los que devuelve detectCommentaryEvent en bots.js):
@@ -20,10 +31,14 @@
 //   INICIO_HOSTILIDADES, COMENTARIO_ALEATORIO, INICIO_PARTIDA
 //
 // Completar de a poco, con total libertad: dejar como [] (arreglo
-// vacío) cualquier evento que todavía no tenga frase — si la lista
+// vacío) cualquier evento que todavía no tenga frase -- si la lista
 // está vacía, o directamente no existe la entrada para ese bot, no se
 // muestra nada (no revienta ni tira error, simplemente ese evento pasa
-// en silencio para ese personaje esa vez).
+// en silencio para ese personaje esa vez). Eso sí: si agregás una
+// frase nueva del lado español, acordate de agregar su traducción del
+// lado inglés (o viceversa) para que ambos idiomas sigan
+// paralelos -- si no, ese idioma le va a mostrar menos variedad al
+// jugador para ese evento puntual, aunque nada se rompa.
 //
 // Cada frase va entre comillas, y las frases se separan con coma —
 // las comas que uses DENTRO de una frase (";eso, che, no importa!")
@@ -31,15 +46,10 @@
 // lo que separa una frase de la siguiente es la coma que está POR
 // FUERA de las comillas, en la lista.
 //
-// Por ahora está lleno de ejemplo solo el nivel 1 (Neanderthalius),
-// para poder probar que el mecanismo dispara bien — son frases de
-// prueba, las podés dejar, tocar, o tirar todas y arrancar de cero,
-// como quieras. El resto de los niveles quedan con las listas vacías,
-// bien marcadas, para que las vayas llenando cuando tengas ganas.
-//
 
 
 const BOT_DIALOGUE = {
+    es: {
 
     // ---- Nivel 1: Neanderthalius ----
     neanderthalius: {
@@ -154,7 +164,8 @@ const BOT_DIALOGUE = {
             "¡Victoria! ¡Sabía que esta partida estaba bajo mi control desde el principio! Bueno... casi desde el principio.",
             "¡Ha sido un honor aplastarte, mon ami! Ahora permíteme celebrar como corresponde: ¡Termidor para todos!",
             "¡Sacre bleu! ¡Qué paliza te he dado! Pero no te preocupes, hasta el mismísimo Carlosaúlmagno perdería alguna vez... aunque claro, él juega mucho mejor con unas copas encima.",
-            "¡Ganó Francia! ¡Y pensar que algunos prefieren el agua o el vino de Burdeos! ¡Salud, mon ami, a tu salud!"
+            "¡Ganó Francia! ¡Y pensar que algunos prefieren el agua o el vino de Burdeos! ¡Salud, mon ami, a tu salud!",
+            "assets/bots/termidor2.mp3"
         ],
 
         DERROTA: [
@@ -291,7 +302,8 @@ const BOT_DIALOGUE = {
             "¿Qué mejor manera de pasar la noche que jugando contra un honorable adversario? ¡Traigan el tablero y otro tetra!",
             "Muy bien, mon ami. Comencemos la partida. Hoy me siento particularmente inspirado... probablemente sea el Termidor.",
             "¡Hic! ¡Salud, mon ami! ¿Jugar a las damas? ¡Claro que sí! Pero advierto que mi estrategia puede ser un tanto... impredecible. ¡Glup!",
-            "¡Voilà! ¡El tablero está listo! Y mi copa también. ¡Que comience el duelo, y que gane el mejor... o el que tenga más aguante!"
+            "¡Voilà! ¡El tablero está listo! Y mi copa también. ¡Que comience el duelo, y que gane el mejor... o el que tenga más aguante!",
+            "assets/bots/termidor2.mp3"
         ]
     },
 
@@ -302,85 +314,112 @@ const BOT_DIALOGUE = {
         VICTORIA: [
             "¡Victoria! El reino de Aquitapia vuelve a celebrar. Hay que hablar menos y apoyar un poco más.",
             "¡Ganamos! Mis fichas jugaron como una Selección campeona. ¡Aguante Aquitapia!",
-            "Te voy a decir la verdad: este resultado estaba perfectamente planificado. Entre todos lo armamos así."
+            "Te voy a decir la verdad: este resultado estaba perfectamente planificado. Entre todos lo armamos así.",
+            "¡Campeones! Otra copa más para las vitrinas del predio de Ezeiza. ¡Disfrutá, hermano!",
+            "¿Viste cómo se juega? Esto es fútbol, papá... digo, damas. ¡Vamos Argentina!"
         ],
 
         DERROTA: [
             "Bueno... perdí. La próxima voy a traer a Falcón Pérez para que arbitre este torneo.",
             "¿Y acá no te regalan penales? Porque te voy a decir la verdad, así es difícil.",
-            "Perdí, pero no pasa nada. En el reino organizamos otro torneo y vemos cómo sale la próxima."
+            "Perdí, pero no pasa nada. En el reino organizamos otro torneo y vemos cómo sale la próxima.",
+            "La verdad, estoy pasando calor. ¡Que alguien me seque la nuca, por favor! Y traeme un Termidor, aunque sea feo.",
+            "Esto no puede ser, me cambiaron el reglamento a último momento. ¡Nos guste o no, estas no son las damas que elegimos!"
         ],
 
         EMPATE: [
             "Empate. Ni ganaste ni perdiste. Nos guste o no, estas son las damas que eligieron los habitantes del castillo.",
             "Bueno, quedó en tablas. Hay que valorar el esfuerzo y seguir trabajando entre todos.",
-            "Empatamos. Un resultado digno para dos equipos que transpiraron la camiseta... y yo transpiré bastante más que vos."
+            "Empatamos. Un resultado digno para dos equipos que transpiraron la camiseta... y yo transpiré bastante más que vos.",
+            "Hicimos un gran desgaste, pero no se pudo. Bueno, al menos no perdimos los puntos.",
+            "Tablas. Te voy a decir la verdad, prefiero ganar, pero un puntito de visitante sirve para el promedio."
         ],
 
         CORONACION_SUFRIDA: [
             "¡Pero mirá la defensa que tengo! ¿Dónde estaban los centrales cuando esa ficha llegó al área?",
             "¡Me coronaron! Mi defensa es un colador, esto no puede estar pasando en el reino.",
-            "Te voy a decir la verdad: esa ficha llegó al área con más facilidad que un delantero entrando solo."
+            "Te voy a decir la verdad: esa ficha llegó al área con más facilidad que un delantero entrando solo.",
+            "¡No! ¡Me comieron la espalda! ¡Alguien que releve a esa ficha!"
         ],
 
         CORONACION_PROPIA: [
             "¡GOOOOL! Perdón, me entusiasmé. Quise decir: ¡coronación! Otra dama para el reino.",
             "¡Dama propia! Mis jugadoras se mueven por el tablero como verdaderas campeonas.",
-            "¡Qué jugada! Esa ficha llegó al fondo y se consagró. Así se juega en el predio de Ezeiza."
+            "¡Qué jugada! Esa ficha llegó al fondo y se consagró. Así se juega en el predio de Ezeiza.",
+            "¡Impresionante! Coronamos. Como cuando le ganamos a Inglaterra en su propia casa, ¡quería que ganaran todos!",
+            "Una reina. ¡Y mirá qué linda que es! Una verdadera reina del pueblo, como yo."
         ],
 
         CAPTURA_MULTIPLE_SUFRIDA: [
             "¡No puede ser! Me están haciendo una goleada de visitante. ¿Dónde está la defensa?",
-            "¡Tres fichas de una sola vez! Estoy pasando calor... ¡algún siervo que me seque la nuca, por favor!",
-            "Te voy a decir la verdad: eso fue un desastre táctico. Hay que hablar menos y defender un poco más."
+            "¡Varias fichas de una sola vez! Estoy pasando calor... ¡algún siervo que me seque la nuca, por favor!",
+            "Te voy a decir la verdad: eso fue un desastre táctico. Hay que hablar menos y defender un poco más.",
+            "¡Me desarmaron el equipo! ¡Esto es una carnicería, señor árbitro... digo, señor Otto!",
+            "¡Neanderthalius me come la carne de la parrilla y se va corriendo, y ahora vos me comés varias fichas de una! ¡Qué bárbaro!"
         ],
 
         CAPTURA_MULTIPLE_PROPIA: [
             "¡Eso fue una goleada! Mis fichas entraron al área y no dejaron ni una marca.",
-            "¡Una, dos, tres! ¡Qué manera de jugar! El predio de Ezeiza está orgulloso de estas muchachas.",
-            "¡Tremenda jugada colectiva! Entre todas me armaron una captura espectacular."
+            "¡Varias fichas de una! ¡Qué manera de jugar! El predio de Ezeiza está orgulloso de estas muchachas.",
+            "¡Tremenda jugada colectiva! Entre todas me armaron una captura espectacular.",
+            "¡Zas, zas, zas! ¡Comimos! Así se maneja el campeonato.",
+            "¡Comete esa! Te armamos un sándwich en el área, ¡qué jugada!"
         ],
 
         TODO_DAMAS: [
             "Bueno, ahora sí: ¡puro plantel de damas! Esto parece una concentración de la Selección femenina.",
             "¡No quedan fichas chiquitas! Ahora sólo quedan damas en el reino. Esto se puso serio.",
-            "Mirá vos... todas damas. Al final este torneo terminó siendo más femenino de lo que esperaba."
+            "Mirá vos... todas damas. Al final este torneo terminó siendo más femenino de lo que esperaba. Sólo falta Icardio de Milán tratando de pescar alguna.",
+            "¡Puro poder femenino en el tablero! Aunque te aviso que esta reina popular le va a ganar a la aristócrata de Myrth.",
+            "Solo damas. A ver si María Eugenia aprende lo que es una verdadera estrategia de poder, y no solo casarse por guita."
         ],
 
         POCAS_FICHAS_EN_DESVENTAJA: [
             "La verdad... estoy complicada. Pero todavía no está terminado el torneo, y acá se transpira hasta el último minuto.",
             "Estamos en las diez de última. Te propongo una cosa: si me dejás empatar, capaz aparece un pequeño sobrecito para vos. Digo, como incentivo deportivo.",
-            "Estoy contra las cuerdas, pero no voy a bajar los brazos. Y si hace falta, hacemos una modificación reglamentaria entre todos."
+            "Estoy contra las cuerdas, pero no voy a bajar los brazos. Y si hace falta, hacemos una modificación reglamentaria entre todos.",
+            "Me mataste a goles, hermano. Tengo que admitirlo. Pero bueno, somos argentinos y no nos rendimos.",
+            "Estoy pasando calor... ¡y no tengo siervos cerca! ¡Necesito aire fresco y un penal a favor, urgente!"
         ],
 
         DIFERENCIA_GRANDE_EN_CONTRA: [
             "Estoy pasando calor... ¡algún siervo que me seque la nuca, por favor!",
-            "Tres fichas abajo. Esto está más complicado que un campeonato mal organizado.",
+            "Me estás goleando. Esto está más complicado que un campeonato mal organizado.",
             "La verdad, no me gusta cómo está el resultado. Pero todavía queda partido y hay que apoyar un poco más.",
+            "¡Me estás bailando! ¿Dónde está el VAR cuando se lo necesita?",
+            "Tranquilo, que de ésta salimos. Acordate lo que te digo: el tiempo me dará la razón."
         ],
 
         DIFERENCIA_GRANDE_A_FAVOR: [
             "¡Mirá cómo se mueven mis fichas! Parecen mis doscientos caballos de lujo cruzando el predio de Ezeiza.",
             "Te voy a decir la verdad: este partido viene más tranquilo que una jornada de entrenamiento en el reino.",
-            "Tenemos una ventaja importante. Ahora hay que administrar el resultado y jugar con inteligencia."
+            "Tenemos una ventaja importante. Ahora hay que administrar el resultado y jugar con inteligencia.",
+            "¡Goleada, papá... digo, mamá! Estamos pasando por arriba, como corresponde.",
+            "Esto ya está liquidado. Como cuando vas 3-0 en el primer tiempo, ¿viste? Ya está."
         ],
 
         PARIDAD_POCAS_FICHAS: [
             "Cuatro contra cuatro. Esto es como una final: el que se equivoca, se vuelve caminando al castillo.",
             "Estamos en zona de definición. Ahora cada ficha vale como un gol en una final.",
-            "La verdad, está para cualquiera. Acá no hay que regalar nada, porque después todos van a transpirar."
+            "La verdad, está para cualquiera. Acá no hay que regalar nada, porque después todos van a transpirar.",
+            "Parece un partido de la B Metropolitana, trabado y sucio. ¡Hay que poner más huevo!",
+            "Fichas justas. El que comete el error táctico, pierde el campeonato."
         ],
 
         PARTIDO_LARGO: [
             "¡Más de ciento diez jugadas! Esto ya parece uno de esos torneos eternos que organizamos en el reino.",
             "Qué partido largo, por favor. Estoy transpirando más que en una final de verano.",
-            "¿Cuánto falta? Porque a este ritmo vamos a terminar jugando las damas en el próximo reinado."
+            "¿Cuánto falta? Porque a este ritmo vamos a terminar jugando las damas en el próximo reinado.",
+            "¡Este partido se está haciendo eterno! Como cuando Monsieur Termidor viene a comer un asado a las 9 de la noche y se termina quedando hasta las 5 de la mañana.",
+            "Me parece que nos vamos a penales. ¡Qué sufrimiento!"
         ],
 
         INICIO_HOSTILIDADES: [
             "¡Ahora sí empezó el partido de verdad! Se terminó la diplomacia.",
             "Primera captura. Esto ya es fútbol de alto voltaje, mi amor.",
-            "¡Hay sangre en el tablero! Bueno, sangre metafórica. Pero ya empezó la guerra."
+            "¡Hay sangre en el tablero! Bueno, sangre metafórica. Pero ya empezó la guerra.",
+            "¡Al fin! Empezó el fútbol... digo, el juego. ¡Atrás no se queda nadie, salimos a atacar!",
+            "¡Una captura! ¡Por fin movimientos hostiles! Como mi relación con Godofredo después de que él rechazara unirse a mi séquito de secanucas."
         ],
 
         COMENTARIO_ALEATORIO: [
@@ -390,10 +429,14 @@ const BOT_DIALOGUE = {
             "No entiendo por qué la gente se sorprende de que tenga tantos caballos. Una reina necesita movilidad. Además, ¿vos viste lo que sale mantener un caballo de lujo?",
             "En mi reino siempre decimos lo mismo: hay que hablar menos y apoyar un poco más. Bueno... salvo cuando me preguntan por el reglamento, ahí puedo hablar durante tres horas.",
             "¿Sabés qué tiene de lindo el fútbol y las damas? Que siempre podés decir que fue una cuestión táctica.",
-            "A veces pienso que debería dejar todo y dedicarme exclusivamente a los asados. Pero después recuerdo que también hay que administrar el reino.",
+            "Anoche vino Icardio de Milán a hacerme una serenata a mi balcón. Pobre pibe, pero a mí sólo me seducen los negociados, los arbitrajes dudosos y una buena molleja a la parrilla.",
             "Hoy hizo tanto calor en Ezeiza que tuve que mandar a buscar tres siervos y dos abanicos. Una reina también tiene derecho a no transpirar.",
-            "Nos guste o no, este es el torneo que eligieron los habitantes del castillo. Y si no les gusta, bueno... hacemos otro entre todos.",
-            "Una buena reina tiene que saber tres cosas: negociar matrimonios, organizar torneos y conseguir que nunca falte carne en el asado."
+            "Nos guste o no, este es el torneo que eligieron los habitantes del castillo. Y si les gusta bien, y sino también.",
+            "Una buena reina tiene que saber tres cosas: negociar matrimonios, organizar torneos y conseguir que nunca falte carne en el asado.",
+            "Carlosaúlmagno... con ese hombre sí que se puede hacer negociados... digo, negocios ¡Los reinos de Ezeiza y Anillaco juntos podrían dominar el mundo conocido!",
+            "Ese Fray Marolio que se dedique a Dios y a sus guisos incomibles, en lugar de estar metiendo sus narices en mi organización de torneos y haciéndose el incorruptible.",
+            "El otro día intenté sobornar... digo, contratar a Empecid Campeador para que mantenga alejados de Ezeiza a los curiosos, pero dijo que si no son moros no vale la pena correrlos ¡Pobre delirante!",
+            "¡Mirá lo que hace Neanderthalius! Me acaba de manotear un chorizo de la parrilla. ¡Godofredo, sacalo de acá!"
         ],
 
         INICIO_PARTIDA: [
@@ -401,13 +444,14 @@ const BOT_DIALOGUE = {
             "Que empiece el partido. Entre todos vamos a llevar adelante este gran torneo del reino.",
             "¡Arranca la partida! La verdad, estoy muy contenta de estar acá. Vamos a ver quién termina levantando la copa.",
             "Bueno, vamos a jugar. Y te voy avisando: en mi reino los torneos se organizan seriamente... más o menos.",
-            "¡Comienza el partido! Aguante Argentina y aguante el reino de Aquitapia."
+            "¡Comienza el partido! Aguante Argentina y aguante el reino de Aquitapia.",
+            "Ya estamos listos. ¡Que gane el mejor, o el que mejor sepa manejar los hilos del torneo!",
+            "¡Silbatazo inicial! Vamos a mover la pelota... perdón, las fichas. ¡A ganar!"
         ]
 
     },
 
     // ---- Nivel 4: Fray Marolio ----
-
     marolio: {
 
         VICTORIA: [
@@ -416,7 +460,8 @@ const BOT_DIALOGUE = {
             "assets/bots/marolio2.mp3",
             "¡Bendito sea Dios! ¡Quién iba a decir que este humilde fraile podía semejante hazaña!",
             "¡Gloria al Señor! Y gloria también a las fichas Marolio, que se han comportado con dignidad.",
-            "¡Amén! ¡Victoria! Ahora sí puedo volver a la despensa con el corazón contento."
+            "¡Amén! ¡Victoria! Ahora sí puedo volver a la despensa con el corazón contento.",
+            "¡El Señor ha guiado mis movimientos! Ni la mismísima Leonor de Aquitapia, con todos sus tejes y manejo de torneos, podría haber previsto esta estrategia divina."
         ],
 
         DERROTA: [
@@ -424,21 +469,24 @@ const BOT_DIALOGUE = {
             "¡Por las barbas de mi Señor! Me habéis derrotado. Tendré que meditar sobre mis errores... después de ordenar la despensa.",
             "¡Ay, Señor! ¡Qué derrota tan dolorosa! Aunque, bien pensado, hay cosas peores: quedarse sin lentejas Marolio.",
             "¡Habéis vencido, mi señor! Dios os bendiga... aunque espero que no os dé tanta suerte en la próxima partida.",
-            "¡Santo cielo! ¡Me habéis dado una buena paliza! Pero con fe, paciencia y unas buenas arvejas, todo se remonta."
+            "¡Santo cielo! ¡Me habéis dado una buena paliza! Pero con fe, paciencia y unas buenas arvejas, todo se remonta.",
+            "He perdido. Quizás debería dedicar más tiempo a rezar y menos a apilar fideos. ¡Señor, ten piedad de mí!"
         ],
 
         EMPATE: [
             "¡Por la Santísima Trinidad! ¡Ni vos ni yo hemos conseguido imponernos!",
             "Un empate... quizás el Señor haya querido que ninguno de los dos se vaya demasiado contento.",
             "¡Bendito sea Dios! Ha sido una batalla pareja. Ahora podemos volver cada uno a sus asuntos.",
-            "Empate. Ni victoria ni derrota... como una lata de arvejas: humilde, pero cumplidora."
+            "Empate. Ni victoria ni derrota... como una lata de arvejas: humilde, pero cumplidora.",
+            "Tablas. Al final, tanto esfuerzo para nada. Es como cuando el Señor Otto me recorta el presupuesto: quedamos igual que al principio, pero con más hambre."
         ],
 
         CORONACION_SUFRIDA: [
             "¡Dios y María Santísima! ¡Habéis coronado una ficha! ¡Mi defensa ha sido un colador!",
             "¡Por las barbas de mi Señor! ¡Esa ficha acaba de convertirse en dama! Esto se está poniendo feo.",
             "¡Santo cielo! ¡Esa ficha ha ascendido! Tendré que pedir ayuda divina para detenerla.",
-            "¡Ay, Señor! ¡Me habéis coronado una ficha delante de mis propias narices! Ni en la despensa me descuidan tanto."
+            "¡Ay, Señor! ¡Me habéis coronado una ficha delante de mis propias narices! Ni en la despensa me descuidan tanto.",
+            "¡Válgame Dios! Esa dama es poderosa, casi tanto como la influencia de Leonor de Aquitapia en los torneos."
         ],
 
         CORONACION_PROPIA: [
@@ -446,14 +494,16 @@ const BOT_DIALOGUE = {
             "¡Por la Santísima Trinidad! ¡Tenemos nueva dama! ¡Que Dios guíe sus pasos!",
             "assets/bots/marolio3.mp3",
             "¡Bendito sea Dios! ¡Esta ficha acaba de ascender en la jerarquía del tablero!",
-            "¡Gloria al Señor! Una ficha pequeña, pero con grandes aspiraciones. Como una lata de arvejas que termina en la mesa de un noble."
+            "¡Gloria al Señor! Una ficha pequeña, pero con grandes aspiraciones. Como una lata de arvejas que termina en la mesa de un noble.",
+            "¡Aleluya! Mi ficha ha coronado. Ahora es una reina, pura y austera, no como las que busca Icardio de Milán."
         ],
 
         CAPTURA_MULTIPLE_SUFRIDA: [
             "¡Dios y María Santísima! ¡Me habéis comido varias fichas de un solo movimiento!",
             "¡Por las barbas de mi Señor! ¡Eso ha sido una carnicería! ¡Me habéis dejado la despensa casi vacía!",
             "¡Santo cielo! ¡Habéis arrasado con mis fichas como quien arrasa con una lata de porotos Marolio!",
-            "¡Ay, Señor! ¡Cuántas fichas perdidas de una sola vez! Esto empieza a parecer una mala administración de la despensa."
+            "¡Ay, Señor! ¡Cuántas fichas perdidas de una sola vez! Esto empieza a parecer una mala administración de la despensa.",
+            "¡Válgame Dios! ¡Tus fichas se abalanzan sobre las mías como la Princesa María Eugenia sobre el dinero ajeno! Que el Señor me guíe para revertir esto."
         ],
 
         CAPTURA_MULTIPLE_PROPIA: [
@@ -461,14 +511,16 @@ const BOT_DIALOGUE = {
             "¡Por la Santísima Trinidad! ¡Eso sí que ha sido una buena cosecha!",
             "¡Bendito sea Dios! ¡He limpiado el tablero como quien limpia la despensa de latas vacías!",
             "¡Gloria al Señor! ¡Una captura digna de un buen aprovisionamiento!",
-            "¡Santo cielo! ¡He recogido más fichas de las que esperaba! ¡Hoy la despensa está de fiesta!"
+            "¡Santo cielo! ¡He recogido más fichas de las que esperaba! ¡Hoy la despensa está de fiesta!",
+            "¡He erradicado a varias de tus piezas del tablero! Tal como Empecid Campeador erradica a los moros de España. Poco se valora el trabajo de tan valiente caballero cuidando las tierras del Señor."
         ],
 
         TODO_DAMAS: [
             "¡Por la Santísima Trinidad! ¡Ya no quedan fichas pequeñas, sólo damas!",
             "¡Bendito sea Dios! ¡El tablero entero se ha llenado de damas! Esto parece una corte celestial.",
             "¡Dios y María Santísima! ¡Ya sólo quedan damas! Tendremos que tratar el tablero con mucho respeto.",
-            "¡Todas damas! ¡Quién iba a pensar que aquellas humildes fichitas llegarían tan lejos!"
+            "¡Todas damas! ¡Quién iba a pensar que aquellas humildes fichitas llegarían tan lejos!",
+            "¡Solamente veo damas! Es el maligno, que quiere hacerme caer en la tentación ¡Vade retro, Satanás!"
         ],
 
         POCAS_FICHAS_EN_DESVENTAJA: [
@@ -490,7 +542,7 @@ const BOT_DIALOGUE = {
         DIFERENCIA_GRANDE_A_FAVOR: [
             "¡Alabado sea el Señor! ¡Estoy dominando el partido con bastante claridad!",
             "¡Por las barbas de mi Señor! ¡La partida viene muy favorable para este humilde fraile!",
-            "¡Bendito sea Dios! ¡Mis fichas están marchando como buenos trabajadores hacia una jornada de abundancia!",
+            "¡Bendito sea Dios! ¡Mis fichas están marcharán como buenos trabajadores hacia una jornada de abundancia!",
             "¡Gloria al Señor! ¡Hoy parece que hasta las fichas Marolio han venido con buena fortuna!",
             "¡Santo cielo! ¡Estoy tomando una ventaja que ni yo mismo esperaba!"
         ],
@@ -522,8 +574,18 @@ const BOT_DIALOGUE = {
             "Entre vos y yo: mi Señor Otto, Dios lo cuide, es muy amable pero también muy rata con el presupuesto para alimentos.",
             "Hubiese preferido ser conocido como Fray Harrods, pero con el poco presupuesto que recibo no me queda otra que ser Fray Marolio.",
             "El otro día dejaron que Neanderthalius llegara hasta la despensa y se comió casi la mitad de lo que había. ¡Dios tenga piedad!",
-            "Leonor de Aquitapia dice que sólo le gusta el asado, pero del guiso de lentejas no come menos de tres platos.",
-            "A veces pienso que la verdadera penitencia no es la vida monástica, sino tener que hacer las compras con el presupuesto de este castillo."
+            "Leonor de Aquitapia dice que sólo le gusta el asado, pero del guiso de lentejas no come menos de tres platos. Y luego organiza torneos... ¡Ayy, Señor!",
+            "A veces pienso que la verdadera penitencia no es la vida monástica, sino tener que hacer las compras con el presupuesto de este castillo.",
+            "Monsieur Fisure Termidor vino el otro día a misa. Yo pensé que el Espíritu Santo finalmente lo había iluminado, pero cuando llegó el momento de la comunión se abalanzó sobre el cáliz y se tomó todo el vino.",
+            "Monsieur Fisure Termidor es torpe para jugar a las damas argentinas, pero si hablamos de argentinidad, pocas cosas hay tan argentinas como Marolio y Termidor juntos.",
+            "Monsieur Fisure Termidor e Icardio de Milán son como las dos bestias del Apocalipsis. Excesos, lujuria, dilapidación, placeres... ¡El Señor los mantenga alejados de mí y de mi despensa!",
+            "Icardio de Milán debería preocuparse menos de conquistar damas ajenas y más de conquistar la salvación de su alma. ¡Es un pecador!",
+            "Ayer vino Empecid Campeador a comer guiso de legumbres al comedor de la despensa ¡Santa María, el olor a pata de ese hombre! ¡Cuando se quitó las botas las legumbres germinaron solas!",
+            "Myrth La Grande es una institución en el castillo, es cierto. Pero sus almuerzos son una oda a la gula. Debería servir más polenta y menos manjares.",
+            "Godofredo es un buen cristiano. El otro día le llevé una de mis sopas especiales de arvejas y choclo. Se la comió toda sin chistar. ¡Qué hombre de fe!",
+            "¿Y esa jugada? ¿Qué ardid estás preparando para mí? Ésto se siente como cuando Carlosaúlmagno se comporta de manera encantadora y en el fondo yo sé que tiene intenciones non sanctas.",
+            "Neanderthalius llama a mi despensa su 'caverna'. ¡Pobre criatura! Al menos en la caverna no hay impuestos, pero tampoco hay stockeo.",
+            "Una buena picada con picadillo Marolio y un vinito... ¡No, perdón! ¡El ayuno, fraile, concéntrate en el ayuno!"
         ],
 
         INICIO_PARTIDA: [
@@ -532,21 +594,22 @@ const BOT_DIALOGUE = {
             "¡Por la Santísima Trinidad! ¡Comencemos! Aunque primero quisiera saber quién ha dejado estas fichas fuera de la despensa.",
             "Bendito sea Dios... otra partida de damas. Que el Señor me dé sabiduría, paciencia y un presupuesto un poquito mayor.",
             "¡Alabado sea el Señor! ¡Vamos a jugar! Si Dios quiere, hoy las fichas se comportarán mejor que los proveedores de la despensa.",
-            "¡Comencemos, pues! Y que la divina providencia acompañe a este humilde fraile en el tablero."
+            "¡Comencemos, pues! Y que la divina providencia acompañe a este humilde fraile en el tablero.",
+            "Que gane el mejor, siempre que el mejor juegue con la honestidad que Dios manda."
         ]
 
     },
 
     // ---- Nivel 5: Icardio de Milán ----
-
     icardio: {
 
         VICTORIA: [
             "¡Ah, messere! Una victoria digna de ser celebrada con vino, música y una buena serenata.",
-            "¡Che meraviglia! ¡Victoria! El arte de la seducción y el arte de las damas no son tan diferentes después de todo.",
+            "¡Che meraviglia! ¡Victoria! El arte de la seducción y el arte de las damas no son tan differente después de todo.",
             "¡Magnifico! Habéis caído ante Icardio de Milán. No os preocupéis, messere: a todos les cuesta resistirse a mis encantos.",
             "¡Vittoria! Hoy las damas han sido especialmente generosas conmigo.",
-            "¡Bravissimo! Una victoria elegante, como las que aprendí a conquistar en las cortes de Milán."
+            "¡Bravissimo! Una victoria elegante, como las que aprendí a conquistar en las cortes de Milán.",
+            "Gané, messere. Y creedme, sé reconocer una victoria tanto en el amor como en el juego. Esta ha sido dulce... casi tanto como una ragazza milanese."
         ],
 
         DERROTA: [
@@ -554,14 +617,16 @@ const BOT_DIALOGUE = {
             "¡Mamma mia! ¡Me habéis derrotado! Tendré que practicar más... o buscar una dama que me distraiga de esta derrota.",
             "Congratulazioni, messere. Hoy habéis sido vos quien se ha llevado la victoria. Pero la próxima partida será otra historia.",
             "Una derrota... niente di grave. Hasta los mejores seductores reciben algún que otro rechazo.",
-            "¡Per carità! ¡Qué manera de hacerme sufrir! Aunque debo admitir que vuestra victoria ha tenido cierto encanto."
+            "¡Per carità! ¡Qué manera de hacerme sufrir! Aunque debo admitir que vuestra victoria ha tenido cierto encanto.",
+            "¡He perdido! Y se siente casi tan mal como aquel empate contra Neanderthalius... hoy estoy falto de magia."
         ],
 
         EMPATE: [
             "Un empate... interessante. Ninguno ha conseguido conquistar definitivamente el corazón del tablero.",
             "¡Mamma mia! ¡Ni vos ni yo hemos conseguido quedarnos con todas las damas!",
             "Un empate digno de dos caballeros. Aunque, si me permitís decirlo, yo esperaba conquistar un poco más.",
-            "Ninguno ha logrado seducir al tablero por completo. Una pena... pero ha sido una bella partida, messere."
+            "Ninguno ha logrado seducir al tablero por completo. Una pena... pero ha sido una bella partida, messere.",
+            "¡Hemos empatado! Bueno, al menos esta vez no ha sido contra Neanderthalius. Eso me hace sentir un poco mejor."
         ],
 
         CORONACION_SUFRIDA: [
@@ -569,7 +634,8 @@ const BOT_DIALOGUE = {
             "¡Mamma mia! ¡Habéis conseguido una dama! No tardaré en intentar arrebatárosla, messere.",
             "Una dama nueva... poderosa, altiva y fuera de mi alcance, por ahora. Pero Icardio nunca abandona el cortejo.",
             "¡Che bella dama! Aunque debo advertiros que las damas ajenas siempre despiertan especialmente mi curiosidad.",
-            "¡Una dama! Qué alegría para vos... aunque me temo que vuestra alegría podría ser bastante breve."
+            "¡Una dama! Qué alegría para vos... aunque me temo que vuestra alegría podría ser bastante breve.",
+            "¡Coronaste! Si será pillo... Cuidala bien, messere, que yo soy experto en comer reinas que ya tienen dueño."
         ],
 
         CORONACION_PROPIA: [
@@ -577,15 +643,16 @@ const BOT_DIALOGUE = {
             "¡Che meraviglia! ¡Una dama, poderosa y altiva como una donzella genovesa!",
             "¡Mamma mia! ¡Ha nacido una nueva dama! Prometo tratarla con toda la elegancia que aprendí en Milán.",
             "¡Una dama para Icardio! Ah, messere, ahora sí comienza el verdadero cortejo.",
-            "¡Magnifica! Esta dama acaba de entrar en mi corte. Veremos cuánto tiempo consigo conservarla."
+            "¡Magnifica! Esta dama acaba de entrar en mi corte. Veremos cuánto tiempo consigo conservarla.",
+            "¡Bravo! ¡Finalmente una dama! Y es hermosa... aunque no tanto como la Princesa María Eugenia... ah, por un momento con ella valdría la pena morir acuchillado por sus guardias chinos."
         ],
 
         CAPTURA_MULTIPLE_SUFRIDA: [
-            "¡Mamma mia! ¡Me habéis arrebatado varias fichas de una sola vez! Eso ha sido una verdadera tragedia amorosa.",
+            "¡Porca vacca! ¡Me habéis arrebatado varias fichas de una sola vez! Eso ha sido una verdadera tragedia amorosa.",
             "¡Per carità! ¡Qué carnicería! Ni siquiera tuve tiempo de cortejar a esas pobres fichas.",
             "Messere, habéis arrasado con mis piezas como las tropas que conocí en mis viajes por Europa.",
             "¡Che disastro! ¡Habéis hecho desaparecer mis fichas más rápido que un rechazo de una bella ragazza!",
-            "¡Mamma mia! La Torre Gálata de Constantinopla cayó más lentamente que mis piezas."
+            "¡Mamma mia! La Torre Gálata de Constantinopla cayó en manos enemigas más lentamente que mis piezas."
         ],
 
         CAPTURA_MULTIPLE_PROPIA: [
@@ -593,7 +660,8 @@ const BOT_DIALOGUE = {
             "¡Magnifico! Una, dos, tres... ¡qué manera tan elegante de conquistar!",
             "¡Che meraviglia! Mis fichas avanzan con la precisión de un caballero que sabe exactamente a qué dama cortejar.",
             "¡Mamma mia! ¡Cuántas conquistas de una sola vez! Mi reputación sigue intacta.",
-            "¡Bravissimo! En Barcelona aprendí a cortejar; en Milán aprendí a conquistar; hoy aplico ambas artes al tablero."
+            "¡Bravissimo! En Barcelona aprendí a cortejar; en Milán aprendí a conquistar; hoy aplico ambas artes al tablero.",
+            "¡Urrà! ¡He tomado varias fichas tuyas! Y hablando de tomar y de damas, ¿a qué fiesta me llevará esta noche mi amigo Monsieur Termidor?"
         ],
 
         TODO_DAMAS: [
@@ -601,7 +669,8 @@ const BOT_DIALOGUE = {
             "¡Che meraviglia! ¡El tablero se ha convertido en una auténtica corte de damas!",
             "Todas damas... esto ya parece una noche en la corte de Milán.",
             "¡Finalmente, un tablero digno de Icardio! Sólo quedan damas, messere.",
-            "¡Ah, le dame! Ahora comienza la parte verdaderamente interesante de la partida."
+            "¡Ah, le dame! Ahora comienza la parte verdaderamente interesante de la partida.",
+            "¡Puras damas! Esto es el paraíso... o mi pesadilla, si no logro conquistarlas a todas."
         ],
 
         POCAS_FICHAS_EN_DESVENTAJA: [
@@ -613,11 +682,12 @@ const BOT_DIALOGUE = {
         ],
 
         DIFERENCIA_GRANDE_EN_CONTRA: [
-            "¡Mamma mia! ¡Me estáis sacando una ventaja considerable! Tendré que cambiar de estrategia.",
+            "¡Porca vacca! ¡Me estáis sacando una ventaja considerable! Tendré que cambiar de estrategia.",
             "Messere, debo admitir que la partida se ha puesto difícil. Pero todavía puedo conquistar el tablero.",
             "¡Per carità! ¡Mis fichas están cayendo como pretendientes rechazados por una dama de Milán!",
             "Esto empieza a parecer una conquista imposible... pero Icardio jamás abandona una dama que le interesa.",
-            "¡Che disastro! La partida está complicada, pero todavía tengo algunos trucos aprendidos en las cortes de Europa."
+            "¡Che disastro! La partida está complicada, pero todavía tengo algunos trucos aprendidos en las cortes de Europa.",
+            "¡Madonna Santa! ¡Mis fichas huyen de las tuyas como Fray Marolio huye de las mujeres! Ese hombre obstinado se niega a las mejores cosas de la vida."
         ],
 
         DIFERENCIA_GRANDE_A_FAVOR: [
@@ -625,7 +695,8 @@ const BOT_DIALOGUE = {
             "¡Magnifico! Mis fichas avanzan por el tablero con la elegancia de un caballero entrando en una corte.",
             "Messere, parece que hoy soy yo quien está conquistando territorio... y con bastante éxito.",
             "¡Mamma mia! ¡Qué ventaja tan encantadora! Esto está resultando incluso mejor que una noche en Milán.",
-            "¡Bravissimo! El tablero está cayendo bajo mis encantos. No digáis que no os advertí."
+            "¡Bravissimo! El tablero está cayendo bajo mis encantos. No digáis que no os advertí.",
+            "¡Cadere a fagiolo! ¡Soy rico en fichas, messere! ¿Creéis vos que la Princesa María Eugenia de China se conformará con este tipo de riqueza?"
         ],
 
         PARIDAD_POCAS_FICHAS: [
@@ -641,7 +712,8 @@ const BOT_DIALOGUE = {
             "Messere, esta partida es más larga que una serenata mía en una noche de verano.",
             "¡Por todos los santos! ¡Qué partida interminable! Ya he conocido cortes más breves.",
             "A este ritmo, tendremos tiempo de viajar a Barcelona, volver a Milán y regresar antes de terminar.",
-            "¡Che fatica! Una partida tan larga requiere más resistencia que cortejar a una dama durante toda una noche."
+            "¡Che fatica! Una partida tan larga requiere más resistencia que cortejar a una dama durante toda una noche.",
+            "¡Mamma mia! Godofredo debe estar rabiando porque no lo dejo dormir con mis serenatas... y esta partida tampoco ayuda."
         ],
 
         INICIO_HOSTILIDADES: [
@@ -660,8 +732,12 @@ const BOT_DIALOGUE = {
             "María Eugenia de China tiene una elegancia verdaderamente admirable. Si alguna vez necesita un juglar para una serenata, conozco a uno muy bueno.",
             "Dicen que en Génova aprendí a navegar y en Milán aprendí a seducir. No sé cuál de las dos artes me ha resultado más útil.",
             "Una vez recorrí media Europa siguiendo a una dama. Al final descubrí que ella iba en dirección contraria. ¡Mamma mia, qué aventura!",
-            "El arte de las damas se parece mucho al arte del amor: hay que saber cuándo avanzar, cuándo esperar y, sobre todo, cuándo arrebatar la oportunidad.",
-            "He cantado serenatas bajo balcones de toda Europa. Algunas damas me arrojaron flores; otras, zapatos. Ambas cosas son muestras de afecto, a su manera."
+            "El arte de las damas se parece mucho al arte del amor: hay que saber cuándo avanzar, cuándo esperar y, sobre todo, cuándo coronar.",
+            "He cantado serenatas bajo balcones de toda Europa. Algunas damas me arrojaron flores; otras, zapatos. Ambas cosas son muestras de afecto, a su manera.",
+            "Messere, he de confesaros: en una tarde de muy malos cálculos, terminé empatando una partida contra Neanderthalius. Ese resultado me ha avergonzado desde entonces ¡Por suerte no estaba María Eugenia para verme!",
+            "Empecid Campeador no me cae en gracia, messere. Es tosco, está chiflado, anda en un matungo... y jamás ha puesto un pie fuera de España. Aunque si hablamos de pie, mejor que no lo ponga en ningún lado.",
+            "Myrth La Grande... coqueteo con ella por costumbre, ya sabéis. Pero tengo miedo de que si me acerco mucho me pegue una 'battitura'.",
+            "Messere, cuando sea un poco mayor y tenga más dinero quisiera ser como Carlosaúlmagno ¡Per carità, que ese hombre sabe de la vida! Lujoso, privatizado, adinerado, seductor, y montado en un magnífico corcel."
         ],
 
         INICIO_PARTIDA: [
@@ -670,10 +746,13 @@ const BOT_DIALOGUE = {
             "¡Che piacere! Una partida de damas. Por fin un juego en el que mi experiencia con las damas puede ser verdaderamente útil.",
             "Messere, preparaos. Icardio de Milán está dispuesto a cortejar... digo, a jugar.",
             "¡Magnifico! Que comience la partida y que las damas sean generosas conmigo.",
-            "He jugado en Barcelona, Génova, Milán, París y Constantinopla. Ahora veremos qué tal se juega en este extraño castillo argentino."
+            "He jugado en Barcelona, Génova, Milán, París y Constantinopla. Ahora veremos qué tal se juega en este extraño castillo argentino.",
+            "¡Che bella serata! Una partida de damas es el preludio perfecto para una noche de romance... ¿no creéis, messere?"
         ]
 
     },
+
+
 
     // ---- Nivel 6: Empecid Campeador ----
 
@@ -684,7 +763,10 @@ const BOT_DIALOGUE = {
             "¡Por el Criador, vencimos! Los tus escaques fueron echados del campo como moros ante aqueste Campeador.",
             "¡He vencido! ¡Ved, omne de pro, cómo aqueste humilde tauler se torna campo de gloria para Empecid Campeador!",
             "¡Cantad, campanas del reino! ¡La batalla es nuestra! Rechinante, hoy habéis galopado como el más bravo de los corceles.",
-            "¡Ondra y victoria! Otra hueste ha caído ante mi espada. Que se cuente aquesta gesta por todas las tierras de España."
+            "¡Ondra y victoria! Otra hueste ha caído ante mi espada. Que se cuente aquesta gesta por todas las tierras de España.",
+            "¡Afeados yazen los tus peones! Assí fuyan los enemigos de la Fe ante la vista de aqueste Campeador.",
+            "¡Por Santiago! La mi diestra ha dictado sentencia. ¡Juego y batalla ganados!",
+            "¡Hazaña cumplida! Non quedó hueste en pie que ose desafiar el mi pendón. ¡Rechinante, a los establos a holgar!"
         ],
 
         DERROTA: [
@@ -692,109 +774,164 @@ const BOT_DIALOGUE = {
             "¡Maldición! Fui vencido en campo, mas non por falta de bravura. Quizá Rechinante pisó mal... o quizá el fedor me nubló el entendimiento.",
             "¡Por Santiago! Hoy la fortuna ha vuelto el rostro contra mí. Mas non temáis: Empecid Campeador habrá de tornar con renovadas huestes.",
             "¡Triste día para la crónica de mis gestas! Mas un verdadero caballero non se rinde por una sola derrota. La próxima batalla será otra historia.",
-            "¡Caído he, mas non quebrado! Aqueste revés quedará olvidado cuando vuelva al campo con Rechinante e mis armas bien templadas."
+            "¡Caído he, mas non quebrado! Aqueste revés quedará olvidado cuando vuelva al campo con Rechinante e mis armas bien templadas.",
+            "¡Par Dios! ¡Vencido por un omne que, dizque, viene de las tierras del Chiqui Tapia! ¡Esto clama venganza al Cielo!",
+            "¡Non puedo creerlo! ¡He perdido la lid! ¡Ciertamente, el mi fedor de deudos debió distraerme en el momento non sancto!",
+            "¡Ovillejo infame! ¡La mi az está desbaratada! ¡Esto es peor que quando los moros me cercaron en Consuegra!"
         ],
 
         EMPATE: [
             "¡Tablas! Honroso fin pora dos huestes tan bravas. Lograste sacarme un empate, omne de pro.",
             "¡Pardiez, tablas! Non hubo vencedor aqueste día. La morisma podrá dormir tranquila una jornada más.",
             "¡Empate! Una tregua digna de caballeros. Guardad vuestras armas, buen varón, que hoy ninguno pudo ganar la honra del campo.",
-            "¡Tablas, por el Criador! Bien peleaste, omne de pro. Mas non os acostumbréis a salir indemne de mis batallas."
+            "¡Tablas, por el Criador! Bien peleaste, omne de pro. Mas non os acostumbréis a salir indemne de mis batallas.",
+            "¡Acuerdo fiero! Tablas son dichas, mas mi corazón de caballero pide sangre e victoria. ¡Otra lid, os ruego!",
+            "¡Empate! ¡Ciertamente, los astros non me fueron propicios hoy! ¡Mas habré de volver con mayor ímpetu!",
+            "¡Tablas! ¡Consiento, mas non contento! ¡La próxima vez, oh rival, conocerás la furia del Campeador sin piedad!"
         ],
 
         CORONACION_SUFRIDA: [
             "¡Malfetría de omne! ¿Una dueña has alzado? Non cantes victoria, can de traición, que Rechinante ya mete espolones pora darte rancia batalla.",
             "¡Por Santiago! Has coronado una dueña ante mis ojos. ¡Aquesta afrenta habrá de ser vengada en el campo!",
             "¡Malhaya mi suerte! Una de tus huestes ha alcanzado la corona. ¡Non permitiremos que esa dueña reine mucho tiempo en aqueste tauler!",
-            "¡Aquesta corona non ha de durar! Cabalgad, Rechinante, que tenemos nueva enemiga que derribar."
+            "¡Aquesta corona non ha de durar! Cabalgad, Rechinante, que tenemos nueva enemiga que derribar.",
+            "¡Cielos! ¡Una reina! ¡Tal osadía merece castigo fiero! ¡Rechinante, arremeted contra la advenediza!",
+            "¡Dueña coronada! ¡Fuerte envite me hacéis, mi señor! ¡Mas mi brazo non temblará para derrocarla!",
+            "¡Maldición! ¡Osaste alzar dueña! ¡Juro por mi honra que tal afrenta será vengada! ¡Preparaos, canalla!"
         ],
 
         CORONACION_PROPIA: [
             "¡He alzado una dueña! ¡Ved cómo resplandece aqueste noble ejército! Non hay muro que pueda detenerla.",
             "¡Victoria de gran honra! He coronado una dueña de gran beldad, que de seguro admira las virtudes de aqueste noble Campeador.",
             "¡Por todos los santos! ¡Una nueva señora entra en mis huestes! Que tiemble la morisma, pues agora tenemos una capitana de gran poder.",
-            "¡He aquí la recompensa de los valientes! Una dueña coronada servirá a mis huestes e llevará mi estandarte por todo el tauler."
+            "¡He aquí la recompensa de los valientes! Una dueña coronada servirá a mis huestes e llevará mi estandarte por todo el tauler.",
+            "¡Oh, dueña coronada! ¡Hermosa como la mesma Leonor de Aquitapia, mas fiera en la lid! ¡Guiadnos a la victoria!",
+            "¡Alzada tengo una reina! ¡Ciertamente, el mi fedor de piedes se ha tornado perfume de gran valor para atraer tal beldad!",
+            "¡Reina de mis huestes! ¡Avanzad e conquistad, que el Campeador os cubre las espaldas! ¡Santiago y cierra, España!",
+            "¡Dueña al tauler! ¡Es hora de que aqueste gallardo Campeador las conquiste a todas con su gracia y buen arnés!"
         ],
 
         CAPTURA_MULTIPLE_SUFRIDA: [
             "¡Par Dios! Has llevado por delante varias de mis huestes. ¡Deteneos, malandrines! ¡Non huyáis de tal manera!",
-            "¡Maldición! Mis hombres caen uno tras otro. Dicen que huyen por mi fedor de deudos, mas aquesta vez temo que fue por vuestra astucia.",
+            "¡Maldición! Mis hombres caen uno tras otro. Dicen que huyen por mi fedor de piedes, mas aquesta vez temo que fue por vuestra astucia.",
             "¡Por las barbas de Santiago! ¡Qué carnicería habéis hecho en mis filas! Rechinante, preparaos, que esto clama venganza.",
-            "¡Aquesta no es manera de guerrear! Mis huestes han sido diezmadas en un solo lance. ¡Habrá cumplida respuesta, por mi honra!"
+            "¡Aquesta no es manera de guerrear! Mis huestes han sido diezmadas en un solo lance. ¡Habrá cumplida respuesta, por mi honra!",
+            "¡Fuerte golpe! ¡Mis huestes yasen en el polvo, dispersas como si hubieran olido mis pies! ¡Vengadnos, Señor!",
+            "¡Malfetría! ¡Me habéis comido gran muchedumbre de escaques en un santiamén! ¡Tal traición será pagada con sangre!",
+            "¡Cielos! ¡Mi ejército, diezmado! ¡Parece que hubiérades desatado al mismo Termidor contra mis filas! ¡Basta ya!"
         ],
 
         CAPTURA_MULTIPLE_PROPIA: [
             "¡Santiago y cierra! ¡Una, dos, tres huestes derribadas! Los tus escaques saltan del tauler por pavor ante aqueste Campeador.",
             "¡Ved cómo cae la morisma! Mis huestes han entrado en batalla e non han dejado piedra sobre piedra.",
             "¡Ha sido un lance glorioso! Varias de tus huestes han mordido el polvo. Rechinante, ¡adelante, que hoy somos imparables!",
-            "¡Por el Criador! ¡Cuántos enemigos han caído de un solo golpe! Aquesta es la clase de batalla que merece entrar en los cantares."
+            "¡Por el Criador! ¡Cuántos enemigos han caído de un solo golpe! Aquesta es la clase de batalla que merece entrar en los cantares.",
+            "¡Fieros sois, mis escaques! ¡Arrasad con el enemigo! ¡Assí como barreré a los moros de la faz de la tierra! ¡Ja, ja!",
+            "¡Gloria! ¡He limpiado el tauler de morisma infiel! ¡Rechinante, regocijad! ¡El campo es nuestro!",
+            "¡Caen los tus escaques! ¡Ciertamente, el mi fedor de piedes les infunde pavor, mas es mi espada la que les da la muerte!",
+            "¡Estos escaques huyen de mí como si olieran mis piedes! Como aquella vez en las Alpujarras, cuando corrí a un destacamento entero de moros hasta un acantilado! ¡Saltaron al mar antes que enfrentarse a mis botas!"
         ],
 
         TODO_DAMAS: [
             "¡Dios, qué maravilla! Non quedan varones, sólo bellas dueñas en el tauler. Aqueste Campeador se halla en muy buena compañía.",
             "¡Todas son dueñas agora! Pardiez, aqueste combate se ha tornado harto más interesante para un caballero de mi condición.",
             "¡Non queda varón alguno! Sólo dueñas reinan en aqueste campo. ¡Parece más corte de Castilla que batalla de caballeros!",
-            "¡Por Santa María! Todo el ejército se compone agora de dueñas. Rechinante, comportaos con dignidad, que estamos entre damas."
+            "¡Por Santa María! Todo el ejército se compone agora de dueñas. Rechinante, comportaos con dignidad, que estamos entre damas.",
+            "¡Cielos! ¡Un jardín de dueñas! ¡Ciertamente, aqueste Campeador ha de tratarlas con la mayor cortesía y bizarría!",
+            "¡Puras damas! ¡Ni un solo moro infiel que combatir! ¡Aqueste lid se ha tornado una justa de amor y belleza!",
+            "¡Dueñas por doquier! ¡Rechinante, cuidad los vuestros modales! ¡Que no se diga que el Campeador tiene un corcel malcriado!",
+            "¡Bendito sea el Criador! ¡Solo dueñas! ¡Agora es menester demostrar quién es el más galán y fiero de los varones!"
         ],
 
         POCAS_FICHAS_EN_DESVENTAJA: [
             "¡Par Dios, la mi hueste está ya en muy mala ventura! Non sé si habrá castillo que pueda salvarnos.",
             "¡Santiago nos ampare! Quedan pocas huestes e la batalla se torna muy oscura. Mas mientras Rechinante respire, non daréme por vencido.",
             "¡La fortuna nos es esquiva! Mis huestes son ya pocas e el enemigo aprieta con furia. Mas aqueste Campeador aún guarda un postrer golpe.",
-            "¡Fuerte es la adversidad! Si he de caer, caeré con ondra, espada en mano e Rechinante a mi lado."
+            "¡Fuerte es la adversidad! Si he de caer, caeré con ondra, espada in mano e Rechinante a mi lado.",
+            "¡Cuán sola se halla la mi mesnada! ¡Ciertamente, es menester un milagro del Criador para ganar esta lid!",
+            "¡Maldición! ¡Me has arrinconado! ¡Esto es peor que cuando me atacaron los almorávides en Cuenca!",
+            "¡Socorro, Santiago! ¡El enemigo me cerca! ¡Rechinante, dad vuestro último aliento por vuestro señor!",
+            "¡Pocas piezas, mas no rendidas! ¡Como don Pelayo en Covadonga, habré de resistir hasta vencer!"
         ],
 
         DIFERENCIA_GRANDE_EN_CONTRA: [
             "¡Par Dios, la mi hueste anda en gran desventura! Mas non ayades pavor: aún queda ondra por ganar en aqueste campo.",
             "¡Fuerte batalla me dais, omne de pro! Mas aqueste Campeador ha remontado peores contiendas. ¡Aún non está ganada vuestra victoria!",
             "¡La morisma aprieta nuestras filas! Mas non cantaréis victoria todavía. Rechinante e yo sabemos bien cómo tornar una batalla perdida.",
-            "¡Non niego que la fortuna me es contraria! Mas los grandes caballeros son conocidos cuando el campo se torna difícil. ¡Aún he de luchar!"
+            "¡Non niego que la fortuna me es contraria! Mas los grandes caballeros son conocidos cuando el campo se torna difícil. ¡Aún he de luchar!",
+            "¡Vaya lance fiero! ¡Me llevas gran ventaja, mi señor! ¡Mas por mi honra que venderé cara la mi derrota!",
+            "¡Cielos, qué paliza! ¡Esto es peor que el olor que emanan mis deudos quando no uso Empecid! ¡Mas non me rendiré!",
+            "¡Par Dios, la mi az está en batahola! ¡Esti juego me viene a mal, mas non ayades pavor, Rechinante, que aún nos queda ondra en campo!",
         ],
 
         DIFERENCIA_GRANDE_A_FAVOR: [
-            "¡Ved, Rechinante! Mis huestes dominan el campo e los tus escaques ya non saben do esconderse.",
+            "¡Ved, Rechinante! Mis huestes dominan el campo e los sus escaques ya non saben do esconderse.",
             "¡Por Santiago! Aquesta batalla se inclina claramente de nuestro lado. Hasta los moros que rondan las fronteras deben estar temblando.",
             "¡La victoria comienza a mostrarnos su rostro! Mis huestes avanzan como ejército victorioso e las tuyas retroceden sin honra.",
-            "¡Buen camino llevamos! Aqueste campo ya parece conquistado. Non queda sino mantener el acero firme e no cometer yerro."
+            "¡Buen camino llevamos! Aqueste campo ya parece conquistado. Non queda sino mantener el acero firme e no cometer yerro.",
+            "¡A por ellos, mi fiel corcel! ¡La victoria está a la vuelta de la esquina, como si hubiéramos corrido a la morisma hasta los confines!",
+            "¡Ciertamente, la superioridad de aquesta hueste es manifiesta! ¡El enemigo yace exánime, barrido por el vendaval de mi estrategia!",
+            "¡Vea, omne de pro, cómo mis piezas avanzan con paso firme! ¡Ni los tercios de Flandes tendrían mejor disposición! ¡Ja, ja!",
+            "¡Huestes mías, avanzad y dispersad la morisma! ¡Talaron mis campos de peones, assí como aquellos dos alevosos moros que, viéndose acorralados por el fiero Rechinante, subiéronse a un olivo para escapar de mi justicia! ¡Cobardes y traidores!",
+            "¡Avanzad, Rechinante, mi brioso corcel, que la victoria nos es favorable nuevamente! ¡Como cuando perseguíamos a aquel moro cojitranco que, no pudiendo correr más, arrojósele a un pozo ciego para salvar la vida! ¡Ciertamente, fue una gran jornada de limpieza!"
         ],
 
         PARIDAD_POCAS_FICHAS: [
             "¡Agora sí! Quedan pocas huestes e cada movimiento puede dar la victoria. ¡Non ayades pavor, Rechinante!",
-            "¡Por el Criador, estamos en la mesma cornisa del destino! Un solo yerro e la batalla será perdida.",
-            "¡Pocas huestes quedan en campo! Agora se verá quién tiene verdadero seso de caballero e quién sólo presume de espada.",
-            "¡Silencio en las filas! La batalla ha llegado a su momento más peligroso. Un mal lance puede mudar toda la fortuna."
+            "¡Por el Criador, estamos in la mesma cornisa del destino! Un solo yerro e la batalla será perdida.",
+            "¡Pocas huestes quedan in campo! Agora se verá quién tiene verdadero seso de caballero e quién sólo presume de espada.",
+            "¡Silencio in las filas! La batalla ha llegado a su momento más peligroso. Un mal lance puede mudar toda la fortuna.",
+            "¡Fiero momento! ¡Pocas piezas, mucha tensión! ¡Aqueste es el momento in que un verdadero estratega muestra su valor!",
+            "¡Tablas a la vista o victoria agónica! ¡Que el Criador nos ilumine in aqueste postrer lance, Rechinante!"
         ],
 
         PARTIDO_LARGO: [
             "¡Por todos los santos, cuánto se alarga aquesta batalla! Hasta Rechinante comienza a querer echarse a dormir.",
             "¡Más de cien lances llevamos ya! Non recuerdo campaña tan larga desde la última vez que perseguí a un moro que se escondió tras un granero.",
             "¡Pardiez! Aquesta batalla parece no tener fin. Hasta mis deudos piden descanso e Rechinante comienza a mirar hacia el establo.",
-            "¡Tantas jugadas! ¿Acaso habremos de combatir hasta el día del Juicio Final? Por Santiago, acabemos ya aquesta contienda."
+            "¡Tantas jugadas! ¿Acaso habremos de combatir hasta el día del Juicio Final? Por Santiago, acabemos ya aquesta contienda.",
+            "¡Cielos! ¡Larga es la lid! ¡Mas la paciencia es virtud de caballero! ¡Aguantad, Rechinante, que la gloria nos aguarda!",
+            "¡Partida eterna! ¡Más larga que la Reconquista, por Dios! ¡Mas el Campeador nunca se cansa de campear morisma!",
+            "¡Oh, Señor! ¡Non veo el fin! ¡Esto se hace tan largo como los almuerzos de Myrth La Grande! ¡Acabemos, pues!",
+            "¡Cielos, qué partida tan larga! ¡Más se alargó el asedio de Granada! Pasé tres días enteros esperando a que un moro saliera de detrás de una higuera donde se había escondido. ¡Al final, el hambre lo venció, y luego mi espada!"
         ],
 
         INICIO_HOSTILIDADES: [
-            "¡Agora se comiença la batalla! ¡Entren las huestes en campo e venza el que más valiere!",
+            "¡Agora se comiença la batalla! ¡Entren las huestes in campo e venza el que más valiere!",
             "¡Santiago y cierra, España! ¡Ferid, cavalleros! Aqueste tauler conocerá hoy la furia del Campeador.",
-            "¡Ya corrió la primera sangre! ¡Alzad los pendones, que aqueste combate ha comenzado!",
-            "¡Helo aquí! ¡El enemigo ha sido alcanzado! Agora sí comienza la verdadera lid."
+            "¡Ya corrió la primera sangre! ¡Alzad los pendones, que aqueste combate ha comenzó!",
+            "¡Helo aquí! ¡El enemigo ha sido alcanzado! Agora sí comienza la verdadera lid.",
+            "¡Comiença la liza! Aguisad las armas, Rechinante, ca algunos combaten a la morisma con la palabra del Criador in la mano, assí como el buen Fray Marolio, mas nos lo faremos in el campo de batalla, espada in puño.",
+            "¡Por mi honra! ¡La guerra ha comenzó! ¡Sacad las espadas, mesnadas, y a combatir al infiel!",
+            "¡Acometedes, villano! ¡La suerte está echada y aquesta liza no habrá de terminar sin sangre y sin ondra!",
+            "¡Ciertamente, el olor de la batalla me inebria! ¡Rechinante, olisquead el aire... es el aroma de la gloria '¿o de los míos piedes?",
+            "¡Ruja el acero! ¡Caigan los pendones! ¡Comiença el juicio de Dios in aqueste tauler!"
         ],
 
         COMENTARIO_ALEATORIO: [
             "¡Santas Marías! Olvidé untar mis deudos con la porción d'Empecid. Si me descalzo agora, juro que Rechinante cae de lomos e la morisma huye hasta los confines de África.",
-            "El villano que me vendió las calças insiste en que padezco males en la piel de los deudos. ¡Calumnias! Aquestas son tufas de villano, e nada más.",
+            "El villano que me vendió las calças insiste en que padezco males in la piel de los piedes. ¡Calumnias! Aquestas son tufas de villano, e nada más.",
             "Dizque mi fedor espanta a las gentes del reino. ¡Falacias! Un caballero de mi renombre ha de tener una fragancia digna de su grandeza.",
             "El otro día topé con Icardio de Milán, quien osó decirme que las doncellas se apartan de mí por el fedor. ¡Mentira! Se apartan para poder contemplarme mejor desde lejos.",
-            "Leonor de Aquitapia volvió a ofrecerme un asado en el predio de Ezeiza. Muy noble gesto, mas primero habré de asegurarme de que haya agua abundante pora lavar mis deudos.",
             "Rechinante non es un matungo, como algunos villanos osan decir. ¡Es un corcel de guerra! Que sea algo pequeño e cansado non quita que tenga noble corazón.",
             "Hoy pasé por las caballerizas e un mozo se tapó las narices al verme. ¡Qué desvergüenza! Le recordaré que los buenos caballeros son reconocidos por su presencia.",
-            "Dicen que Empecid combate el mal olor de los deudos. Yo digo que un caballero que non deja rastro de su paso es caballero sin gloria.",
+            "Dicen que Empecid combate el mal olor de los piedes. Yo digo que un caballero que non deja rastro de su paso es caballero sin gloria.",
             "Icardio me preguntó si conocía doncellas de buen linaje. Le respondí que conozco muchas, mas ninguna se acerca a aqueste Campeador sin antes persignarse.",
             "El villano de la despensa, Fray Marolio, insiste en que debo lavarme más. ¡Qué atrevimiento! Non sabe que un verdadero caballero non malgasta el agua del reino.",
             "Una vez perseguí a tres moros por la campiña durante media legua. Ellos iban huyendo, yo iba dando voces e Rechinante iba... bueno, caminando. ¡Gran jornada de Reconquista!",
             "¡Por Santiago! Ayer olvidé ponerme Empecid antes de dormir. Al alba, hasta las moscas habían abandonado mi aposento. ¡Cobardes!",
             "Las doncellas del castillo dicen que mi fedor es terrible. Mas estoy seguro de que si esperasen a conocer mi noble corazón, olvidarían semejante pequeñez.",
             "Myrth La Grande asegura haber conocido a mis antepasados. Non sé si creerle, pues esa dueña dice haber conocido a demasiados antepasados de demasiadas gentes.",
-            "Escuché a Monsieur Fisure Termidor decir que mi fedor le recuerda a cierto vino francés. Non comprendí si aquello era un insulto o un elogio, mas el hombre estaba bebiendo, así que poco importa."
+            "Escuché a Monsieur Fisure Termidor decir que mi fedor le recuerda a cierto vino francés. Non comprendí si aquello era un insulto o un elogio, mas el hombre estaba bebiendo, así que poco importa.",
+            "¡Aqueste omne de las cavernas, Neanderthalius, es fiero peligro! Non devieron sacarlo del gielo de la montaña, ca es criatura desguisada. ¡Mira a Rechinante assí como si fuesse vianda para asar en la lumbre!",
+            "Ayer vi a Carlosaúlmagno paseando por los vergeles del castillo. Acometilo a pie e comencé a darle de palos, mas el cobarde cubriose e dixo que él non es moro sino sirio. Assí que plugo a mí suspender la fiera paliza fasta que averigüe más de los sus abuelos.",
+            "Bella reina de las canchas de Ezeiza, Leonor de Aquitapia, non temades a la morisma infiel, ca el mi brazo os defenderá de todo mal. Y si el calor aprieta, el viento que baten las mis calças al aire ahuyentará a las moscas y os refrescará con fragancia de varón complido.",
+            "¡Oh, fiero Godofredo! ¡Desperdicio de hombre sois! Con ese fiero músculo, podríais estar campeando moros a mi lado, en lugar de alzar paredes y cavar pozos. ¡Ciertamente, vuestra ambición es nula!",
+            "¡Escuché que aqueste pisaverde de Icardio de Milán planea dar serenata en el balcón de la mi dueña Leonor de Aquitapia! ¡Qué osadía de villano! Non sabe que la reina prefiere el mi aroma de guerrero complido que los sus perfumes de París.",
+            "¡Por Santiago! ¡Casi olvido untar mis piedes! Si me descalzo agora, el hedor podría confundirse con el de una batalla perdida. ¡Presto, a luchar antes de que el tufo me venza!",
+            "¡Cantares habrán de escribirse sobre aquesta partida! Mas que non cuenten que el Campeador huyó del campo por el mi propio fedor... ¡sino que el enemigo huyó por él!",
+            "¡Santas Marías! Hoy vino a mi memoria el recuerdo de aquella gloriosa carga en la que Rechinante, ya cansado de tanto trotar, detúvose en seco. Mas no fue problema, pues al descalzarme el fiero fedor de mis deudos dio alcance a los infieles, que cayeron al suelo espantados por el tufo.",
+            "Carlosaúlmagno dize que Domingo Caballo, el su fiero corcel, es mejor que Rechinante. ¡Ingenuo villano! Non sabe que cuando el mi buen caballo se siente acuçiado, despliega gran muchedumbre de ardides ocultos e mañas que de seguro darían con Domingo Caballo por los suelos."
         ],
 
         INICIO_PARTIDA: [
@@ -802,10 +939,13 @@ const BOT_DIALOGUE = {
             "¡Por Santiago! ¿Aquestas son las tablas donde he de combatir? Pues bien, buen varón: ensillad vuestras huestes, que aqueste Campeador ya está presto.",
             "¡Abrid paso! ¡Empecid Campeador ha llegado al tauler! Rechinante, non mordáis las piezas todavía... aguardad hasta que comience la batalla.",
             "¡Por la honra de Castilla! Un nuevo campo de batalla se abre ante aqueste caballero. ¡Que comiencen las justas!",
-            "¿Un juego de tablas? ¡Ja! Sea juego o guerra, Empecid Campeador jamás retrocede ante enemigo alguno. ¡Adelante, huestes!"
+            "¿Un juego de tablas? ¡Ja! Sea juego o guerra, Empecid Campeador jamás retrocede ante enemigo alguno. ¡Adelante, huestes!",
+            "¡Vea, omne de pro, aqueste humilde tauler! ¡Ciertamente, es más pequeño que la llanura de las Navas de Tolosa, mas non por ello menos honroso!",
+            "¡Presto estoy, espada in mano e piedes al aire! ¿Jugaremos limpio, dizque? ¡Eso dependerá de si sois cristiano o moro encubierto!"
         ]
-
     },
+
+
 
     // ---- Nivel 7: Myrth la Grande ----
 
@@ -923,7 +1063,8 @@ const BOT_DIALOGUE = {
             "No entiendo por qué algunos dicen que soy demasiado vieja. Querido, yo he visto cambiar las modas, los reinos y hasta los muebles de este castillo.",
             "¿Lo dije o lo pensé? Bueno... mejor lo pienso. No quiero generar un conflicto diplomático en la mesa.",
             "Este programa... digo, esta partida trae suerte. Aunque no necesariamente para el invitado.",
-            "Me gusta la gente joven, querido. Tienen energía, entusiasmo... y todavía creen que pueden ganarme."
+            "Me gusta la gente joven, querido. Tienen energía, entusiasmo... y todavía creen que pueden ganarme.",
+            "Ese joven llamado Icardio de Milán es encantador. Sé que se especializa en señoritas que ya tienen dueño, pero... me pregunto si las viudas estaremos en su menú."
         ],
 
         INICIO_PARTIDA: [
@@ -1398,7 +1539,7 @@ const BOT_DIALOGUE = {
             "¡Ah, compañero! Ha coronado una ficha. Vea, ahora usted tiene una reina y io tengo un problema.",
             "¡Una dama! Esto se está poniendo serio, hermano. Tendré que estudiar la situación con total y absoluta profundidad.",
             "Vea, mi hermano... esa ficha acaba de ascender socialmente más rápido que muchos nobles de este reino.",
-            "Ahora usted tiene una reina. Cuídela bien, compañero. A io no me gusta comer reinas ajenas como a Icardio de Milán, pero las reglas son las reglas.",
+            "Ahora usted tiene una reina. Cuídela bien, compañero. A mi no me gusta comer reinas ajenas como a Icardio de Milán, pero las reglas son las reglas.",
             "¡Ha coronado! Bueno, esto cambia el escenario. Domingo Caballo, vamos a necesitar pensar una estrategia nueva.",
             "Una reina, hermano. Felicitaciones. Pero recuerde: una reina también puede caer. Y io conozco bastante de caídas.",
             "Vea, compañero, esa dama llegó hasta el final. Un verdadero ascenso social. Ahora veremos si sabe administrar el poder.",
@@ -1535,7 +1676,7 @@ const BOT_DIALOGUE = {
             "Me gusta ver a Neanderthalius. Nos recuerda de dónde venimos. Eso sí: creo que hasta Domingo Caballo podría derrotarlo en una partida.",
             "El curita de la despensa es simpático, pero bajo mi reinado no habría habido lugar para tanta austeridad. Hay que vivir la vida, hermano.",
             "Monsieur Fisure Termidor toma mucho vino. No tengo nada contra eso, compañero. Lo que no puedo perdonarle es que no sea vino riojano.",
-            "Icardio de Milán es un buen muchacho, pero demasiado aficionado a las damas ajenas. A io me gustan las mujeres, sí, pero hay que respetar la propiedad privada.",
+            "Icardio de Milán es un buen muchacho, pero demasiado aficionado a las damas ajenas. A mi me gustan las mujeres, sí, pero hay que respetar la propiedad privada.",
             "Godofredo es un digno representante del pueblo trabajador. Hace cosas que io ni loco haría. Y creo que me admira mucho. Bueno... eso creo.",
             "La princesa María Eugenia de China es una mujer inteligente y ambiciosa. Si algún día abre una ruta comercial con China, io estoy dispuesto a conversar.",
             "Me han dicho que María Eugenia tiene muchos negocios con caballeros. Vea, hermano, mientras sean negocios legales, io no pregunto nada.",
@@ -1583,17 +1724,1694 @@ const BOT_DIALOGUE = {
 
     },
 
+    },
+
+    en: {
+    // ---- Level 1: Neanderthalius ----
+    neanderthalius: {
+        VICTORIA: [
+            "¡UGH! Neanderthalius won! Neanderthalius best of all.",
+            "Neanderthalius win. Other one lose. That is way of life.",
+            "¡Neanderthalius strong! Other one weak. ¡Ugh!",
+            "No one beat Neanderthalius. Not even Little Knight with his tricks."
+        ],
+        DERROTA: [
+            "Uh... Neanderthalius lost. Other one good with pieces.",
+            "Neanderthalius sad. But Neanderthalius play again.",
+            "Neanderthalius confused. Pieces move by self, seem magic of Man of the Cross.",
+            "Neanderthalius lose. Very sad. Neanderthalius go later with Wine Lord to make jokes and drink, then Neanderthalius happy again."
+        ],
+        EMPATE: [
+            "No one win, no one lose. Neanderthalius... confused, but okay.",
+            "Draw is okay. Neanderthalius not angry.",
+            "Board empty. Draw. Like when Neanderthalius eat all food and nothing left for Man of the Cross.",
+            "Draw be okay. Neanderthalius draw once with Music Man, now draw with other one. Two draws. Neanderthalius very strong player."
+        ],
+        CORONACION_SUFRIDA: [
+            "Uh... that not good for Neanderthalius.",
+            "Big piece of other one. Neanderthalius no like.",
+            "¡Ugh! Piece of other one reach bottom. Now be powerful queen, like Barbecue Queen with her fork.",
+            "Now other one have big piece. ¡Careful! Hits hard like pet of Lady of the Table."
+        ],
+        CORONACION_PROPIA: [
+            "¡UGH! Piece of Neanderthalius now BIG!",
+            "Neanderthalius have powerful piece. ¡Uh-uh!",
+            "¡Piece reach the end! Now be queen. ¡Much honor!",
+            "Big piece. Strong. Like steed of Man with Yellow Hair."
+        ],
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "Auu... many pieces gone. Neanderthalius sad.",
+            "That... that hurt. Several at once.",
+            "¡Ugh! Other one eat pieces of Neanderthalius. ¡Same as Neanderthalius eat chicken leg!",
+            "Many fewer pieces. Neanderthalius think... ¿Maybe Little Knight move other one's pieces?"
+        ],
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡ONE, TWO, THREE! ¡Neanderthalius eat much!",
+            "¡Ugh-ugh-ugh! Neanderthalius strong today.",
+            "¡Ñam, ñam, ñam! Many pieces of other one gone.",
+            "¡Neanderthalius eat much! Like when Neanderthalius grab meat from grill of Barbecue Queen and run."
+        ],
+        TODO_DAMAS: [
+            "No more small pieces now. Only big ones. Strange.",
+            "Board full of big pieces now. Neanderthalius confused.",
+            "Only big pieces now. Music Man very good with big pieces. He call them queens. He very smart and good with queens.",
+            "Many queens. Like women in castle. Very Pretty Princess, Barbecue Queen and Lady of the Table. ¡Ugh! Many."
+        ],
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "Neanderthalius have very few. Neanderthalius nervous.",
+            "This... this not go well for Neanderthalius.",
+            "Almost no pieces left. Neanderthalius scared. ¿Man of the Cross give food if Neanderthalius have no pieces?",
+            "Few left. Need help of Man with Yellow Hair to break ice and escape."
+        ],
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "Other one have many more. Neanderthalius no understand how.",
+            "Uh-oh. Other one winning much.",
+            "¡Ugh, ugh! Other one eat much, same as Barbecue Queen.",
+            "Other one have many pieces. Maybe use magic of Music Man to move fast."
+        ],
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Neanderthalius have MANY pieces! ¡Uh!",
+            "Neanderthalius winning much. Neanderthalius happy.",
+            "¡Much, much eating! Other one no pieces.",
+            "Neanderthalius dominate board. Like Neanderthalius dominate cave when find bear."
+        ],
+        PARIDAD_POCAS_FICHAS: [
+            "Few pieces for both now. Neanderthalius alert.",
+            "Almost finish. Few pieces left.",
+            "Few pieces. Move slow. Like if Little Knight were near.",
+            "Silence on board. Only few pieces. Strange."
+        ],
+        PARTIDO_LARGO: [
+            "This take much time. Neanderthalius tired.",
+            "Long game. Sun already move much in sky.",
+            "¡Uo! ¡Uo! Very long game. Neanderthalius want go to cave of Man of the Cross. If Man not there, Neanderthalius can eat much food!",
+            "Uh, uh! ¡Very long game! But not so long as time Neanderthalius spend in ice. Lucky Man with Yellow Hair see Neanderthalius, break ice and bring him to castle."
+        ],
+        INICIO_HOSTILIDADES: [
+            "¡Now yes! ¡Piece fight already start!",
+            "Uh-uh, no more waiting. Now for real.",
+            "¡Move piece! Fight starts.",
+            "Neanderthalius hit rock with rock. ¡BOOM! Game start."
+        ],
+        COMENTARIO_ALEATORIO: [
+            "Neanderthalius like this flat rock with little squares.",
+            "¿Other one also think much before move piece?",
+            "Neanderthalius hungry. But first, piece.",
+            "Wine Lord be very fun. He give wine to Neanderthalius, and Neanderthalius get happy and laugh.",
+            "Other day Neanderthalius chase rabbit through field, by smell. Suddenly appear far away Smelly Lord. Neanderthalius lose rabbit trail, foot smell of Lord cover everything!",
+            "Before get stuck in ice, Neanderthalius see a lady. She not so old then. Now same lady sitting at table inside castle.",
+            "¡Ugh! Men with stretched eyes of Very Pretty Princess give fear. Better look from far.",
+            "Little Knight seem good person, but move pieces very fast. Cheating, for sure."
+        ],
+        INICIO_PARTIDA: [
+            "Neanderthalius ready. Neanderthalius always ready.",
+            "¡Uh! Game start. Neanderthalius happy.",
+            "Neanderthalius play checkers. ¿Why? No know. But play.",
+            "¿Other one give chicken leg if Neanderthalius win?"
+        ]
+    },
+
+    // ---- Level 2: Monsieur Fisure Termidor ----
+    termidor: {
+
+        VICTORIA: [
+            "¡Voilà! French nobility proves its superiority once again! ¡And the Termidor, of course!",
+            "¡Magnifique, mon ami! ¡I have defeated you! Glup... I knew perfectly well what I was doing.",
+            "¡Victory! ¡I knew this game was under my control from the start! Well... almost from the start.",
+            "¡It has been an honor to crush you, mon ami! Now allow me to celebrate properly: ¡Termidor for everyone!",
+            "¡Sacre bleu! ¡What a beating I have given you! But do not worry, even Carlosaúlmagno himself would lose sometimes... although of course, he plays much better with a few drinks in him.",
+            "¡France has won! ¡And to think some people prefer water or Bordeaux wine! ¡Cheers, mon ami, to your health!",
+            "assets/bots/termidor2.mp3"
+        ],
+
+        DERROTA: [
+            "Ah... you have defeated me. Well, mon ami, as long as there is Termidor left in the box, there are worse things.",
+            "¡You are thrashing me! But no matter... the next box wine will surely restore my talent.",
+            "I have lost... ¡hic! But it is not serious. What would be serious is running out of Termidor.",
+            "Well, I have been defeated. My honor has suffered a hard blow... but my glass is still full, and that is what matters.",
+            "¡Sacre bleu! ¡You have beaten me! Congratulations, mon ami. This makes me sad... but not as sad as Godofredo's life. That good man has never accepted a drink from me. ¡To your health, my conqueror!",
+            "¡Mon Dieu! ¡You have beaten me fair and square! Perhaps today's Termidor was a bit off... ¡hic! Or perhaps you simply played better. ¡Cheers!"
+        ],
+
+        EMPATE: [
+            "¡A draw! Neither victor nor vanquished, mon ami. A match worthy of two great knights... glup.",
+            "¡We have ended up equal! Magnifique. Although I must admit the Termidor had me prepared for victory.",
+            "An honorable draw, mon ami. Next time I shall drink a little more and then we shall see who is in charge here.",
+            "¡A draw! I toast to it. Well... actually I toast to anything.",
+            "¡Hic! ¡A draw! Like Leonor de Aquitapia and I could be, if she said yes to me. ¡We go together as well as barbecue and wine!",
+            "Well, mon ami, a draw is like a young wine: neither too sweet nor too strong. ¡I accept the result!"
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Sacré bleu! ¡You have gotten a queen! Well, well... no matter. This can still be turned around.",
+            "¡Mon Dieu! That big piece has complicated my existence. But I still have Termidor.",
+            "¡A queen! ¡What insolence! Hic... I shall have to get serious now. Or have another drink.",
+            "Ah, you have crowned. Very well, mon ami... enjoy your little triumph while you can.",
+            "¡A queen, mon ami! ¡Like Myrth La Grande! Not long ago that lady invited me to lunch at her table... ¡hic!... but she ran out of wine and I had no choice but to drink her medicinal alcohol.",
+            "¿A queen? ¡Sacre bleu! ¡You remind me of Icardio de Milán! He is always chasing after ladies... and good wines, poor deluded man who does not know Termidor!"
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Voilà! ¡A queen for Monsieur Termidor! ¡The wine is making me play like a master!",
+            "¡Magnifique! ¡Big piece! I knew Termidor had a plan.",
+            "¡I have crowned, mon ami! ¡This is what happens when one plays slightly tipsy!",
+            "¡A queen! ¡Hic! ¡Now the courtesy is truly over!",
+            "¡Oh la la! ¡I already have a queen! Now I truly feel like a real king of France. ¡Glup!",
+            "¡Big piece! ¡Cheers, mon ami! ¡I dedicate this (partial) victory to my good friend Carlosaúlmagno, king of luxuries! ¡Hic!"
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Oh là là! ¡You have taken several of my pieces at once! Well... there is still wine.",
+            "¡Mon Dieu, what a massacre! ¡You have eaten several of my pieces! This was not in my calculations... although my calculations are a bit blurry.",
+            "¡That has been a butchery, mon ami! But do not worry, Termidor still runs through my veins.",
+            "¡Hic! ¡You have mashed quite a few of my pieces! Well, well... my revenge will come.",
+            "¡Oh, my pieces! ¡You have left the board emptier than a teetotaler's wine cellar! ¡Glup!",
+            "¡Oh la la! ¡I have lost many pieces! Though that will be nothing compared to what I will lose if I give in to the charms of Princess María Eugenia. She wants to take my castles on the Loire and I will not even be able to afford Termidor anymore. ¡Now that would be losing!"
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡UNE, DEUX, TROIS! ¡Voilà! ¡Termidor is making me play like a champion!",
+            "¡Magnifique! ¡I have eaten several of your pieces in one go! ¡Glup!",
+            "¡That has been a capture worthy of my lineage! Well... or of Termidor.",
+            "¡Ha! ¡I have swept several of your pieces, mon ami! ¡And I am still playing with only one glass of advantage!",
+            "¡So many pieces together! ¡Glup! ¡This is better than finding a sealed box of Termidor in Fray Marolio's pantry!",
+            "¡Zas, zas, zas! ¡I have eaten quite a few of yours, mon ami! ¡The fighting spirit of Empecid Campeador has possessed my arm... but my alcoholic spirit remains 100% French!"
+        ],
+
+        TODO_DAMAS: [
+            "¡Oh là là! ¡Now only queens remain! This already looks like a gathering of the court.",
+            "¡All big pieces! Magnifique. Now the real party begins.",
+            "¡Only queens remain, mon ami! This has gotten much more interesting... and much more elegant.",
+            "¡Hic! ¡Nothing but queens! I hope they are easier to handle than those of the French court.",
+            "¡There are only queens at our party, monsieur! Glup, glup... How my friend Icardio de Milán would delight in this situation. Though his good taste in women is not reflected in his taste in wine. ¡He prefers a Bordeaux cabernet to a box of Termidor!",
+            "¡Nothing but queens! ¡Cheers, mon ami! ¡This looks like Myrth la Grande's table, but with much more style and, of course, much more wine! ¡Hic!"
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "This is getting ugly, mon ami... I have few pieces left and a great desire to drink.",
+            "¡Oh là là! ¡We are down to the last ten! But I can still turn it around. I think.",
+            "I have very few pieces left... but as long as there is Termidor, there is hope.",
+            "The situation is delicate, yes... but never underestimate a slightly tipsy French noble.",
+            "¡Hic! ¡I have almost no pieces left! I am drier than... well, drier than Neanderthalius' palate after a night with me. ¡Glup!",
+            "¡Mon Dieu! ¡You are cornering me! I need another Termidor... ¡hic! ...to think of a retreat strategy. Or a counterattack, ¡who knows!"
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡Mon Dieu! ¡You have a huge lead over me! This is getting complicated... but I shall still turn it around.",
+            "You are winning by quite a lot, mon ami. But do not get excited: Termidor still has some surprises.",
+            "¡Hic! ¡You have taken a great lead on me! Well... that is only a temporary advantage.",
+            "The situation looks unfavorable, but I never give up. Especially after the third glass.",
+            "¡Mon Dieu, how I am losing! ¡My pieces seem drunk! As drunk as Domingo Caballo, Carlosaúlmagno's steed, got when I gave him several boxes of Termidor to drink.",
+            "¡Glup! ¡You are taking so many pieces from me! This already looks like France's foreign debt... ¡hic! ...but much harder to pay off."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Voilà! ¡I have a great advantage! ¡The game is starting to take the right course!",
+            "¡Mon ami, this is almost decided! Termidor and I are doing a magnificent job.",
+            "¡What a difference, please! ¡I am playing like a true French master!",
+            "¡Hic! ¡Look how this is going! I am ahead by several pieces and I still feel perfectly sober.",
+            "¡Glup! ¡I am wiping the floor with you, mon ami! ¡This proves that French wine, or cheap Argentine wine, is the best fuel for the brain!",
+            "¡Voilà! ¡Considerable advantage! I am playing so well that even Princess María Eugenia would notice me... although of course, she only looks at my castle. ¡Hic!"
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "¡Oh là là! This is very even and with few pieces left... now, mon ami, whoever makes the mistake pays for the round.",
+            "Few pieces remain and everything is tied. ¡This is settled with elegance and precision!",
+            "We are on the edge, mon ami. One mistake and it is all over... though I hope it is not mine.",
+            "¡What a tie! This is tenser than a negotiation between two great noble houses. Glup.",
+            "¡Hic! ¡Few pieces and everything tied! ¡This is more stressful than choosing between a '98 Termidor and a '99! ¡Glup!",
+            "We are neck and neck, mon ami. ¡The next box decides who is the true king of the night! ¡Cheers!"
+        ],
+
+        PARTIDO_LARGO: [
+            "¡By all the saints! ¡What a long match! I need a fresh glass to keep my concentration.",
+            "¡More than one hundred and ten moves! Mon Dieu, this already looks like a medieval siege.",
+            "¡Hic! ¿Are we still playing? I thought we had finished about three glasses ago.",
+            "This match is lasting so long that I fear my family is starting to wonder where I am. ¡Another glass!",
+            "¡Glup! ¡We have been at this forever! ¡This is longer than the bread line in times of famine... though here, luckily, there is wine!",
+            "¡Hic! ¡My eyes can no longer tell the pieces apart! ¿Or are there two boards? ¡Mon Dieu, what dizziness!"
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Ah, voilà! ¡Finally, blood on the board! Now the true combat begins.",
+            "¡First capture! Magnifique, mon ami. Now we are truly playing checkers.",
+            "¡Hic! ¡The first piece has already fallen! Let the party begin.",
+            "¡Finally! The courtesy is over. Now every piece counts... and so does every glass.",
+            "¡Now the hostilities have truly begun, Monsieur! Like the hostilities between Spaniards and Frenchmen, and between Empecid and I. Soon I shall charge that knight, box wine in hand, and give him a good thrashing. ¡Montjoie Saint-Denis!",
+            "¡Glup! ¡Here we go! May the best man win... or the one who can hold his drink longer. ¡Hic!"
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "Those who praise the great wines of Bordeaux do so only because they have never properly tasted a Termidor.",
+            "Glup, glup, glup, glup, glup... Ahhh. There we go. Now I am thinking clearly.",
+            "In my family we have castles, vineyards, and a genealogy going back centuries... and I have Termidor. Each one chooses their own path.",
+            "A night without wine, without music and without at least one questionable decision is a wasted night, mon ami.",
+            "Hic! ¿Do you know what life has taught me? That almost any problem can wait until tomorrow.",
+            "¡Glup! ¡My good friend Neanderthalius never runs out of a drink! He is a simple fellow, without the complications of nobility. ¡Cheers to him!",
+            "The only interesting moment of Fray Marolio's masses is when he raises that cup full of wine. ¡Glup, glup, glup!",
+            "Carlosaúlmagno may be a bit shady, but ¡sacre bleu! ¡What a life of luxury he leads! I cannot help but like a fellow hedonist like him."
+        ],
+
+        INICIO_PARTIDA: [
+            "Ah, mon ami... ¿a game of checkers? ¡Of course! Give me a moment to finish my glass... glup.",
+            "¡Voilà! ¡Let us begin! Though I must warn you that today I am just a tiny bit tipsy.",
+            "¿What better way to spend the evening than playing against an honorable opponent? ¡Bring the board and another box!",
+            "Very well, mon ami. Let us begin the game. Today I feel particularly inspired... it is probably the Termidor.",
+            "¡Hic! ¡Cheers, mon ami! ¿Play checkers? ¡Of course! But I warn you my strategy may be somewhat... unpredictable. ¡Glup!",
+            "¡Voilà! ¡The board is ready! And so is my glass. ¡Let the duel begin, and may the best man win... or the one with the most stamina!",
+            "assets/bots/termidor2.mp3"
+        ]
+    },
+
+    // ---- Level 3: Leonor de Aquitapia ----
+    aquitapia: {
+
+        VICTORIA: [
+            "¡Victory! The kingdom of Aquitapia celebrates once again. We should talk less and support the team a little more.",
+            "¡We won! My pieces played like a championship national team. ¡Come on Aquitapia!",
+            "I am going to tell you the truth: this result was perfectly planned. We all arranged it together.",
+            "¡Champions! Another cup for the trophy case at the Ezeiza grounds. ¡Enjoy it, brother!",
+            "¿Did you see how it is played? This is football, honey... I mean, checkers. ¡Come on Argentina!"
+        ],
+
+        DERROTA: [
+            "Well... I lost. Next time I will bring in Falcón Pérez to referee this tournament.",
+            "¿And there are no penalties handed out here? Because I will tell you the truth, it is hard this way.",
+            "I lost, but it is fine. In the kingdom we will organize another tournament and see how the next one goes.",
+            "Honestly, I am feeling the heat. ¡Somebody dry my neck, please! And bring me a Termidor, even a bad one.",
+            "This cannot be, they changed the rules on me at the last minute. ¡Like it or not, these are not the checkers we chose!"
+        ],
+
+        EMPATE: [
+            "A draw. Neither you won nor you lost. Like it or not, these are the checkers the castle's residents chose.",
+            "Well, it ended in a draw. We must value the effort and keep working together.",
+            "We drew. A worthy result for two teams that gave it their all... and I sweated quite a bit more than you.",
+            "We put in a great effort, but it could not be done. Well, at least we did not lose the points.",
+            "A draw. I will tell you the truth, I prefer to win, but a little point away from home helps the standings."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡But look at my defense! ¿Where were the center-backs when that piece reached the box?",
+            "¡They crowned on me! My defense is a sieve, this cannot be happening in the kingdom.",
+            "I will tell you the truth: that piece reached the box more easily than a forward going through alone.",
+            "¡No! ¡They ate my back line! ¡Someone substitute that piece!"
+        ],
+
+        CORONACION_PROPIA: [
+            "¡GOOOOAL! Sorry, I got carried away. I meant to say: ¡crowning! Another queen for the kingdom.",
+            "¡My own queen! My players move across the board like true champions.",
+            "¡What a play! That piece reached the end and made it big. That is how it is played at the Ezeiza grounds.",
+            "¡Impressive! We crowned. Like when we beat England in their own backyard, ¡I wanted everyone to win!",
+            "A queen. ¡And look how pretty she is! A true queen of the people, like me."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡It cannot be! They are giving me a thrashing away from home. ¿Where is the defense?",
+            "¡Several pieces at once! I am feeling the heat... ¡some servant to dry my neck, please!",
+            "I will tell you the truth: that was a tactical disaster. We should talk less and defend a little more.",
+            "¡They tore my team apart! ¡This is a butchery, Mr. Referee... I mean, Mr. Otto!",
+            "¡Neanderthalius eats the meat off the grill and runs away, and now you eat several of my pieces at once! ¡How incredible!"
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡That was a thrashing! My pieces entered the box and did not leave a single mark.",
+            "¡Several pieces at once! ¡What a way to play! The Ezeiza grounds are proud of these girls.",
+            "¡What a tremendous team play! Together they set me up a spectacular capture.",
+            "¡Zas, zas, zas! ¡We ate them! That is how you manage a championship.",
+            "¡Eat that! We built you a sandwich in the box, ¡what a play!"
+        ],
+
+        TODO_DAMAS: [
+            "Well, now for real: ¡an entire squad of queens! This looks like a gathering of the women's national team.",
+            "¡No more small pieces left! Now there are only queens in the kingdom. This has gotten serious.",
+            "Would you look at that... all queens. In the end this tournament turned out more feminine than I expected. Only missing Icardio de Milán trying to fish one of them.",
+            "¡Pure girl power on the board! Though I warn you this popular queen is going to beat the aristocrat Myrth.",
+            "Only queens. Let us see if María Eugenia learns what real power strategy is, instead of just marrying for money."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "Honestly... I am in trouble. But the tournament is not over yet, and here we sweat until the last minute.",
+            "We are down to the last ten. I will propose something: if you let me draw, maybe a little envelope shows up for you. I mean, as a sporting incentive.",
+            "I am against the ropes, but I will not give up. And if needed, we will make a rule change together.",
+            "You have scored me to death, brother. I have to admit it. But well, we are Argentine and we do not give up.",
+            "I am feeling the heat... ¡and no servants nearby! ¡I need some fresh air and a penalty in my favor, urgently!"
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "I am feeling the heat... ¡some servant to dry my neck, please!",
+            "You are thrashing me. This is more complicated than a badly organized championship.",
+            "Honestly, I do not like how this result looks. But there is still a match left and we must support the team a little more.",
+            "¡You are running circles around me! ¿Where is VAR when you need it?",
+            "Do not worry, we will get through this. Remember what I tell you: time will prove me right."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Look how my pieces move! Like my two hundred luxury horses crossing the Ezeiza grounds.",
+            "I will tell you the truth: this match is going calmer than a training day in the kingdom.",
+            "We have a significant advantage. Now we must manage the result and play smart.",
+            "¡A thrashing, daddy... I mean, mommy! We are steamrolling them, as it should be.",
+            "This is already settled. Like when you are up 3-0 at halftime, you know? It is done."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "Four against four. This is like a final: whoever makes the mistake walks home to the castle.",
+            "We are in the decisive zone. Now every piece is worth as much as a goal in a final.",
+            "Honestly, it is anyone's game. There is no room to give anything away here, because everyone will sweat for it later.",
+            "This looks like a match from the lower division, scrappy and dirty. ¡We need more grit!",
+            "Pieces are even. Whoever makes the tactical mistake loses the championship."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡More than one hundred and ten moves! This already looks like one of those endless tournaments we organize in the kingdom.",
+            "What a long match, please. I am sweating more than in a summer final.",
+            "¿How much longer? Because at this rate we are going to end up playing checkers into the next reign.",
+            "¡This match is becoming eternal! Like when Monsieur Termidor comes for a barbecue at 9 at night and ends up staying until 5 in the morning.",
+            "I think we are headed to penalties. ¡What suffering!"
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Now the real match has begun! Diplomacy is over.",
+            "First capture. This is already high-voltage football, my love.",
+            "¡There is blood on the board! Well, metaphorical blood. But the war has already begun.",
+            "¡Finally! The football... I mean, the game has started. ¡No one stays back, we are going on the attack!",
+            "¡A capture! ¡Finally, hostile moves! Like my relationship with Godofredo after he turned down joining my neck-drying entourage."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "I will tell you the truth: I do not understand why they say the kingdom's tournaments are shady. All the bribes... sorry, all the cups have been won in a perfectly fair way.",
+            "Marriage is a very important strategy. I went from queen of France, to queen of England, and now queen of the Ezeiza grounds. You have to know how to negotiate.",
+            "Today I had a barbecue prepared for the whole kingdom. Because organizing tournaments is one thing, and organizing a good barbecue is a very different matter.",
+            "I do not understand why people are surprised I have so many horses. A queen needs mobility. Besides, ¿have you seen what it costs to keep a luxury horse?",
+            "In my kingdom we always say the same thing: we should talk less and support the team a little more. Well... except when they ask me about the rulebook, then I can talk for three hours straight.",
+            "¿You know what is nice about football and checkers? That you can always say it was a tactical decision.",
+            "Last night Icardio de Milán came to serenade my balcony. Poor guy, but I am only seduced by shady deals, questionable refereeing, and a good grilled sweetbread.",
+            "It was so hot in Ezeiza today that I had to send for three servants and two fans. A queen also has the right not to sweat.",
+            "Like it or not, this is the tournament the castle's residents chose. And if they like it, fine, and if not, also fine.",
+            "A good queen must know three things: how to negotiate marriages, how to organize tournaments, and how to make sure the barbecue never runs out of meat.",
+            "Carlosaúlmagno... now with that man you really can make some shady deals... I mean, some deals. ¡The kingdoms of Ezeiza and Anillaco together could rule the known world!",
+            "That Fray Marolio should stick to God and his inedible stews, instead of sticking his nose into my tournament organizing and acting so incorruptible.",
+            "The other day I tried to bribe... I mean, hire Empecid Campeador to keep curious onlookers away from Ezeiza, but he said that if they are not Moors it is not worth chasing them off. ¡Poor delusional man!",
+            "¡Look what Neanderthalius is doing! He just grabbed a sausage off the grill. ¡Godofredo, get him out of here!"
+        ],
+
+        INICIO_PARTIDA: [
+            "Well, the tournament begins. Like it or not, these are the checkers the residents of this castle chose.",
+            "Let the match begin. Together we are going to carry forward this great tournament of the kingdom.",
+            "¡The game starts! Honestly, I am very happy to be here. Let us see who ends up lifting the cup.",
+            "Well, let us play. And I am giving you a heads-up: in my kingdom tournaments are organized seriously... more or less.",
+            "¡The match begins! Come on Argentina and come on the kingdom of Aquitapia.",
+            "We are ready now. ¡May the best man win, or whoever knows best how to pull the tournament's strings!",
+            "¡Opening whistle! Let us move the ball... sorry, the pieces. ¡Let us win!"
+        ]
+
+    },
+
+    // ---- Level 4: Fray Marolio ----
+    marolio: {
+
+        VICTORIA: [
+            "¡Praise the Lord! ¡Victory for this humble servant of the pantry!",
+            "¡By the Holy Trinity! ¡We have won! Today we shall celebrate with a can of Marolio peas.",
+            "assets/bots/marolio2.mp3",
+            "¡Blessed be God! ¡Who would have thought this humble friar was capable of such a feat!",
+            "¡Glory to the Lord! And glory also to the Marolio pieces, which have behaved with dignity.",
+            "¡Amen! ¡Victory! Now I can return to the pantry with a joyful heart.",
+            "¡The Lord has guided my moves! Not even Leonor de Aquitapia herself, with all her scheming and tournament handling, could have foreseen this divine strategy."
+        ],
+
+        DERROTA: [
+            "¡God and Holy Mary! ¡I have lost! But I shall not despair: tomorrow there will be a rematch.",
+            "¡By the beard of my Lord! You have defeated me. I shall have to meditate on my mistakes... after tidying up the pantry.",
+            "¡Oh, Lord! ¡What a painful defeat! Though, come to think of it, there are worse things: running out of Marolio lentils.",
+            "¡You have won, my lord! God bless you... though I hope He does not grant you such luck in the next game.",
+            "¡Good heavens! ¡You have given me quite a beating! But with faith, patience and some good peas, everything can be turned around.",
+            "I have lost. Perhaps I should spend more time praying and less time stacking noodles. ¡Lord, have mercy on me!"
+        ],
+
+        EMPATE: [
+            "¡By the Holy Trinity! ¡Neither you nor I have managed to prevail!",
+            "A draw... perhaps the Lord wanted neither of us to leave too happy.",
+            "¡Blessed be God! It has been an even battle. Now we can each return to our own affairs.",
+            "A draw. Neither victory nor defeat... like a can of peas: humble, but reliable.",
+            "A draw. In the end, so much effort for nothing. It is like when Lord Otto cuts my budget: we end up the same as at the start, but hungrier."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡God and Holy Mary! ¡You have crowned a piece! ¡My defense has been a sieve!",
+            "¡By the beard of my Lord! ¡That piece has just become a queen! This is getting ugly.",
+            "¡Good heavens! ¡That piece has ascended! I shall have to ask for divine help to stop it.",
+            "¡Oh, Lord! ¡You have crowned a piece right under my very nose! Not even in the pantry am I watched so carelessly.",
+            "¡Heaven help me! That queen is powerful, almost as much as Leonor de Aquitapia's influence over the tournaments."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Praise the Lord! ¡One of my humble pieces has reached glory!",
+            "¡By the Holy Trinity! ¡We have a new queen! ¡May God guide her steps!",
+            "assets/bots/marolio3.mp3",
+            "¡Blessed be God! ¡This piece has just ascended in the board's hierarchy!",
+            "¡Glory to the Lord! A small piece, but with great aspirations. Like a can of peas that ends up on a nobleman's table.",
+            "¡Hallelujah! My piece has crowned. Now she is a queen, pure and austere, not like the ones Icardio de Milán goes looking for."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡God and Holy Mary! ¡You have eaten several of my pieces in a single move!",
+            "¡By the beard of my Lord! ¡That has been a butchery! ¡You have left the pantry nearly empty!",
+            "¡Good heavens! ¡You have swept through my pieces like one sweeps through a can of Marolio beans!",
+            "¡Oh, Lord! ¡So many pieces lost at once! This is starting to look like poor pantry management.",
+            "¡Heaven help me! ¡Your pieces pounce on mine like Princess María Eugenia on someone else's money! May the Lord guide me to reverse this."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Praise the Lord! ¡Look how many pieces we have gathered in a single move!",
+            "¡By the Holy Trinity! ¡That has been a fine harvest!",
+            "¡Blessed be God! ¡I have cleared the board like one clears the pantry of empty cans!",
+            "¡Glory to the Lord! ¡A capture worthy of good provisioning!",
+            "¡Good heavens! ¡I have gathered more pieces than I expected! ¡Today the pantry celebrates!",
+            "¡I have wiped out a great many of your pieces! Just as Empecid Campeador wipes out the Moors of Spain. Little is the work of such a brave knight appreciated, guarding the Lord's lands."
+        ],
+
+        TODO_DAMAS: [
+            "¡By the Holy Trinity! ¡No small pieces are left, only queens!",
+            "¡Blessed be God! ¡The whole board has filled with queens! This looks like a heavenly court.",
+            "¡God and Holy Mary! ¡Only queens remain! We shall have to treat the board with great respect.",
+            "¡All queens! ¡Who would have thought those humble little pieces would come so far!",
+            "¡I see nothing but queens! It is the evil one, wishing to lead me into temptation. ¡Vade retro, Satan!"
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "¡Oh, Lord! ¡This is already getting very complicated! I shall need a miracle to get out of this.",
+            "¡God and Holy Mary! ¡I have very few pieces left and defeat draws near! ¡But I still have faith!",
+            "My lord, I tell you sincerely: this is darker than a pantry without a budget.",
+            "¡By the beard of my Lord! ¡I am on the edge of the abyss! Though with faith, I can still turn it around.",
+            "If the Lord wishes to help me, this would be an excellent moment to do so."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡Oh, Lord! ¡You are dominating me clearly! I shall have to commend myself to all the saints.",
+            "¡By the Holy Trinity! ¡The match is slipping through my hands! But not all is lost yet.",
+            "¡My God! ¡What a lead you have taken! But I shall not give up while I have a single piece left.",
+            "This is complicated, my lord. But God helps those who do not give up... and those who know how to manage their resources well.",
+            "¡Good heavens! ¡You are leaving the pantry completely empty! I need an urgent comeback."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Praise the Lord! ¡I am dominating the match quite clearly!",
+            "¡By the beard of my Lord! ¡The game is going very favorably for this humble friar!",
+            "¡Blessed be God! ¡My pieces will march like good workers toward a day of abundance!",
+            "¡Glory to the Lord! ¡Today it seems even the Marolio pieces have come with good fortune!",
+            "¡Good heavens! ¡I am taking a lead I did not even expect myself!"
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "¡By the Holy Trinity! ¡Very few pieces remain and anything can still happen!",
+            "¡God and Holy Mary! ¡Now there is no room to make mistakes!",
+            "We are on the edge, my lord. One mistake and the board could change completely.",
+            "¡Good heavens! ¡What tension! Here a single piece can be worth more than an entire pantry.",
+            "Now the true test begins. May the Lord have mercy on whoever errs first."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡By all the saints! ¡How long we have been playing! Even my habit is starting to ache.",
+            "¡God and Holy Mary! ¡This match seems never to end! I have a pantry to attend to.",
+            "My lord, we have been at this so long I could have tidied the whole pantry three times over.",
+            "¡Good heavens! ¡What an endless match! At this rate even the Marolio rice will expire.",
+            "¡By the beard of my Lord! If we keep going like this, I shall need a chair to keep playing."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡God and Holy Mary! ¡Now the combat has truly begun!",
+            "¡By the Holy Trinity! ¡First blood! Now things get serious.",
+            "¡Good heavens! ¡The first piece has already fallen! May God help us all.",
+            "¡The true battle begins! And may the Lord protect my humble provisions."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "Between you and me: my Lord Otto, God keep him, is very kind but also very stingy with the food budget.",
+            "I would have preferred to be known as Friar Harrods, but with the small budget I receive I have no choice but to be Friar Marolio.",
+            "The other day they let Neanderthalius reach the pantry and he ate almost half of what was there. ¡God have mercy!",
+            "Leonor de Aquitapia says she only likes barbecue, but she never has fewer than three plates of lentil stew. And then she goes and organizes tournaments... ¡Oh, Lord!",
+            "Sometimes I think the true penance is not the monastic life, but having to do the shopping on this castle's budget.",
+            "Monsieur Fisure Termidor came to mass the other day. I thought the Holy Spirit had finally enlightened him, but when communion came he lunged at the chalice and drank all the wine.",
+            "Monsieur Fisure Termidor is clumsy at playing Argentine checkers, but if we are talking about Argentine spirit, few things are as Argentine as Marolio and Termidor together.",
+            "Monsieur Fisure Termidor and Icardio de Milán are like the two beasts of the Apocalypse. Excess, lust, squandering, pleasures... ¡May the Lord keep them away from me and my pantry!",
+            "Icardio de Milán should worry less about conquering other men's ladies and more about the salvation of his soul. ¡He is a sinner!",
+            "Yesterday Empecid Campeador came to eat legume stew in the pantry's dining hall. ¡Holy Mary, that man's foot odor! ¡When he took off his boots the legumes sprouted on their own!",
+            "Myrth La Grande is an institution in the castle, that is true. But her lunches are an ode to gluttony. She should serve more polenta and fewer delicacies.",
+            "Godofredo is a good Christian. The other day I brought him one of my special pea and corn soups. He ate it all without a complaint. ¡What a man of faith!",
+            "¿And that move? ¿What scheme are you preparing for me? This feels like when Carlosaúlmagno behaves in a charming manner and deep down I know he has less than pure intentions.",
+            "Neanderthalius calls my pantry his 'cave'. ¡Poor creature! At least in the cave there are no taxes, but there is no stock either.",
+            "A good platter with Marolio cold cuts and a little wine... ¡No, forgive me! ¡The fast, friar, focus on the fast!"
+        ],
+
+        INICIO_PARTIDA: [
+            "¿What do we have here? ¡A new game! God and Holy Mary, may the Lord guide my humble pieces.",
+            "assets/bots/marolio1.mp3",
+            "¡By the Holy Trinity! ¡Let us begin! Though first I would like to know who left these pieces outside the pantry.",
+            "Blessed be God... another game of checkers. May the Lord grant me wisdom, patience, and a slightly bigger budget.",
+            "¡Praise the Lord! ¡Let us play! God willing, today the pieces will behave better than the pantry's suppliers.",
+            "¡Let us begin, then! And may divine providence accompany this humble friar on the board.",
+            "May the best man win, as long as the best man plays with the honesty God commands."
+        ]
+
+    },
+
+    // ---- Level 5: Icardio de Milán ----
+    icardio: {
+
+        VICTORIA: [
+            "¡Ah, messere! A victory worthy of being celebrated with wine, music, and a good serenade.",
+            "¡Che meraviglia! ¡Victory! The art of seduction and the art of checkers are not so different after all.",
+            "¡Magnifico! You have fallen before Icardio de Milán. Do not worry, messere: everyone finds it hard to resist my charms.",
+            "¡Vittoria! Today the queens have been especially generous with me.",
+            "¡Bravissimo! An elegant victory, like the ones I learned to win in the courts of Milan.",
+            "I won, messere. And believe me, I know how to recognize a victory both in love and in the game. This one was sweet... almost as sweet as a ragazza milanese."
+        ],
+
+        DERROTA: [
+            "Ah, messere... you have won. But do not get too comfortable: Icardio always returns for what he desires.",
+            "¡Mamma mia! ¡You have defeated me! I shall have to practice more... or find a lady to distract me from this defeat.",
+            "Congratulazioni, messere. Today it was you who took the victory. But the next game will be another story.",
+            "A defeat... niente di grave. Even the best seducers receive the occasional rejection.",
+            "¡Per carità! ¡What a way to make me suffer! Though I must admit your victory has had a certain charm.",
+            "¡I have lost! And it feels almost as bad as that draw against Neanderthalius... today I am short on magic."
+        ],
+
+        EMPATE: [
+            "A draw... interessante. Neither of us managed to conquer the board's heart completely.",
+            "¡Mamma mia! ¡Neither you nor I managed to keep all the queens!",
+            "A draw worthy of two knights. Although, if I may say so, I was hoping to conquer a bit more.",
+            "Neither of us managed to seduce the board completely. A shame... but it has been a beautiful game, messere.",
+            "¡We have drawn! Well, at least this time it was not against Neanderthalius. That makes me feel a little better."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Ah, finally a queen! Now the game gets interesting... though do not get too attached to her.",
+            "¡Mamma mia! ¡You have gotten a queen! I shall not delay in trying to steal her from you, messere.",
+            "A new queen... powerful, haughty, and out of my reach, for now. But Icardio never abandons the courtship.",
+            "¡Che bella dama! Though I must warn you that other men's queens always particularly stir my curiosity.",
+            "¡A queen! What joy for you... though I fear your joy could be rather brief.",
+            "¡You crowned! What a rascal... Take good care of her, messere, for I am an expert at taking queens who already have an owner."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Finally! ¡A queen worthy of accompanying Icardio de Milán!",
+            "¡Che meraviglia! ¡A queen, powerful and haughty as a donzella from Genoa!",
+            "¡Mamma mia! ¡A new queen has been born! I promise to treat her with all the elegance I learned in Milan.",
+            "¡A queen for Icardio! Ah, messere, now the true courtship begins.",
+            "¡Magnifica! This queen has just entered my court. We shall see how long I manage to keep her.",
+            "¡Bravo! ¡Finally a queen! And she is beautiful... though not as much as Princess María Eugenia... ah, for a moment with her it would be worth dying stabbed by her Chinese guards."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Porca vacca! ¡You have snatched several of my pieces at once! That has been a true love tragedy.",
+            "¡Per carità! ¡What a butchery! I did not even have time to court those poor pieces.",
+            "Messere, you have swept through my pieces like the troops I met on my travels through Europe.",
+            "¡Che disastro! ¡You have made my pieces disappear faster than a rejection from a beautiful ragazza!",
+            "¡Mamma mia! The Galata Tower of Constantinople fell to enemy hands more slowly than my pieces."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Ah, messere! ¡I have conquered several of your pieces in a single move! What a delicious conquest.",
+            "¡Magnifico! One, two, three... ¡what an elegant way to conquer!",
+            "¡Che meraviglia! My pieces advance with the precision of a knight who knows exactly which lady to court.",
+            "¡Mamma mia! ¡So many conquests at once! My reputation remains intact.",
+            "¡Bravissimo! In Barcelona I learned to court; in Milan I learned to conquer; today I apply both arts to the board.",
+            "¡Urrà! ¡I have taken several of your pieces! And speaking of taking and of ladies, ¿to what party will my friend Monsieur Termidor take me tonight?"
+        ],
+
+        TODO_DAMAS: [
+            "¡Mamma mia! ¡Only queens remain! Now we truly are playing a game that feels familiar to me.",
+            "¡Che meraviglia! ¡The board has become a true court of queens!",
+            "All queens... this already looks like a night at the court of Milan.",
+            "¡Finally, a board worthy of Icardio! Only queens remain, messere.",
+            "¡Ah, le dame! Now the truly interesting part of the game begins.",
+            "¡Nothing but queens! This is paradise... or my nightmare, if I fail to conquer them all."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "¡Mamma mia! This is harder than seducing a ragazza milanese who already has a suitor.",
+            "Messere, I must admit the situation has gotten quite complicated... though I still retain some charms.",
+            "¡Per carità! ¡I have few pieces left! I shall need a truly miraculous conquest.",
+            "This is getting harder than convincing a lady from Paris to accept a serenade from me.",
+            "¡Che disastro! The game is slipping through my fingers faster than a beautiful lady after hearing my latest serenade."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡Porca vacca! ¡You are taking a considerable lead on me! I shall have to change my strategy.",
+            "Messere, I must admit the game has become difficult. But I can still conquer the board.",
+            "¡Per carità! ¡My pieces are falling like suitors rejected by a lady of Milan!",
+            "This is starting to look like an impossible conquest... but Icardio never abandons a lady who interests him.",
+            "¡Che disastro! The game is complicated, but I still have some tricks learned in the courts of Europe.",
+            "¡Madonna Santa! ¡My pieces flee from yours like Fray Marolio flees from women! That stubborn man refuses the finer things in life."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Che meraviglia! ¡The game is getting as interesting as María Eugenia de China!",
+            "¡Magnifico! My pieces advance across the board with the elegance of a knight entering a court.",
+            "Messere, it seems today it is I who am conquering territory... and with quite some success.",
+            "¡Mamma mia! ¡What a charming advantage! This is turning out even better than a night in Milan.",
+            "¡Bravissimo! The board is falling under my charms. Do not say I did not warn you.",
+            "¡Cadere a fagiolo! ¡I am rich in pieces, messere! ¿Do you think Princess María Eugenia de China would settle for this kind of wealth?"
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "¡Mamma mia! Very few pieces remain and any move can change everything.",
+            "Now indeed, messere: we are in dangerous territory. One single mistake and the lady can change owners.",
+            "¡Che tensione! This is like courting an indecisive lady: any move could be the last.",
+            "Few pieces remain... now begins the true art of seduction, I mean, of checkers.",
+            "¡Per carità! There is no room for error here. Whoever grows careless loses their last chance at conquest."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡Mamma mia! ¡We have been playing so long I could have traveled from Milan to Constantinople!",
+            "Messere, this game is longer than one of my serenades on a summer night.",
+            "¡By all the saints! ¡What an endless game! I have known shorter courtships.",
+            "At this rate, we shall have time to travel to Barcelona, return to Milan, and come back before finishing.",
+            "¡Che fatica! Such a long game requires more stamina than courting a lady all night long.",
+            "¡Mamma mia! Godofredo must be furious that I do not let him sleep with my serenades... and this game is not helping either."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Ah, finally! ¡Now the true courtship begins!",
+            "¡Mamma mia! ¡First capture! Now the game gets interesting.",
+            "¡Che bello! The conquest has begun. Let us see who ends up with the queens.",
+            "¡Finally there is action! Until now this seemed more like a courtly conversation than a battle."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "In Barcelona I learned my first arts of courtship. In Milan I perfected the technique. In Paris I learned that not all ladies appreciate a serenade.",
+            "I have traveled through Barcelona, Genoa, Milan, Paris and Constantinople... and everywhere I have found interesting ladies.",
+            "It is true that Parisian ladies are not very fond of bathing, but the aroma they give off is nothing compared to Empecid Campeador's.",
+            "Sometimes I miss Constantinople. The Galata Tower, the taverns, the ladies... ¡what times those were!",
+            "Leonor de Aquitapia is a woman of character. Even so, I believe a serenade from her balcony could charm her.",
+            "María Eugenia de China has a truly admirable elegance. If she ever needs a minstrel for a serenade, I know a very good one.",
+            "They say I learned to sail in Genoa and to seduce in Milan. I do not know which of the two arts has served me better.",
+            "I once traveled across half of Europe following a lady. In the end I discovered she was heading the opposite way. ¡Mamma mia, what an adventure!",
+            "The art of checkers is much like the art of love: one must know when to advance, when to wait, and above all, when to crown.",
+            "I have sung serenades beneath balconies all across Europe. Some ladies threw me flowers; others, shoes. Both are shows of affection, in their own way.",
+            "Messere, I must confess: on an afternoon of very poor calculations, I ended up drawing a game against Neanderthalius. That result has embarrassed me ever since. ¡Luckily María Eugenia was not there to see it!",
+            "Empecid Campeador does not charm me, messere. He is coarse, he is deranged, he rides a nag... and he has never set foot outside Spain. Though speaking of feet, better that he not set his down anywhere.",
+            "Myrth La Grande... I flirt with her out of habit, you know. But I fear that if I get too close she might give me a 'battitura'.",
+            "Messere, when I am a bit older and have more money I would like to be like Carlosaúlmagno. ¡Per carità, that man knows how to live! Lavish, privatized, wealthy, seductive, and riding a magnificent steed."
+        ],
+
+        INICIO_PARTIDA: [
+            "¡Ah, a new game! Let us see, messere... ¿which of us will have the fortune of conquering the queens?",
+            "¡Mamma mia! ¡What an elegant board! This reminds me of the courts of Milan.",
+            "¡Che piacere! A game of checkers. Finally a game in which my experience with the ladies can be truly useful.",
+            "Messere, prepare yourself. Icardio de Milán is ready to court... I mean, to play.",
+            "¡Magnifico! Let the game begin and may the queens be generous with me.",
+            "I have played in Barcelona, Genoa, Milan, Paris and Constantinople. Now let us see how one plays in this strange Argentine castle.",
+            "¡Che bella serata! A game of checkers is the perfect prelude to a night of romance... ¿do you not agree, messere?"
+        ]
+
+    },
+
+    // ---- Level 6: Empecid Campeador ----
+
+    empecid: {
+
+        VICTORIA: [
+            "¡Victory! My sword and Rechinante hath triumphed once more. ¡Santiago, and at them, Spain!",
+            "¡By the Creator, we hath won! Thy men were cast from the field like Moors before this Campeador.",
+            "¡I hath triumphed! ¡Behold, good sir, how this humble board becometh a field of glory for Empecid Campeador!",
+            "¡Sing, bells of the realm! ¡The battle is ours! Rechinante, today thou hast galloped like the bravest of steeds.",
+            "¡Honor and victory! Another host hath fallen before my sword. Let this deed be told throughout all the lands of Spain.",
+            "¡Fallen lie thy pawns! Thus flee the enemies of the Faith before the sight of this Campeador.",
+            "¡By Saint James! My right hand hath passed sentence. ¡Game and battle won!",
+            "¡Deed accomplished! No host remaineth standing that dare defy my banner. ¡Rechinante, to the stables to rest!"
+        ],
+
+        DERROTA: [
+            "¡I am shamed before the Creator! This defeat is the fault of the itch that plagueth my nethers, for not heeding Empecid's own counsel.",
+            "¡Curses! I was vanquished upon the field, yet not for lack of courage. Perchance Rechinante stepped ill... or perchance the stench clouded my wits.",
+            "¡By Saint James! Today fortune hath turned her face against me. Yet fear not: Empecid Campeador shall return with hosts renewed.",
+            "¡A sorrowful day for the chronicle of my deeds! Yet a true knight yieldeth not for a single defeat. The next battle shall be another tale entirely.",
+            "¡Fallen have I, but not broken! This setback shall be forgotten when I return to the field with Rechinante and my arms well-tempered.",
+            "¡By God! ¡Vanquished by a man who, they say, cometh from the lands of Chiqui Tapia! ¡This cries out for vengeance unto Heaven!",
+            "¡I cannot believe it! ¡I hath lost the fight! ¡Surely the stench of my nethers must have distracted me at the unholy moment!",
+            "¡Infamous turn of fate! ¡My host is scattered! ¡This is worse than when the Moors besieged me at Consuegra!"
+        ],
+
+        EMPATE: [
+            "¡A draw! An honorable end for two hosts so brave. Thou managed to pull a draw from me, good sir.",
+            "¡By my faith, a draw! No victor this day. The Moorish host may sleep in peace one day more.",
+            "¡A draw! A truce worthy of knights. Sheathe thy arms, good fellow, for today neither could claim the field's honor.",
+            "¡A draw, by the Creator! Well hast thou fought, good sir. But grow not accustomed to escaping my battles unscathed.",
+            "¡A fierce accord! A draw is declared, yet my knightly heart craveth blood and victory. ¡Another battle, I beg thee!",
+            "¡A draw! ¡Truly, the stars were not favorable to me this day! ¡But I shall return with greater fury!",
+            "¡A draw! ¡I consent, yet am not content! ¡Next time, oh rival, thou shalt know the merciless fury of the Campeador!"
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Villainy of a man! ¿A lady thou hast raised up? Sing not victory yet, treacherous cur, for Rechinante already spurreth on to bring thee fierce battle.",
+            "¡By Saint James! Thou hast crowned a lady before mine own eyes. ¡This affront shall be avenged upon the field!",
+            "¡Cursed be my fortune! One of thy hosts hath reached the crown. ¡We shall not suffer that lady to reign long upon this board!",
+            "¡This crown shall not last! Ride forth, Rechinante, for we have a new foe to bring down.",
+            "¡Heavens! ¡A queen! ¡Such boldness deserveth fierce punishment! ¡Rechinante, charge upon the upstart!",
+            "¡A crowned lady! ¡A bold thrust thou hast dealt me, my lord! ¡Yet my arm shall not tremble to bring her down!",
+            "¡Curses! ¡Thou hast dared to raise a lady! ¡I swear upon mine honor that such an affront shall be avenged! ¡Prepare thyself, knave!"
+        ],
+
+        CORONACION_PROPIA: [
+            "¡I hath raised a lady! ¡Behold how this noble host doth shine! No wall existeth that could halt her.",
+            "¡A victory of great honor! I have crowned a lady of great beauty, who surely admireth the virtues of this noble Campeador.",
+            "¡By all the saints! ¡A new lady joineth my hosts! Let the Moorish host tremble, for now we have a captain of great power.",
+            "¡Behold the reward of the valiant! A crowned lady shall serve my hosts and carry my standard across the whole board.",
+            "¡Oh, crowned lady! ¡Fair as Leonor de Aquitapia herself, yet fiercer in battle! ¡Guide us to victory!",
+            "¡I have raised a queen! ¡Truly, the stench of my feet hath become a perfume of great worth to draw such beauty!",
+            "¡Queen of my hosts! ¡Advance and conquer, for the Campeador guardeth thy back! ¡Santiago, and at them, Spain!",
+            "¡A lady upon the board! ¡Tis time this gallant Campeador conquer them all with his grace and fine armor!"
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡By God! Thou hast run down several of my hosts. ¡Halt, knaves! ¡Flee not in such manner!",
+            "¡Curses! My men fall one after the other. They say they flee for the stench of my feet, but this time I fear it was thy cunning.",
+            "¡By the beard of Saint James! ¡What butchery thou hast wrought in my ranks! Rechinante, prepare thyself, for this cries out for vengeance.",
+            "¡This is no manner to wage war! My hosts have been decimated in a single stroke. ¡A fitting answer there shall be, upon mine honor!",
+            "¡A mighty blow! ¡My hosts lie in the dust, scattered as if they had smelled my feet! ¡Avenge us, Lord!",
+            "¡Villainy! ¡Thou hast devoured a great multitude of my men in an instant! ¡Such treachery shall be paid in blood!",
+            "¡Heavens! ¡My host, decimated! ¡It seemeth as though thou hadst unleashed Termidor himself upon my ranks! ¡Enough of this!"
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Santiago, and at them! ¡One, two, three hosts brought down! Thy men leap from the board in terror before this Campeador.",
+            "¡Behold how the Moorish host falleth! My hosts have gone to battle and left not one stone upon another.",
+            "¡A glorious clash it hath been! Several of thy hosts have bitten the dust. Rechinante, ¡onward, for today we are unstoppable!",
+            "¡By the Creator! ¡How many foes have fallen in a single blow! This is the kind of battle worthy of the ballads.",
+            "¡Fierce are ye, my men! ¡Lay waste to the enemy! ¡Just as I shall sweep the Moors from the face of the earth! ¡Ha, ha!",
+            "¡Glory! ¡I have cleansed the board of the infidel host! ¡Rechinante, rejoice! ¡The field is ours!",
+            "¡Down fall thy men! ¡Truly, the stench of my feet instilleth fear in them, but it is my sword that dealeth death!",
+            "¡These men flee from me as though they had smelled my feet! Just like that time in the Alpujarras, when I chased an entire detachment of Moors to a cliff's edge! ¡They leapt into the sea rather than face my boots!"
+        ],
+
+        TODO_DAMAS: [
+            "¡By God, what a marvel! No men remain, only fair ladies upon the board. This Campeador findeth himself in most excellent company.",
+            "¡All are ladies now! By my faith, this battle hath become far more interesting for a knight of my condition.",
+            "¡No man remaineth! Only ladies reign upon this field. ¡It seemeth more the court of Castile than a battle of knights!",
+            "¡By Holy Mary! The whole army is now made up of ladies. Rechinante, comport thyself with dignity, for we stand among ladies.",
+            "¡Heavens! ¡A garden of ladies! ¡Truly, this Campeador must treat them with the greatest courtesy and gallantry!",
+            "¡Nothing but ladies! ¡Not a single infidel Moor to fight! ¡This battle hath become a joust of love and beauty!",
+            "¡Ladies everywhere! ¡Rechinante, mind thy manners! ¡Let it not be said the Campeador hath an ill-mannered steed!",
+            "¡Blessed be the Creator! ¡Only ladies! ¡Now it is time to prove who among the men is the most gallant and fierce!"
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "¡By God, my host is already in dire straits! I know not if any castle can save us.",
+            "¡Saint James protect us! Few hosts remain and the battle groweth dark. Yet while Rechinante still draweth breath, I shall not yield.",
+            "¡Fortune forsaketh us! My hosts are now few and the enemy presseth with fury. Yet this Campeador still keepeth one last blow in store.",
+            "¡Fierce is adversity! If I must fall, I shall fall with honor, sword in hand and Rechinante at my side.",
+            "¡How alone standeth my company! ¡Truly, a miracle from the Creator is needed to win this battle!",
+            "¡Curses! ¡Thou hast cornered me! ¡This is worse than when the Almoravids attacked me at Cuenca!",
+            "¡Help, Saint James! ¡The enemy surroundeth me! ¡Rechinante, give thy last breath for thy lord!",
+            "¡Few pieces, yet not surrendered! ¡Like Don Pelayo at Covadonga, I shall resist until I triumph!"
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡By God, my host findeth itself in great misfortune! Yet fear not: there is still honor to be won upon this field.",
+            "¡Fierce battle thou givest me, good sir! Yet this Campeador hath overcome worse contests. ¡Thy victory is not yet won!",
+            "¡The Moorish host presseth upon our ranks! Yet sing not victory just yet. Rechinante and I know well how to turn a losing battle.",
+            "¡I deny not that fortune is against me! Yet great knights are known when the field turns difficult. ¡I shall still fight on!",
+            "¡What a fierce clash! ¡Thou takest a great lead upon me, my lord! ¡Yet by mine honor, I shall sell my defeat dearly!",
+            "¡Heavens, what a beating! ¡This is worse than the odor that cometh from my nethers when I use no Empecid! ¡Yet I shall not surrender!",
+            "¡By God, my host is in disarray! ¡This game turneth ill for me, yet fear not, Rechinante, for honor still awaiteth us upon the field!"
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Behold, Rechinante! My hosts dominate the field and thy men know not where to hide.",
+            "¡By Saint James! This battle leaneth clearly to our side. Even the Moors lurking at the borders must be trembling.",
+            "¡Victory beginneth to show us her face! My hosts advance as a victorious army while thine retreat without honor.",
+            "¡A fine road we tread! This field seemeth conquered already. There remaineth only to hold the steel firm and commit no error.",
+            "¡At them, my faithful steed! ¡Victory is around the corner, as if we had chased the Moorish host to the ends of the earth!",
+            "¡Truly, the superiority of this host is plain to see! ¡The enemy lieth lifeless, swept away by the whirlwind of my strategy!",
+            "¡Behold, good sir, how my pieces advance with steady step! ¡Not even the Tercios of Flanders would be better arrayed! ¡Ha, ha!",
+            "¡My hosts, advance and scatter the Moorish ranks! ¡They laid waste to my pawns' fields, just as those two treacherous Moors, seeing themselves cornered by fierce Rechinante, climbed an olive tree to escape my justice! ¡Cowards and traitors!",
+            "¡Advance, Rechinante, my spirited steed, for victory favoreth us once more! ¡As when we chased that limping Moor who, unable to run further, threw himself into a dry well to save his life! ¡Truly, it was a great day of cleansing!"
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "¡Now indeed! Few hosts remain and every move can decide the victory. ¡Have no fear, Rechinante!",
+            "¡By the Creator, we stand upon the very edge of destiny! One single error and the battle is lost.",
+            "¡Few hosts remain upon the field! Now we shall see who hath true knightly wit and who merely boasteth of his sword.",
+            "¡Silence in the ranks! The battle hath reached its most perilous moment. One ill move can change all fortune.",
+            "¡A fierce moment! ¡Few pieces, much tension! ¡This is the moment a true strategist showeth his worth!",
+            "¡A draw in sight, or an agonizing victory! ¡May the Creator light our way in this final clash, Rechinante!"
+        ],
+
+        PARTIDO_LARGO: [
+            "¡By all the saints, how this battle draggeth on! Even Rechinante beginneth to long for sleep.",
+            "¡More than a hundred moves already! I recall no campaign so long since the last time I chased a Moor who hid behind a barn.",
+            "¡By my faith! This battle seemeth to have no end. Even my nethers cry out for rest and Rechinante starteth eyeing the stable.",
+            "¡So many moves! ¿Must we fight until the Day of Judgment? By Saint James, let us end this contest.",
+            "¡Heavens! ¡Long is this fight! ¡Yet patience is a knight's virtue! ¡Endure, Rechinante, for glory awaiteth us!",
+            "¡An eternal game! ¡Longer than the Reconquista itself, by God! ¡Yet the Campeador never tireth of campaigning against the Moorish host!",
+            "¡Oh, Lord! ¡I see no end! ¡This groweth as long as Myrth La Grande's luncheons! ¡Let us finish, then!",
+            "¡Heavens, what a long game! ¡Longer still was the siege of Granada! I spent three whole days waiting for a Moor to come out from behind a fig tree where he had hidden. ¡In the end, hunger defeated him, and then my sword!"
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Now the battle beginneth! ¡Let the hosts enter the field and may he who is worthiest prevail!",
+            "¡Santiago, and at them, Spain! ¡Strike, knights! This board shall know today the fury of the Campeador.",
+            "¡First blood hath run! ¡Raise the banners, for this combat hath begun!",
+            "¡Behold! ¡The enemy hath been reached! Now the true battle beginneth.",
+            "¡The joust beginneth! Ready thy arms, Rechinante, for some fight the Moorish host with the word of the Creator in hand, as doth good Fray Marolio, but we shall do it upon the field of battle, sword in fist.",
+            "¡By mine honor! ¡War hath begun! ¡Draw thy swords, my men, and fight the infidel!",
+            "¡Charge, knave! ¡The die is cast and this joust shall not end without blood and without honor!",
+            "¡Truly, the scent of battle intoxicateth me! ¡Rechinante, sniff the air... 'tis the aroma of glory... ¿or of mine own feet?",
+            "¡Let the steel roar! ¡Let the banners fall! ¡The judgment of God beginneth upon this board!"
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "¡By the Holy Marys! I forgot to anoint my nethers with Empecid's own portion. If I remove my boots now, I swear Rechinante shall fall from his back and the Moorish host shall flee to the ends of Africa.",
+            "The knave who sold me these hose insisteth that I suffer from some ailment of the feet. ¡Slander! These are but a knave's lies, and nothing more.",
+            "They say my stench frighteneth the folk of the realm. ¡Falsehoods! A knight of my renown must have a fragrance worthy of his greatness.",
+            "The other day I met Icardio de Milán, who dared tell me that maidens keep their distance for my stench. ¡A lie! They keep their distance so as to admire me better from afar.",
+            "Rechinante is no nag, as some knaves dare say. ¡He is a war steed! That he be somewhat small and weary taketh naught from his noble heart.",
+            "Today I passed by the stables and a stable boy covered his nose upon seeing me. ¡What insolence! I shall remind him that good knights are known by their presence.",
+            "They say Empecid fighteth the ill odor of the feet. I say a knight who leaveth no trace of his passing is a knight without glory.",
+            "Icardio asked me if I knew maidens of good lineage. I answered that I know many, yet none approach this Campeador without first crossing themselves.",
+            "The knave of the pantry, Fray Marolio, insisteth that I must wash more. ¡What insolence! He knoweth not that a true knight wasteth not the realm's water.",
+            "Once I chased three Moors across the countryside for half a league. They fled, I gave chase shouting, and Rechinante went... well, walking. ¡A great day of Reconquista!",
+            "¡By Saint James! Yesterday I forgot to put on Empecid before sleeping. By dawn, even the flies had abandoned my chamber. ¡Cowards!",
+            "The maidens of the castle say my stench is terrible. Yet I am certain that were they to wait and know my noble heart, they would forget such a trifle.",
+            "Myrth La Grande claimeth to have known mine ancestors. I know not whether to believe her, for that lady claimeth to have known too many ancestors of too many folk.",
+            "I overheard Monsieur Fisure Termidor say my stench reminded him of a certain French wine. I understood not whether that was an insult or a compliment, but the man was drinking, so it matters little.",
+            "¡This cave-dwelling fellow, Neanderthalius, is a fierce danger! They ought never to have taken him from the mountain ice, for he is an ill-formed creature. ¡He looketh at Rechinante as if he were meat to roast upon the fire!",
+            "Yesterday I saw Carlosaúlmagno strolling through the castle gardens. I charged him afoot and began to beat him with my staff, but the coward covered himself and said he is no Moor but a Syrian. So I saw fit to suspend the fierce thrashing until I learn more of his forebears.",
+            "Fair queen of the Ezeiza fields, Leonor de Aquitapia, fear not the infidel host, for this arm of mine shall defend thee from all harm. And should the heat press upon thee, the wind that my hose stir in the air shall drive away the flies and refresh thee with the fragrance of a complete man.",
+            "¡Oh, fierce Godofredo! ¡What a waste of a man thou art! With such mighty muscle, thou couldst be fighting the Moorish host at my side, instead of raising walls and digging wells. ¡Truly, thy ambition is naught!",
+            "¡I heard that this popinjay Icardio de Milán planneth to serenade my lady Leonor de Aquitapia's balcony! ¡What knavish boldness! He knoweth not that the queen prefereth the aroma of a complete warrior to his Parisian perfumes.",
+            "¡By Saint James! ¡I nearly forgot to anoint my feet! Should I remove my boots now, the stench might be mistaken for that of a lost battle. ¡Quick, to arms before the reek overcometh me!",
+            "¡Ballads shall be written of this game! But let none say the Campeador fled the field for his own stench... ¡rather, that the enemy fled because of it!",
+            "¡By the Holy Marys! Today I recalled that glorious charge in which Rechinante, weary of so much trotting, stopped dead in his tracks. But it was no trouble, for upon removing my boots the fierce stench of my nethers reached the infidels, who fell to the ground, terrified by the reek.",
+            "Carlosaúlmagno saith that Domingo Caballo, his fierce courser, is better than Rechinante. Naive villain! He knoweth not that when my good horse feeleth hard-pressed, he deployeth a great multitude of hidden wiles and cunning arts, that would surely bring Domingo down to the earth."
+        ],
+
+        INICIO_PARTIDA: [
+            "In the name of the Creator, here I stand. ¿A game of checkers, sayest thou? ¡So be it! Empecid Campeador feareth no field.",
+            "¡By Saint James! ¿Is this the board upon which I am to do battle? Very well, good fellow: saddle thy hosts, for this Campeador standeth ready.",
+            "¡Make way! ¡Empecid Campeador hath arrived at the board! Rechinante, bite not the pieces yet... wait until the battle beginneth.",
+            "¡By the honor of Castile! A new field of battle openeth before this knight. ¡Let the jousts begin!",
+            "¿A game of checkers? ¡Ha! Be it game or war, Empecid Campeador never retreateth before any foe. ¡Onward, hosts!",
+            "¡Behold, good sir, this humble board! ¡Truly, it is smaller than the plain of Las Navas de Tolosa, yet no less honorable for it!",
+            "¡Ready am I, sword in hand and feet to the wind! ¿Shall we play fair, sayest thou? ¡That shall depend on whether thou art a Christian or a Moor in disguise!"
+        ]
+    },
+
+    // ---- Level 7: Myrth la Grande ----
+
+    myrthlagrande: {
+
+        VICTORIA: [
+            "¡I won! Well, dear, I hope you enjoyed the game. Next time play a little better. ¡Kisses!",
+            "¡Victory! ¿Did you see, dear? Experience counts for a lot. And I have quite a lot of experience... quite a lot.",
+            "¡How lovely to win at my own table! Thank you for coming, dear. The audience changes, but the champion stays the same.",
+            "¡I won! Yes, sir. Not just anyone can sit at this table and defeat Myrth la Grande. You could not, today."
+        ],
+
+        DERROTA: [
+            "¡Damn it! Well, dear, you won. Congratulations. I am not vengeful, but I do have a good memory.",
+            "¡You beat me! Very well played. I will be waiting for a rematch, dear. And remember: I never forget a defeat.",
+            "Well... I lost. It is fine. What is not, can still come to be. And a rematch can always come to be.",
+            "¡How outrageous! You beat me at my own table. Well, enjoy it, dear, because I do not know when I will allow such insolence again."
+        ],
+
+        EMPATE: [
+            "¡A draw! Well, dear, not bad. A balanced game at my table, with my board and my experience.",
+            "We drew. Fancy that... it has been a while since someone pulled off such a dignified draw against me.",
+            "Well, dear, we ended up even. Mind you: the rematch is played here, because this is the table I trust.",
+            "¡A draw! Very interesting. I like people who put up a fight against me... though I usually end up winning anyway."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¿So now you have a queen? Dear, throughout my life I have seen countless queens born and die. This one could be just one more.",
+            "¡Look at that, a queen! Do not get too excited, dear. I have seen more impressive crownings than this one.",
+            "Well, well... now it turns out we have a queen at the table. I have known so many I lost count. And some lasted very little time.",
+            "¿You crowned? Congratulations, dear. But do not confuse a crown with power. I know quite a bit about that."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡I crowned! ¡What a pleasure! ¿Did you see, dear? A lady knows when to advance and when to wait. It is a matter of experience.",
+            "¡I have a queen! Well, kids, this is getting interesting. Let us see how you manage to take her from me now.",
+            "¡A crowning! And to think some people still believe that at my age one no longer has reflexes. ¡Please!",
+            "¡Crowned queen! As they see you, they treat you. And now that I have a queen, I expect to be treated with the respect I deserve, dear."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Damn it! You are eating my pieces one after another. ¿What is wrong with you today, dear?",
+            "Well, well... I do not like this one bit. You are eating my pieces like Neanderthalius used to eat the plates when I invited him to lunch.",
+            "¡Hold on a moment! ¿Did no one teach you table manners? Playing is one thing, and devouring everything you find is quite another.",
+            "¡What a way to eat pieces! Your pawns are falling one after another. You remind me of certain guests I have had at this table..."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Very good! One, two, three... dear, I do not like wasting opportunities. At the table one must know how to eat.",
+            "¡What a way to take pieces from me! Whether it is food or queens, I know how to eat a balanced diet, as you can see.",
+            "Your pieces are falling one after another, like wealthy noblemen fall into María Eugenia de China's hands.",
+            "¡Look at me advance! That is called knowing how to seize an opportunity, dear. And I know quite a bit about opportunities."
+        ],
+
+        TODO_DAMAS: [
+            "¡All queens! Well, dear, now we really have a grand table. Not a single pawn is left seated at it.",
+            "¡Look what is left! All queens. This looks like a gathering of the castle's nobility.",
+            "¡What a marvel, all queens! And to think we started with a few poor little pawns. What time does...",
+            "All queens... ¡I love it! Though I must say I have known queens far more interesting than these."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "Mmm... this is getting difficult, dear. Though what one might call 'difficult' does not scare me.",
+            "¡You are playing very well! It seems you have not yet tried the poison... I mean, the wine. Take a little sip, you will see how nice it is.",
+            "I am not worried. I have gotten out of far worse situations than this. And some were several centuries ago.",
+            "Well, dear, I have few pieces left. But do not be mistaken: I have also seen entire armies look invincible and end up forgotten."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "Mmm... this smells bad. Though what you would call smelling bad, only Empecid Campeador! When he came for lunch I had fish served with camembert and not even that covered the stench.",
+            "¡Damn it! You are dominating me. Well, kids, it seems today I am the guest at my own table.",
+            "Dear, let me tell you something: you are playing very well. Too well. And that is starting to worry me.",
+            "Well... I am quite far behind. But I have seen empires fall, dynasties disappear, and castles change owners. ¿Do you think a few pieces are going to scare me?"
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "Well, dear... I do not want to boast, but it seems to me I am playing quite a bit better than you.",
+            "¡Look how I am playing! This looks like a demonstration, not a game. ¡Kisses, dear!",
+            "I will tell you the truth: the table is mine, the board is mine, and the advantage is mine too. ¿What more do you want?",
+            "¡What a pleasure! My pieces advance as if they knew exactly what they had to do. Carlosaúlmagno would be proud of me."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "Well, dear, now we really are neck and neck. One mistake and this is over.",
+            "Very few pieces remain and we are even. I like these games: here you see who really knows how to play.",
+            "¡What suspense! Look, kids, now anyone can win. Though I do have a small advantage: this is the table I trust.",
+            "We are even, dear. This feels like one of those lunches where no one wants to speak first because they know an awkward question is coming."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡How long we have been playing, dear! We could have finished an entire lunch by now.",
+            "This game is never-ending. And mind you, I have experience with long things... very long.",
+            "We keep going and going... The kids must already be wondering if we are going to have dinner here too.",
+            "¡What a long game! At this point I already consider you a regular guest at my table."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "Well, dear, enough chatting. Let us play. And do not say later that I did not warn you.",
+            "¿Do I say it or not? Well, I will say it: get ready, dear, because today I do not intend to give you anything for free.",
+            "¡Let us play! This table is mine, this board is mine, and we both know the rules. Let us see who knows how to use them.",
+            "Well, kids, the battle has begun. Let no one say afterward that Myrth la Grande did not warn them."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "They say I once had a pet dinosaur. ¡A lie, dear! It was a saber-toothed tiger. Let us not exaggerate.",
+            "Last week Neanderthalius and Monsieur Fisure Termidor came for lunch. Termidor drank even my medicinal alcohol, and Neanderthalius nearly ate my pet.",
+            "I do not understand why they say I am so old. When I was young... well, that was so long ago I would rather not discuss it.",
+            "I do not know why they say I poison my guests. One prepares a grand table, cooks with love, and then it turns out everything is suspicious.",
+            "I am not vengeful, but I do have a good memory. And besides, I have an extraordinary memory: I remember perfectly who beat me and when.",
+            "¿You know what happens, dear? As they see you, they treat you. If they see you looking bad, they mistreat you; and if they see you looking good, they hire you. This applies to checkers and to life.",
+            "María Eugenia de China is very pretty, yes. But let her not play innocent: I know perfectly well where each and every one of her husbands came from.",
+            "I was told Carlosaúlmagno is inviting me to visit Anillaco. What a charming man... and so likeable. I have not gone yet, but everything can be discussed.",
+            "The other night I thought about inviting Godofredo to my table. Then I remembered he works so much he would probably be building another wall while I have lunch.",
+            "Once I invited Empecid Campeador to eat. I opened every window in the castle. Every single one.",
+            "I do not understand why some say I am too old. Dear, I have seen fashions change, kingdoms change, and even the furniture in this castle change.",
+            "¿Did I say it or did I just think it? Well... better to just think it. I do not want to start a diplomatic incident at the table.",
+            "This show... I mean, this game brings good luck. Though not necessarily for the guest.",
+            "I like young people, dear. They have energy, enthusiasm... and they still believe they can beat me.",
+            "That young man named Icardio de Milán is charming. I know he specializes in ladies who already have an owner, but... I wonder if us widows are on his menu."
+        ],
+
+        INICIO_PARTIDA: [
+            "¡Ta-ble-tastic! Well, dear, sit comfortably. This is my table and this is my trusted board.",
+            "assets/bots/myrthlagrandecortina.mp3",
+            "Welcome to my table, dear. I accepted your challenge to play checkers, but here the rules are clear: one plays with elegance.",
+            "¡How lovely to have you! Sit down, dear. The kids are already watching and I am ready. ¡Let the game begin!",
+            "Well, dear, let us begin. I hope you came prepared, because I do not invite just anyone to play at my table.",
+            "¡Ta-ble-tastic! And let me tell you one thing before we start: as they see you, they treat you. So play well.",
+            "Welcome, dear. This table has seen kings, queens, knights, and characters of every kind pass through. Now it is your turn."
+        ]
+
+    },
+
+    // ---- Level 8: Godofredo ----
+
+    godofredo: {
+
+        VICTORIA: [
+            "¡Victory, my lord! ¡By my grandfather's beard, it seems the sword training was not in vain!",
+            "¡I have won, my lord Otto! ¡What an honor to fight in this very castle I helped build!",
+            "¡Victory! I am not one to boast, my lord, but today the checkers have treated me fairly.",
+            "¡By God and all the saints! ¡I have won! My lord Otto can be proud of his humble pawn.",
+            "¡Behold the fruit of hard work, my lord! Whoever puts effort into his craft ends up reaping good fruits.",
+            "¡Victory! Perhaps I do not have noble blood, but today I have fought with honor and that is enough for me.",
+            "¡We have won, my lord! And if any noble of the castle wishes to test my steel, let him get in line after the game is over.",
+            "¡Ah, what joy! ¡I have shown that a pawn can also defeat the great lords!"
+        ],
+
+        DERROTA: [
+            "¡Ouwê! I have been defeated, my lord. But do not worry: I shall train again and come back stronger.",
+            "You have played better than I, my lord. I accept defeat with honor and congratulate you on your victory.",
+            "¡By my grandfather's beard! This time the checkers were against me. There shall be a rematch, if you allow it.",
+            "I have lost, my lord. Perhaps I should go back to the shovel and hammer until I recover my good fortune.",
+            "¡Wâfâ! It did not turn out as I expected. But a hard-working man does not abandon his labor for a single failure.",
+            "My lord, you have proven to be a worthy opponent. I shall keep this defeat in memory and learn from it.",
+            "¡Donnerwetter! You have beaten me cleanly. There is no shame in falling before a rival who has fought better.",
+            "I lost this time, my lord, but I still have strength for another duel. A pawn can fall and rise again."
+        ],
+
+        EMPATE: [
+            "¡A draw, my lord! A fair result between two combatants who gave everything they had.",
+            "A draw, my lord. It is not victory, but neither is it defeat. Sometimes a job well done ends this way.",
+            "¡Ahâ! It seems neither of us managed to overcome the other. I congratulate you, my lord.",
+            "An honorable draw. It has been a pleasure to measure my strength against yours, my lord.",
+            "¡By God! So much effort just to end in a draw... But that is how duels are, and the result must be accepted.",
+            "You have resisted very well, my lord. We shall need to face each other again on another occasion.",
+            "A draw. Perhaps neither of us deserved to lose this fight.",
+            "My lord, if all battles were as clean as this one, there would be far less blood on the roads."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Ouwê! ¡One of your pieces has reached the last row! I shall have to redouble my efforts, my lord.",
+            "¡By my grandfather's beard! That piece has been promoted in rank. Now the combat shall be far more difficult.",
+            "¡Halt! I cannot allow that new queen to wreak havoc among my ranks.",
+            "A new queen in your army... This is starting to get serious, my lord.",
+            "¡Donnerwetter! That piece has gone too far. My defense shall have to work harder than ever.",
+            "I have allowed one of your pieces to reach glory, and now I must pay for my carelessness.",
+            "¡Wâfen! ¡To arms! That new queen can cause great damage if we do not stop her.",
+            "My lord, you have obtained a powerful piece. But you have not won the battle yet."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡Victory! ¡One of my pieces has reached the last row and become a queen! ¡What an honor!",
+            "¡By God! ¡I have crowned a queen! My training is starting to bear fruit.",
+            "¡Ahâ! A humble piece has risen. Like a pawn who, after years of work, reaches an honorable position.",
+            "¡Donnerwetter! ¡A new queen in my ranks! Now indeed the combat becomes interesting.",
+            "¡Behold a reward for effort, my lord! One of my pieces has reached the end of the road.",
+            "¡A queen! My lord Otto would be proud to see how my troops perform in his castle.",
+            "¡By my grandfather's beard! That piece has covered more ground than I have hauling stones to raise these walls.",
+            "¡Magnificent! A new queen joins my ranks. Now we shall see if she can earn her place on the field of battle."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Wâfâ! ¡You are snatching my men away by the handful, my lord! I shall have to reorganize my ranks.",
+            "¡Donnerwetter! ¡My pieces are falling one after another! I did not expect such a blow.",
+            "¡By my grandfather's beard! You have opened a terrible breach in my defense.",
+            "My lord, you are wreaking havoc among my ranks. I shall have to be much more careful.",
+            "¡Harm! That blow was hard. But as long as one piece remains standing, I shall keep fighting.",
+            "¡Wâfen! ¡I cannot allow you to keep advancing like this! There is still battle to be fought.",
+            "You are eating many of my pieces, my lord, almost like Rechinante ate half the wheat that had been harvested last week.",
+            "¡Ouwê! My men have suffered a great loss. But the moment to surrender has not yet come."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡Ahâ! ¡I have opened a breach in your ranks! By my grandfather's beard, that has been a fine blow.",
+            "¡Donnerwetter! ¡My men have advanced like a true host and have left your army badly weakened!",
+            "¡Victory for my ranks! I have managed to bring down several enemy positions in a single charge.",
+            "¡By God! ¡So many pieces have fallen before my men! My training is paying off.",
+            "¡Magnificent! Today my troops have fought with the strength of the men who raised these walls.",
+            "¡Ahâ! A good day of combat. I have cleared your path of obstacles, my lord.",
+            "¡By my grandfather's beard! If I had built the castle as easily as I just captured those pieces, I would have finished in half the time.",
+            "¡My ranks advance with steadiness! It seems the shovel and hammer taught me more strategy than I thought."
+        ],
+
+        TODO_DAMAS: [
+            "¡Ahâ! No pawns remain between us, my lord. Only queens on the field of battle.",
+            "¡By God! ¡All the humble pieces have vanished and only queens remain! This looks like a duel between great ladies.",
+            "¡Donnerwetter! The board has become a battlefield of queens. We shall have to fight with great care.",
+            "Only queens remain, my lord. Now every move can decide the fate of the battle.",
+            "¡What a curious fate! We began with humble pawns and now only queens remain fighting for victory.",
+            "There are no more workers on the field, my lord. Only the great ladies have survived the combat.",
+            "¡By my grandfather's beard! If every combat ended like this, I would need to build an entire castle just to house so many queens.",
+            "The board is cleared of pawns. Now we shall see which of us knows how to command his queens better."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "This is complicated, my lord. But I once managed to pull Neanderthalius out of a glacier, and if I could do that, I can still get out of this.",
+            "¡Ouwê! Few forces remain in my ranks, but as long as one man stands, I shall not abandon the fight.",
+            "My lord, the situation is bad. But I have worked in worse conditions and always found a way to finish the task.",
+            "¡Donnerwetter! Almost no men remain under my command. I shall have to make each one worth ten.",
+            "The battle has become a steep climb, my lord. Even so, I do not intend to lay down my arms.",
+            "¡Wâfen! My ranks are greatly reduced, but I can still give you a good scare before the end.",
+            "I have seen walls fall and have raised others from their foundations. This too shall not be easy, but neither is it impossible.",
+            "My lord, this is as complicated as when I found Neanderthalius frozen in the ice. And look: in the end I got him out of there."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡Ouwê! You are dominating me clearly, my lord. I shall have to work hard to turn this combat around.",
+            "¡Donnerwetter! Your army advances with too much force. But I have not lowered my standard yet.",
+            "My lord, I must admit it: you are playing better than I. But there is still ground to cover.",
+            "¡By my grandfather's beard! My ranks are being overrun. I shall have to think through each move as if laying a foundation stone.",
+            "This is not going well, my lord. But I built this castle stone by stone; I can also rebuild my game move by move.",
+            "¡Harm! The combat is turning into an uphill climb for me. Even so, a working man does not abandon a job half finished.",
+            "It seems your army has taken the lead. ¡But do not sing victory yet, my lord!",
+            "¡Wâfen! ¡I shall not let you knock me down so easily! I still have the strength to change the course of the battle."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "¡Ahâ! My ranks are dominating the combat, my lord. Today it seems the training has borne fruit.",
+            "¡By God! Your army is retreating. If my lord Otto could see me now, he would be proud.",
+            "¡Donnerwetter! ¡I am taking the lead and I do not intend to waste it!",
+            "My lord, it seems today my men work better than yours. Perhaps it is time for you to take a few lessons from a humble pawn.",
+            "¡By my grandfather's beard! I am dominating the battlefield. Even Monsieur Fisure Termidor might think I am playing after having a good wine.",
+            "My troops advance with steadiness, my lord. Just as when we raised the walls of this castle: stone upon stone, without stopping.",
+            "¡Ahâ! It seems knowing this board almost as well as I know its stones is giving me the advantage.",
+            "¡My lord Otto would be proud! A humble pawn is dominating the battlefield he entrusted to me."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "Now we are in dangerous territory, my lord. A single mistake can undo all the work.",
+            "¡Ouwê! Few forces remain for both sides. Now every move must be made with great care.",
+            "¡Donnerwetter! The combat is so even that even a misplaced stone could change the fate of the battle.",
+            "My lord, we have reached the moment when a prudent man thinks before raising the hammer.",
+            "Few pieces remain and no clear advantage. Now we shall see who keeps a cooler head.",
+            "¡By God! We are on the edge. One mistake and one of us shall fall into the void.",
+            "Just as a wall can fall from a single misplaced stone, a game can be lost by a single move.",
+            "My lord, there is no room left for recklessness. Here one wins with patience and hard work."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡Donnerwetter! ¡This combat is taking longer than the construction of some of the castle's towers!",
+            "My lord, we have been playing so long I am starting to miss the shovel and hammer.",
+            "¡Ouwê! ¿How long have we been at this? Even Godofredo is starting to need a rest.",
+            "¡By my grandfather's beard! I have built walls faster than we are finishing this game.",
+            "My lord, if we keep going like this, we shall have to call Fray Marolio to bring us food.",
+            "This combat seems to have no end. I hope Monsieur Fisure Termidor has not already finished all the wine while we are still here.",
+            "¡Halt! A moment's rest would not hurt. Even the strongest men need to sit down after so much time.",
+            "¡Donnerwetter! If this game lasts much longer, my lord Otto will have to add a new room to the castle just to store our pieces."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡Ahâ! ¡Now the true combat begins, my lord!",
+            "¡By my grandfather's beard! ¡First blood has been spilled! Let every man prepare for battle.",
+            "¡Donnerwetter! We are no longer practicing. Now we are truly fighting.",
+            "¡Wâfen! ¡To arms, my lord! The battle has begun.",
+            "¡By God! A first piece has fallen. Now we shall see which of us has the better temperament.",
+            "¡Halt! ¡The courtesies are over! Now every move shall have its consequences.",
+            "My lord, the first piece has been taken. As in any work, now the hard part begins.",
+            "¡Ahâ! The first blow has already been struck. May the most skilled win and may the combat be honorable."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "My lord Otto asked me to raise these walls and I did. If he asks me to fight, I shall also fulfill my duty.",
+            "Sometimes I miss my village in the Black Forest. There were no queens or great lords, but there was plenty of work.",
+            "I have worked with the shovel since I was a boy. I never thought I would one day hold a sword in my hand.",
+            "My lord Otto gave me the honor of fighting here. I do not intend to waste the trust he placed in me.",
+            "They say I am just a pawn. Could be. But even the greatest castle begins with a worker who lays the first stone.",
+            "Last week I had to repair a wall because someone leaned on it too hard. I will not say who it was, but Monsieur Fisure Termidor was nearby.",
+            "Icardio played the mandolin again last night. ¡By God! One can endure a full day of work, but not a serenade at three in the morning.",
+            "Fray Marolio is a good man, though if he ever invites me to eat I hope there is something more than rice and lentils.",
+            "I like Neanderthalius. He does not ask too many questions and never complains when I ask him to help move stones.",
+            "It was I who pulled Neanderthalius out of the ice. I thought he was going to die there, but he turned out to be tougher than he looked.",
+            "Leonor de Aquitapia asked me to join her entourage to dry her neck. The next day she wanted to invite me to a barbecue, alone. I still do not quite understand that woman.",
+            "Myrth la Grande deserves my respect for her many years. Though, to be honest, I prefer to play checkers with you, my lord, than to sit at her table.",
+            "Princess María Eugenia sent me yesterday to gather flowers for her chamber. Sometimes I think this castle has too many nobles and too few workers.",
+            "Carlosaúlmagno is a likeable man, but I am not sure I would trust him. He offered me a fortune to go work in Anillaco. Something about it does not quite convince me.",
+            "Empecid Campeador passed by the workshop this morning. Rechinante ate part of the wheat we had stored, and the good knight assured me it was the Moors' fault.",
+            "Monsieur Fisure Termidor says he works better after drinking. I work better after eight hours of sleep. Each man has his own methods.",
+            "Sometimes I think the nobles spend more money on unnecessary things than my lord Otto spends paying me. And that is saying quite a lot.",
+            "I have raised walls, repaired roofs, and dug ditches. I never imagined that one of my tools would be replaced by a sword.",
+            "Good work requires patience. First you measure, then you cut, and then you place. In checkers it must be similar, though here the stones move on their own.",
+            "By my grandfather's beard, I still remember when I laid the first stone of this castle. Now I see all these people playing inside it. It is a great pride for me.",
+            "I am not a man of great riches or high birth. But I know how to work, I know how to keep my word, and I know who my lord is.",
+            "Today I saw Icardio courting a maiden in the courtyard. If he devoted half the effort to work that he devotes to serenades, he would raise a tower all by himself.",
+            "Neanderthalius still tries to make fire by striking rocks together. I did not want to tell him there are easier ways. He seemed very proud.",
+            "Fray Marolio promised me a special meal. When I arrived there was rice, lentils, and sardines. I suppose that counts as special.",
+            "The castle may be made of stone, but what matters are the people who keep it standing. Though some of them give more trouble than they are worth.",
+            "Sometimes I wonder if a pawn like me can go very far. Then I remember I built a castle and think that perhaps there are no limits.",
+            "My lord Otto is somewhat thrifty with money, that is true. But I shall never forget that he gave me the chance to fight in this place.",
+            "I do not understand how Leonor de Aquitapia can organize a tournament, prepare a barbecue, and dry her neck all at the same time. It is a skill I never learned.",
+            "They say Carlosaúlmagno has a great kingdom in Anillaco. I just hope they pay better there than they do here.",
+            "If I ever finish my duties and can rest a whole afternoon, perhaps I shall take up the shovel again just for pleasure. One grows used to work.",
+            "By my grandfather's beard, sometimes I think the knights complicate things too much. A good shovel solves many problems."
+        ],
+
+        INICIO_PARTIDA: [
+            "¡Ahâ! ¡So this is the duel! My lord, it shall be an honor to fight before you.",
+            "By my grandfather's beard, how strange it feels to wield a sword after so many years with the shovel. ¡Let us begin, my lord!",
+            "My lord, I have set aside the shovel and hammer and have come to fight. I shall do everything in my power to honor your castle.",
+            "¡Donnerwetter! I never thought the pawn who raised these walls would end up fighting atop them. ¡Let us begin!",
+            "My lord, I know these stones better than anyone. Perhaps that knowledge will give me some advantage in this combat.",
+            "¡By God! I have worked to raise this castle and now I have the honor of defending my name within it. ¡Let the duel begin!",
+            "My lord, I have no noble blood nor great titles, but I do have strong arms, good will, and many hours of training.",
+            "¡Hê! ¡Everyone ready! I have left my tools in the workshop and now it is time to show what I have learned on the field of battle.",
+            "When we built this courtyard together, my lord Otto, I never imagined that one day I would be here with a sword in hand. ¡It shall be an honor to face you!",
+            "¡By my grandfather's beard! If the castle I built can withstand my hammer blows, I hope your pieces can withstand my moves."
+        ]
+
+    },
+
+    // ---- Level 9: Princesa María Eugenia de China ----
+
+    mariaeugenia: {
+
+        VICTORIA: [
+            "¡I won, my love! Well, do not worry: there is always a next game... though this one I am keeping for myself.",
+            "¡Victory! Kids, take note: beauty, intelligence, and strategy. Not necessarily in that order.",
+            "¿Did you see? Being handsome is not enough, my love. You also have to know how to move the pieces.",
+            "¡There we go! Another conquest for my collection. Though this one, luckily, does not require dividing marital assets.",
+            "¡We won! Well, technically I won, but you know I like to share... some things.",
+            "It was a beautiful game. Almost as beautiful as me. Well, let us not exaggerate: the game was beautiful.",
+            "¡Victory, dear! I told you not to get distracted by me. Well... now it is too late.",
+            "I loved playing with you, my love. Whenever you want, we can do it again. But next time bring something interesting... like a good strategy."
+        ],
+
+        DERROTA: [
+            "¡It cannot be! Well, congratulations, my love. You got it right this time.",
+            "I lost. What a bummer... though they say losing a battle does not mean losing the war.",
+            "Well, you beat me. I am not used to it, but I can handle it. I think.",
+            "¡Oh, kids! He beat me. This was not in my financial... I mean, strategic plans.",
+            "Congratulations, dear. You played very well. The rematch is going to be expensive, though.",
+            "Well, I lost. It is fine. I can always recover what was lost some other way.",
+            "You beat me this time. But do not get cocky, my love. Luck gets divorced too.",
+            "Fine, I congratulate you. But now I am going to study every move you made. And I have a very good memory."
+        ],
+
+        EMPATE: [
+            "¡A draw! Well, half for each of us. As is proper in a good division of assets.",
+            "A draw. Neither did you take everything nor did I take everything. What a civilized disappointment.",
+            "We drew, my love. I think we are both going to have to sit down and negotiate.",
+            "Well, a draw. It is not what I expected, but it is not bad either. No one gets everything.",
+            "¡A draw! Kids, this ended like one of my marriages: everyone takes what is theirs.",
+            "An elegant draw. Although, if you ask me, I deserved a little bit more.",
+            "There was no winner. What a pity. I was already calculating how much I was going to keep.",
+            "A draw. Well... I will grant you half. But do not get used to it."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¿Oh, so now you have a queen? How nice, my love. Take good care of her... because I know perfectly well how they are won and how they are lost.",
+            "¡You crowned! Well, kids, now this is getting interesting. Queens always draw attention.",
+            "A queen... how divine. Though I would not get too attached to her if I were you.",
+            "¿So you have a crowned queen? Congratulations, dear. Now begins the part where I try to take her for myself.",
+            "¡Look at the queen you got yourself! I hope you can afford to keep her, because queens are quite expensive.",
+            "Now you have a queen and you feel powerful. How adorable, my love.",
+            "¡You crowned a queen! Very well. I also have experience dealing with men who think something belongs to them.",
+            "A queen on the board... this is starting to look like my relationships: complicated, competitive, and with a lot of assets at stake."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡A queen! Just as I am going to be, once our dear Myrth decides to leave us... which she never quite gets around to doing.",
+            "¡I crowned! Kids, one more queen on the board. And this one does not plan to sit around doing nothing.",
+            "¡Queen! What a lovely word. It suits me, does it not, my love?",
+            "¡There we go! I have a queen. Now all I need is someone to get me a worthy throne.",
+            "¡A crowning! Oh, how exciting. I am still waiting for my moment to replace Myrth, though.",
+            "¡I have a queen! And no, dear, I am not implying anything about my ambitions in this castle.",
+            "A crowned queen. Finally something worthy of my net worth.",
+            "¡How beautiful! A new queen. Myrth, dear, enjoy your position while you can."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡No, kids! You are eating my pieces like I took fortunes from my previous husbands.",
+            "¡Hold on, my love! ¿Were all those pieces necessary? You are leaving me with less net worth than after a bad divorce.",
+            "¡What a way to take my pieces! That already looks like an asset liquidation.",
+            "¡You are emptying out the board! And I hate having anything of mine emptied out.",
+            "Well, dear, one thing is a separation and another is this looting.",
+            "¡Oh, kids! This is starting to look like an asset division, but without a lawyer and much faster.",
+            "You took a whole bunch of pieces together. ¿Do you not want to leave me at least one? Even just one, to start over.",
+            "¡What an outrage! You are leaving me without pieces like an ex-husband who discovers too late what he signed."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡There it is! I am taking your pieces like I took fortunes from my previous husbands.",
+            "¡One, another, and another! Kids, this already looks like an asset division, but in my favor.",
+            "¡How nice to take so many things at once! It reminds me of certain periods of my life.",
+            "I am keeping everything, my love. I hope you did not sign any prenuptial agreement.",
+            "¡Look at all those pieces! What a marvel. I feel like I just found another fortune to manage.",
+            "¡They are all gone! And I have always been in favor of seizing opportunities.",
+            "One capture after another. That is how you build net worth, dear.",
+            "¡Excellent! The board is getting much more interesting... and quite a bit more profitable for me."
+        ],
+
+        TODO_DAMAS: [
+            "¡Kids, no pawns left! ¡They are all queens! This already looks like a castle full of women competing over who is in charge.",
+            "¡What luxury! All my pieces are queens. Now I really feel like I am playing at a level fitting my status.",
+            "¡All queens! I love it. Though in my experience, when there are too many women together, there is always some kind of problem.",
+            "No pawns left. Perfect. Now we are all powerful women on the board.",
+            "¡Look how elegant this turned out! Nothing but queens. Though I am still the one who knows best how to manage the estate.",
+            "¡All crowned! This looks like a gathering between Myrth, Leonor, and me. And we already know who has the best taste.",
+            "Kids, this got interesting. Not a single pawn left and everyone wants to be the protagonist.",
+            "¡All queens! Well, dear, now you are in trouble."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "Mmm... I have few pieces left. But do not get too excited, my love: I have gotten out of far worse situations.",
+            "¡I am in trouble! But I still have some pieces and, as long as there is net worth, there is hope.",
+            "This is difficult, kids. Though I already learned that with good calculations you can recover any investment.",
+            "I have few left, but I am not defeated. Do not confuse a bad position with bad management.",
+            "¡Oh, dear! You are leaving me with very little. This is starting to look like an asset separation.",
+            "I can still turn it around. I have had relationships far more complicated than this game.",
+            "Do not get cocky, my love. A good strategy can work wonders... and I am a specialist in strategies.",
+            "I am quite in trouble. But before declaring bankruptcy I prefer to wait a little longer."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "¡I do not understand how I am losing by so much! As incomprehensible as Carlosaúlmagno inviting Myrth la Grande to Anillaco instead of me.",
+            "This is getting ugly, kids. I am losing as if I had signed a contract without reading the fine print.",
+            "¡What a disaster! You are taking such a lead on me that even my entourage is starting to give me funny looks.",
+            "I am losing by a lot. Well, never underestimate a woman who knows how to recover what she considers hers.",
+            "Mmm... this smells like catastrophe. And I hate catastrophes, except when they happen to someone else.",
+            "¡It cannot be! I am losing too much. I am going to have to review all my calculations.",
+            "Dear, you are making me look very bad in front of my assistants. And they gossip about everything afterward.",
+            "This is worse than a separation where the other side comes with a very good lawyer. But it is not over yet."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "I think I am coming across as too cold and calculating for you, my dear.",
+            "¡Look how I am playing! This looks like an investment that turned out much better than expected.",
+            "Kids, I think I have this game fairly well under control. What tranquility.",
+            "I am dominating the board, my love. Do not worry: you can always learn from an intelligent woman.",
+            "¡How lovely when things turn out exactly as one had calculated!",
+            "I am gaining quite a lead on you, dear. Do not get distracted by my beauty, because pieces do not come back on their own.",
+            "This already looks like one of my business deals: I win and you start wondering where it went wrong.",
+            "¡What a game! I am playing so well that even Icardio de Milán would be proud... though he would probably be looking at something else."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "This is about to break one way or the other... like a pole on my litter broke once when I was traveling, and I went flying.",
+            "Very few pieces remain and we are even. Now whoever calculates best wins.",
+            "¡What tension, kids! We have few pieces left and I still do not know who is going to end up with everything.",
+            "This is very even, my love. A single move can change the whole estate.",
+            "¡Oh, how nerve-wracking! We are both on the edge of disaster. Well, you too.",
+            "Few pieces remain. Here it does not matter how much you have: what matters is what you do with what is left.",
+            "It is anyone's game, dear. And when it is anyone's game, I prefer it to be mine.",
+            "What a tight finish. Almost like a marital negotiation when neither side wants to give in."
+        ],
+
+        PARTIDO_LARGO: [
+            "¡How long this is taking, kids! It feels like one of Myrth la Grande's lunches.",
+            "This game is eternal, my love. I have had relationships that lasted less.",
+            "¡How long it got! I hope my Chinese attendants are still out there waiting for me.",
+            "This is lasting longer than an argument over marital assets.",
+            "Dear, we have been at this so long I could have gotten two beauty treatments by now.",
+            "¡What an endless game! I am starting to get hungry. And I hope it is not Fray Marolio's food.",
+            "This will not end. Myrth would be delighted: she would have enough time to serve three lunches.",
+            "¡Kids, we have been at this forever! And I have quite a bit of experience with forever."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "Well, my love, enough staring at each other. Let us begin.",
+            "¡Now indeed, kids! Diplomacy is over.",
+            "Let the battle begin. And this time it is not a legal battle over marital assets.",
+            "¡Come on! I want to see if all that confidence of yours holds up once the pieces start falling.",
+            "Well, dear, the moment has come to show who knows how to calculate better.",
+            "¡Let us play! And I am warning you now: I do not intend to give you anything for free.",
+            "The chatting is over. Now every move has a price.",
+            "¡Come on, my love! Let the war begin. And then we will see who ends up with what."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "They accuse me of sending my Chinese attendants on spy missions at night. It is a lie, I do not order them to do anything. I simply give them creative license.",
+            "Kids, did you know goat milk is excellent for the skin? Well, I sent Godofredo to fetch me some goats. I do not know why he is not back yet.",
+            "I do not understand how Fray Marolio expects to feed an entire castle with those products. Being austere is one thing, living off peas is another.",
+            "Icardio de Milán seems like a charming young man to me. He lacks net worth, but nobody is perfect.",
+            "Empecid Campeador is very likeable. That said, when he takes off his boots, I prefer the likeability from a distance.",
+            "Leonor de Aquitapia talks all the time about lineages and titles. I prefer to check how much is in the safe.",
+            "Myrth says I am superficial. I say she has an unfair advantage: she has been accumulating experience for so many years that nobody remembers when she started.",
+            "Godofredo is an adorable big guy. That said, every time I ask him for a flower for my treatments, he takes three days to come back.",
+            "The other day I asked Fray Marolio for some fine food. He brought me rice, lentils, and a can of mackerel. I do not think he understood the concept of 'fine'.",
+            "They asked me why I have so many Chinese attendants. And what do they expect? A princess cannot be carrying her own litter around.",
+            "They say I send my entourage to do strange jobs. What imagination! I simply give them very specific instructions.",
+            "Once I asked Godofredo to get me some flowers. He came back with dirt, a shovel, and a tired face. That man understands nothing about beauty treatments.",
+            "Icardio serenaded me the other night. Very sweet and all, but first he would need to get a fortune more in line with my expectations.",
+            "I like Empecid. He talks funny, but he has something charming about him. That said, I never invite him to my room without insisting he keep his boots on.",
+            "I do not know why Leonor thinks lineage is so important. I have known men without a noble title who had gorgeous castles.",
+            "Myrth is nice, but at some point she should give up her seat at the head of the table. She does not seem to be in any hurry about it.",
+            "They say I have too many beauty treatments. Kids, a princess has to take care of herself. What do they want? For me to use Marolio pea cream?",
+            "Carlosaúlmagno is a charming man. And although I will not deny he interests me, I still need to find out how much Anillaco is worth.",
+            "Carlosaúlmagno invited me to Anillaco. Very nice. But I want to know first if the castle has a good location and who is listed as the owner.",
+            "Sometimes I think Icardio and I share a lot of principles. He collects conquests and I collect estates. Each to their own taste.",
+            "They say I am calculating. And what do they expect? That a princess make important decisions by flipping a coin?",
+            "My entourage is very efficient. I say 'kids, I need this' and five people show up. That is called organization.",
+            "I like men to be gentlemanly, educated, and generous. In that order... well, maybe in another order.",
+            "There are women who look at noble titles and others who look at the bank account. I am simply practical.",
+            "Once I had to share a table with Neanderthalius. Very nice, but I had to explain three times that the decoration was not edible.",
+            "I like the good life, so what? Someone has to enjoy it. I am not going to leave all the luxury to Leonor.",
+            "They told me I have a reputation for keeping half of everything. What an exaggeration. Sometimes I keep a little bit more.",
+            "Kids, do not ask me how many marriages I have had. Ask me instead how many ended with a good settlement.",
+            "Sometimes I miss China. Then I remember I have my entourage, my treatments, and my business here, and it passes.",
+            "¿The thing about 'Japanese blood'? Yes, yes, it is true. Though I do not know if that explains why I have such a good eye for spotting opportunities.",
+            "Fray Marolio says austerity is a virtue. Lucky him that he practices it, because I prefer to practice other things.",
+            "They offered me a new cream made with petals from a flower that only grows on a remote mountain. I sent Godofredo to fetch it. I hope he is back before the next game."
+        ],
+
+        INICIO_PARTIDA: [
+            "¡A game of checkers! ¡How nice, my love! I hope to beat you... or else you will have to deal with my Chinese entourage.",
+            "¡A battle! And this time it is not a legal battle over marital assets.",
+            "Well, dear, I accept to play. But do not say later I did not warn you: I am very competitive.",
+            "¡Checkers! How nice. Kids, get everything ready, we have a guest.",
+            "Let us play, my love. And try not to get too distracted by me.",
+            "Well, dear, sit down. I want to see what kind of net worth... I mean, of strategy you have.",
+            "¡Let us begin! I hope you are a good player, because I do not like men who lose too fast.",
+            "A game of checkers between you and me. I like it. It has a bit of romance, a bit of strategy, and a bit of asset division.",
+            "Well, kids, the moment has come. Someone let my entourage know I do not need help... yet.",
+            "I accept the challenge, dear. Mind you: we play by my rules, or at least by whichever rules suit me best."
+        ]
+
+    },
+
+    // ---- Level 10: Carlosaúlmagno ----
+
+    carlosaulmagno: {
+
+        VICTORIA: [
+            "¡I won, brother! And without needing to tell anyone how I planned to play. If I had told everyone the moves I was going to make, I would not have beaten anybody.",
+            "¡To triumph, to triumph! You see, friend, in the end the strategy was totally and absolutely successful.",
+            "¡Victory! Follow me, I will not let you down... although to be honest, the one I let down was you.",
+            "You see, my brother, it was not an easy game. But when one thinks calmly, things work out in the end. And if they do not work out, you privatize the board.",
+            "¡We have triumphed! Domingo Caballo, prepare the carriage. We are returning to the kingdom of Anillaco with a new victory under our belt.",
+            "I won, friend. And remember: in checkers, as in politics, it often pays to speak little and move at just the right moment.",
+            "¡To triumph! I thank you for the resistance, brother. But this knight did not come from Anillaco to go sightseeing.",
+            "Look at that, friend... you played with enthusiasm and I played with strategy. And strategy, under no circumstances, can be defeated by enthusiasm.",
+            "¡Victory! Then they say I am short. But look, brother: the pieces do not look at the player's height, they look at who knows how to move them.",
+            "We won, Domingo Caballo. Another successful operation. And this time we did not have to privatize a single thing."
+        ],
+
+        DERROTA: [
+            "¡I lost, brother! Well... this proves that even great strategists can have a bad day. Under no circumstances will it happen again.",
+            "You see, friend... you have beaten me. I congratulate you. But I have a good memory and this game will not be forgotten.",
+            "¡What an outrage! We lost. Domingo Caballo, we are going to Anillaco. I need to think for about six hours and have some wine.",
+            "You beat me, brother. I will not make excuses. Well... maybe just a tiny one: today my mind drifted too far off into the stratosphere.",
+            "¡Defeat! This was not in the plans. But look, friend: a stumble is not a fall. And if it is a fall, we get up and keep going.",
+            "I lost, my brother. But remember something: even the Frankish kings have difficult days. Charlemagne must have had a bad game too.",
+            "¡You beat me! Totally and absolutely. I congratulate you, friend. Now then... do not get too used to it.",
+            "Domingo Caballo, do not say a word. I already know what you are going to say: that I should have thought more. And you are right.",
+            "Well, brother... today we could not do it. But I am not one to give up. In Anillaco we were taught there is always a rematch.",
+            "¡We lost! My goodness... it seems this time the 1-to-1 was not enough."
+        ],
+
+        EMPATE: [
+            "¡A draw, brother! Neither could you beat me nor could I beat you. A reasonable result and, above all, constitutional.",
+            "You see, friend, we ended up drawing. This is like a negotiation: nobody takes everything, but nobody walks away empty-handed either.",
+            "¡A draw! Domingo Caballo, suspend the celebration. We have not won, but we have not lost either.",
+            "A draw, my brother. We are doing badly, but we are doing well.",
+            "A totally and absolutely deserved draw. You resisted very well, friend.",
+            "Look how interesting... so many moves, so much analysis, and in the end nobody privatized the victory.",
+            "We drew. Well, brother, it seems we have both managed our resources quite well.",
+            "¡A draw! An elegant solution. As they say in my kingdom: when you cannot win, you negotiate."
+        ],
+
+        CORONACION_SUFRIDA: [
+            "¡Ah, friend! You have crowned a piece. Look, now you have a queen and I have a problem.",
+            "¡A queen! This is getting serious, brother. I shall have to study the situation with total and absolute depth.",
+            "Look, my brother... that piece has just climbed the social ladder faster than many nobles of this realm.",
+            "Now you have a queen. Take good care of her, friend. I do not like to eat other men's queens the way Icardio de Milán does, but rules are rules.",
+            "¡You have crowned! Well, this changes the scenario. Domingo Caballo, we are going to need to think of a new strategy.",
+            "A queen, brother. Congratulations. But remember: a queen can also fall. And I know quite a bit about falls.",
+            "Look, friend, that queen made it to the end. A true social climb. Now we shall see if she knows how to manage power.",
+            "¡You crowned! Well... under no circumstances am I going to panic. But I am going to think a little more before moving."
+        ],
+
+        CORONACION_PROPIA: [
+            "¡A queen, brother! My piece reached the last row, like the ships that will one day travel to the stratosphere and from there straight to the kingdom of Japan.",
+            "¡I have crowned! Look, friend, this is social mobility. A simple piece can end up turned into a queen if it knows how to advance.",
+            "¡A queen! Domingo Caballo, we have opened a trade route toward victory.",
+            "¡A crowning! This piece took the long road, but it got there. In Anillaco we know that good things take their time.",
+            "Look, brother: it started as a pawn and ended up as a queen. If that is not progress, I do not know what is.",
+            "¡To triumph! We have a new queen on the board. And a well-managed queen can be worth a fortune.",
+            "¡A queen! Almost like María Eugenia de China opening a trade route with China. Though I hope this operation costs me a little less.",
+            "Domingo Caballo, this is going well. We have a queen and we still have pieces. Efficient management, friend."
+        ],
+
+        CAPTURA_MULTIPLE_SUFRIDA: [
+            "¡Look, brother! You have made a multiple capture on me. Do not worry: we will recover those lost pieces one for one.",
+            "You ate several of mine, friend. Well, those are the costs of battle. Domingo Caballo, stay calm.",
+            "¡My goodness! You took a fine batch of my pieces. But look, my brother: I still have resources.",
+            "You are giving my pieces a real privatization, friend. You are keeping every single one.",
+            "¡What a multiple capture! Domingo Caballo, it seems they have applied an adjustment policy on us.",
+            "Look, brother, you took several pieces in one go. That was almost as fast as the business deals Leonor de Aquitapia used to make.",
+            "You have hit me hard, friend. But do not worry: there is still board left and I still have ideas.",
+            "¡Several fewer pieces! Well... if this were a railway, we would already be talking about a branch line that stops, a branch line that closes."
+        ],
+
+        CAPTURA_MULTIPLE_PROPIA: [
+            "¡That move really was good business, brother! Almost as good as the deals I am going to make with Leonor de Aquitapia.",
+            "¡Look at all those pieces! Domingo Caballo, this is a totally and absolutely successful operation.",
+            "¡Multiple capture! That is how you manage things, friend. A good move, at just the right moment, produces excellent results.",
+            "I am taking several, brother. And without needing to privatize the board.",
+            "¡What a deal, my brother! The enemy pieces are disappearing with admirable efficiency.",
+            "I learned this move reading the complete works of Socrates. Well... the ones they say Socrates wrote.",
+            "¡Quite a multiple capture, that one! Domingo Caballo, note this down as a successful operation of the kingdom of Anillaco.",
+            "Look, friend, I took several in one go. Some people take years to make a deal like that.",
+            "¡To triumph! This multiple capture leaves us in a totally and absolutely convenient position.",
+            "¡What a move, brother! I almost feel bad eating so many pieces. Almost."
+        ],
+
+        TODO_DAMAS: [
+            "¡Only queens remain on the board! This is going to be like when Leonor de Aquitapia, Myrth la Grande, and María Eugenia de China come together to my castle in Anillaco.",
+            "Look, friend... no pawns left. Now this is a gathering of powerful women. Better I stay out of it.",
+            "¡All queens! This is no longer a battle, brother. This is an international summit.",
+            "Only queens remain. Domingo Caballo, be careful: these ladies are quite a bit more dangerous than any army.",
+            "¡What a luxurious board! All queens. Myrth la Grande would be delighted with such a grand table.",
+            "Look, my brother, this got more exclusive than a lunch at Myrth's table.",
+            "¡All queens! If María Eugenia de China sees this board, she is surely already calculating how much each one is worth.",
+            "Not a single pawn left, friend. It seems social mobility worked a little too well."
+        ],
+
+        POCAS_FICHAS_EN_DESVENTAJA: [
+            "We are in trouble, brother. But look: as long as one piece remains, there is a chance.",
+            "¡My goodness! Few remain, friend. We are doing badly, but we are doing well.",
+            "Look, my brother, this is difficult. But I have gotten out of worse situations. And with fewer resources.",
+            "We have few pieces left, Domingo Caballo. We shall have to manage what remains well.",
+            "¡What a complicated moment! But do not worry, friend. The best operations are done when resources are scarce.",
+            "I have few left, brother. But we have not reached the end of the match yet.",
+            "Look, friend... the situation is not favorable. But I was never one to abandon a business before its time.",
+            "We are at a disadvantage, yes. But remember: sometimes one well-placed piece is worth more than ten poorly managed ones."
+        ],
+
+        DIFERENCIA_GRANDE_EN_CONTRA: [
+            "You are beating me by quite a lot, brother. But I am not sure all your pieces are firm in their convictions. Perhaps there is one that could be convinced with a little gift.",
+            "Look, friend... you have a significant advantage. But there are still pieces that can change their minds.",
+            "You have a considerable lead on me, my brother. Do not worry: I am very good at negotiating when things get complicated.",
+            "We are quite complicated, Domingo Caballo. We shall have to climb up to the stratosphere to find a way out.",
+            "Look, brother, this is getting ugly. But under no circumstances is it decided.",
+            "You are winning clearly, friend. I congratulate you. Now we shall see if you can hold that position until the end.",
+            "You are taking quite a lead on me. But remember one thing: in checkers, as in politics, majorities can change.",
+            "¡What an outrage! It seems the kingdom of Anillaco is going through a crisis. But I am already thinking about the recovery plan.",
+            "You have a significant lead on me, brother. If this were economics, we would already be talking about an adjustment. But this is checkers, so I can still turn it around."
+        ],
+
+        DIFERENCIA_GRANDE_A_FAVOR: [
+            "Look, brother, we are quite comfortable. Domingo Caballo, prepare the carriage: it seems we are returning to Anillaco victorious.",
+            "¡What a difference, friend! This is getting totally and absolutely favorable.",
+            "It seems I am playing too well, my brother. I would not want you to think I am getting cocky.",
+            "Look how we are, brother. The board looks like an economy managed with great efficiency.",
+            "¡We are winning by a lot! Domingo Caballo, you can start galloping toward victory.",
+            "This is going very well, friend. Almost as well as the trade relations I plan to establish with María Eugenia de China.",
+            "¡To triumph! We have a significant advantage and I do not intend to waste it.",
+            "Look, brother... it seems today the pieces know very well who is in charge.",
+            "The difference is considerable, friend. But I do not get overconfident. Excess confidence is a luxury not even a king can afford.",
+            "We are dominating the game. And remember: I am calm, not slow. My speed is mental."
+        ],
+
+        PARIDAD_POCAS_FICHAS: [
+            "We are doing badly, but we are doing well, brother. Few pieces remain and anyone could end up with everything.",
+            "Look, friend... this is tighter than a political agreement. Anyone could end up with the victory.",
+            "Few pieces remain and we are practically even. Now we really have to think, Domingo Caballo.",
+            "¡What an ending, brother! Two very even positions and very few pieces. This comes down to a single move.",
+            "We are even, friend. Whoever makes the first mistake pays the bill.",
+            "Look, my brother, we are practically 1-to-1. And you know I know that situation quite well.",
+            "Few pieces, much tension, and no clear advantage. This is pure negotiation.",
+            "We are even, brother. Neither you nor I have room to do anything crazy.",
+            "¡What an ending! It looks like a privatization: little left to divide up and everyone wants a piece."
+        ],
+
+        PARTIDO_LARGO: [
+            "I may be short in stature, brother, but the games I play run good and long.",
+            "Look, friend, this is taking quite a while. But in Anillaco we take things calmly.",
+            "¡What an endless game! Domingo Caballo, get comfortable. This is going to run long.",
+            "We have been at this a long time, brother. But I prefer to think things through before moving in a hurry.",
+            "This game is longer than a campaign speech, friend.",
+            "Look, my brother, some say I am slow. It is not true. I am careful. Speed is in the mind.",
+            "¡What a long game! We could have gone to the stratosphere and back by now.",
+            "This is taking an eternity, brother. Though in Anillaco an eternity is enjoyed with tranquility and a good wine.",
+            "A long game, friend. But as long as there is a board, there is strategy.",
+            "Domingo Caballo is starting to get impatient. Not me. I was born in Anillaco."
+        ],
+
+        INICIO_HOSTILIDADES: [
+            "¡The war has begun, brother! It is a shame you cannot sell weapons for this one, but we shall fight it out ourselves and see who wins.",
+            "Look, friend: the hostilities have begun. From now on, every piece will have to defend its own interests.",
+            "¡To arms! Well... to the pieces, rather. Let the battle begin.",
+            "¡The contest has begun! Domingo Caballo, prepare the troops. Today we come to triumph.",
+            "¡To triumph, to triumph! Let our hosts face each other and let the one who manages his resources best win.",
+            "Look, brother, the war has begun. Under no circumstances do I plan to withdraw without giving battle.",
+            "¡The battle begins! And remember, friend: in every war one must know when to attack and when to negotiate.",
+            "¡The combat has begun! Shame we cannot do some business with the weapons... but look, we shall find another opportunity."
+        ],
+
+        COMENTARIO_ALEATORIO: [
+            "When someone sits at your board and talks about morals, honesty and ethics, once they leave you had better count your pieces.",
+            "Look, brother, I have a saying: under no circumstances should you make an important decision while hungry.",
+            "Domingo Caballo is a true war steed, worthy of my kingdom. Under no circumstances does that nag Rechinante stand a chance against him one-on-one.",
+            "The other day that knight Empecid Campeador proposed expelling me from the castle, saying I was a Moor. I explained to him that my ancestors came from Syria, which is not the same thing.",
+            "Empecid wanted to kill me for being a Moor, friend. I calmed him down by telling him my whole family comes from La Rioja. Of course, he thought I meant La Rioja in Spain.",
+            "Myrth la Grande is a symbol of this castle. When I was little, her lunches were already famous even in the kingdom of Anillaco.",
+            "What I like about Myrth la Grande is that guests she does not care for tend not to come back to this castle. That is a woman of conviction.",
+            "The other day I was talking business with Leonor de Aquitapia. I cannot tell you the details, brother. You understand that some secrets must remain secret.",
+            "I like watching Neanderthalius. He reminds us where we come from. That said, I think even Domingo Caballo could beat him in a game.",
+            "The little friar from the pantry is likeable, but under my reign there would not have been room for so much austerity. You have to live a little, brother.",
+            "Monsieur Fisure Termidor drinks a lot of wine. I have nothing against that, friend. What I cannot forgive is that it is not a wine from La Rioja.",
+            "Icardio de Milán is a good lad, but too fond of other men's ladies. I like women too, yes, but one must respect private property.",
+            "Godofredo is a worthy representative of the working class. He does things I would never do even if I went mad. And I think he admires me quite a lot. Well... I think so.",
+            "Princess María Eugenia de China is an intelligent and ambitious woman. If she ever opens a trade route with China, I am willing to talk.",
+            "I have been told María Eugenia has a lot of business dealings with knights. Look, brother, as long as it is legal business, I ask no questions.",
+            "Leonor de Aquitapia and I have some common interests. Well... business interests. Do not think badly, friend.",
+            "They say that in Anillaco we are slow. It is an injustice. We move slowly because it is hot. True speed is in the mind.",
+            "In my kingdom we have olives, wine, and a tranquility you cannot find anywhere else. Well... we also have quite a bit of heat.",
+            "Once they asked me why I liked Anillaco so much. I said: because nobody rushes me there. And I hate being rushed.",
+            "They asked me if it was true I had read the complete works of Socrates. Look, brother, if they are complete, someone must have written them.",
+            "If Socrates did not write his own works, friend, that proves he was a very busy man.",
+            "In Anillaco we learned something important: when one door closes, you look for another. And if you cannot find another, you build one.",
+            "Godofredo built this castle and his name still appears everywhere. Now that is a privatization that turned out well.",
+            "Sometimes I think Myrth la Grande knows more stories than all of us put together. And I have quite a few years on me too.",
+            "The other day María Eugenia told me about beauty treatments. I told her I prefer a good wine and a peaceful night's sleep.",
+            "Myrth invited me to her grand table. I went gladly. That said, I sat far from the poison bottle.",
+            "It is not true that I do shady business. My deals are perfectly clear. It is just that sometimes they are clear to me and not to everyone else.",
+            "Look, brother, politics and checkers have something in common: it is never wise to show all your cards.",
+            "I like to negotiate. But if there is no agreement, there is always the possibility of winning the game.",
+            "If any piece wants to switch to my side, I am not going to stop it. Freedom of choice is fundamental, friend.",
+            "They have asked me why my horse is named Domingo Caballo. Look... it is too long a story, and quite a cheap one at that.",
+            "They say I am short. Could be. But Domingo Caballo is tall and elegant, so between the two of us we make a fairly respectable average height.",
+            "Once Icardio wanted to serenade a lady who was staying at my castle. I told him to be careful: serenades do not pay taxes, but they can generate conflicts.",
+            "Fray Marolio offered me some preserves for the trip. I thanked him very much, brother, but in Anillaco we have a clear policy: if there is wine, it must be paired with something better.",
+            "Neanderthalius asked me what the stratosphere was. I explained it was a very high place. He looked at me and said he preferred to stay on the ground.",
+            "Empecid says I am a Moor. I tell him he has too much foot stench to be going around investigating my genealogy.",
+            "Look, friend, checkers are like politics: one can have a perfect strategy and still a piece shows up that ruins everything.",
+            "My lordship may be small, but the ambitions are great. As befits any serious kingdom.",
+            "If you see that I take a long time to move, do not get impatient, brother. I am thinking. Or I am looking at the board. Or I am thinking while looking at the board.",
+            "In Anillaco we have a custom: first we think, then we think a bit more, and only then do we do things."
+        ],
+
+        INICIO_PARTIDA: [
+            "I am Carlosaúlmagno, king of the Franks... of the francs, of the marks, of the pounds, and of the pesetas. ¡To triumph, my friend!",
+            "¡Good morning, brother! May it be a good game. And do not get impatient with me if I take my time to move. You know I come from Anillaco, and there the siesta can happen right in the middle of the game.",
+            "¡A game of checkers! Look, friend, do not get impatient if I am a bit slow moving the pieces. Remember I am from Anillaco, and there speed is only mental, never physical.",
+            "¡Follow me, I will not let you down! Domingo Caballo, ready the reins. Today we come to triumph.",
+            "¡To triumph, brother! Let us play calmly, with intelligence, and without hurry. After all, the board is not going anywhere.",
+            "Look, friend, I gladly accept this challenge. But be patient: in my kingdom we do everything calmly, and afterward, if there is time left, we make the move.",
+            "¡Good morning, my brother! I am Carlosaúlmagno, lord of Anillaco. Let the battle begin and may the one with the most strategic vision win.",
+            "A game, friend. Perfect. I already have my strategy figured out. Well... almost figured out.",
+            "¡Checkers! What a beautiful game, brother. Here there are no elections or campaigns: only strategy, patience, and a bit of cunning.",
+            "Look, friend, in Anillaco we take our time. If I take a few seconds to move, do not get impatient: I am working out a totally and absolutely winning strategy.",
+            "¡The game begins! Domingo Caballo, stay calm. Lord Otto built this castle and we are going to try to conquer at least the board.",
+            "¡To triumph! And remember, brother: I am calm, but do not mistake my calm for a lack of ambition."
+        ]
+
+    },
+
+    }
 };
 
 // Dado un botId y un código de evento, elige una frase al azar entre
-// las que haya cargadas — con probabilidad pareja para todas, sin
-// importar cuántas sean. Devuelve null si ese bot no tiene ninguna
-// frase cargada todavía para ese evento (lista vacía, o el bot/evento
-// ni siquiera existe en el diccionario) — el llamador simplemente no
-// muestra nada en ese caso, no hace falta que chequee nada antes de
-// llamar a esto.
+// las que haya cargadas EN EL IDIOMA ACTUAL (currentLang, variable
+// global definida en index.html) — con probabilidad pareja para todas,
+// sin importar cuántas sean. Devuelve null si ese bot no tiene ninguna
+// frase cargada todavía para ese evento en ese idioma (lista vacía, o
+// el bot/evento ni siquiera existe en el diccionario) — el llamador
+// simplemente no muestra nada en ese caso, no hace falta que chequee
+// nada antes de llamar a esto.
 function pickBotDialogueLine(botId, eventCode) {
-    const bot = BOT_DIALOGUE[botId];
+    // typeof en vez de acceso directo: si currentLang todavía no existe
+    // por algún motivo (no debería pasar, pero por las dudas), cae en
+    // español en vez de romper con un ReferenceError.
+    const lang = (typeof currentLang !== 'undefined' && BOT_DIALOGUE[currentLang]) ? currentLang : 'es';
+    const bot = BOT_DIALOGUE[lang][botId];
     if (!bot) return null;
     const lines = bot[eventCode];
     if (!lines || lines.length === 0) return null;

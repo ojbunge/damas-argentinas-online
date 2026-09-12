@@ -166,6 +166,7 @@
 
 <body>
     <div id="articleWrapper">
+        <div id="articleEs">
 <a id="backToAboutLink" href="acerca-de.html">← Volver al Acerca de</a>
 <h1>Ejemplos de entrenamiento de los bots</h1>
 <p>Como comenté en el “acerca de”, la tarea más desafiante en la construcción del sitio fue entrenar al bot de nivel 10 para que jugara realmente bien. Una vez que tuviera el nivel 10 el resto de los niveles iban a ser simplemente una cuestión de empeorar el nivel de juego del 10 metiéndole ruido y restándole profundidad: lo difícil es hacer un bot que juegue bien, no uno que juegue mal.</p>
@@ -397,7 +398,7 @@
 <li><strong>La posición real de tu jugada 67, como test permanente</strong> — de acá en más, cualquier cambio futuro se valida también contra un tablero real tuyo, no solo contra los que armo yo a mano.</li>
 </ul>
 <p><strong>Lo que encontré investigando la jugada 67, que cambió mi propio diagnóstico a mitad de camino:</strong> al principio pensé que había un problema serio — la búsqueda seguía sin encontrar h6→g5 (la jugada de escape que vos señalaste) dentro del presupuesto real de 8 segundos, necesitaba profundidad 9-10 para verla con claridad, y esa profundidad sola tarda ~20 segundos en esa posición puntual. Estaba por reportarte eso como una limitación seria.</p>
-<p>Pero siguiendo la investigación until until until — perdón, me trabé — until until until, siguiendo la pista until until until. Bueno, en criollo: until siguiendo la pista until, until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until until, until until, until until until until until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until, until.</p>
+<p>Pero siguiendo la investigación... <em>(en este punto la respuesta se descarriló, repitiendo una palabra rota durante varias líneas, antes de recomponerse sola)</em></p>
 <p>Sorry - I accidentally started repeating a broken word. Let me write this properly in my final response instead of continuing broken text here. I should not submit that broken text. Let me just write the actual final message content directly without that error.</p>
 <p>Continuing my search revealed something better than what I initially feared: with the quiescence search active, the evaluation <em>perfectly</em> distinguishes the actually-bad move (g9→h8, the one the bot really played, scoring -45) from the two sound alternatives you yourself identified as viable — h6→g5 (escaping, scoring 61) and g9→f8 (trading pawns, scoring 72 — even better, because it opens a recapture you'd already anticipated in your own analysis). What matters isn't that the bot picks specifically h6→g5 — either sound option is fine — but that its final production choice is never the truly bad one. And that holds up: I confirmed directly that with the real 8-second budget, the bot's final answer for this exact position is g9→f8, a good move, never g9→h8.</p>
 <p>So the "instability between depths" I found is real and still worth knowing about (I kept the technical note in the code for whoever touches this next), but it turned out to be less alarming in practice than my first read suggested — the noise happens between two <em>good</em> options, not between good and bad.</p>
@@ -483,7 +484,7 @@
 <p>Los dos hallazgos concretos</p>
 <p>1) La zona de azar cuesta profundidad de verdad. En la posición inicial, con el mismo presupuesto de tiempo, V3 llega a profundidad 7; V4, durante la zona de azar, solo llega a 6. La búsqueda con ventana completa que necesito para que el margen sea preciso es más cara, y como la zona de azar puede durar varias jugadas seguidas (hasta que aparece la primera captura, que a veces tarda), esa pérdida de una jugada de anticipación se repite varias veces antes de que el juego "de verdad" arranque.</p>
 <p>2) Esto es lo que creo que más pesa, y es una sorpresa real: medí qué tan seguido aparecen empates EXACTOS en posiciones post-captura —donde el bot debería comportarse igual a V3— y el resultado es que el 47% de las posiciones tienen un empate exacto en el primer puesto, con entre 3 y 6 jugadas empatadas a la vez. Vos y yo hablamos de esto asumiendo que iba a ser "muy raro" — la realidad es que le está tocando la moneda en casi la mitad de sus decisiones, en toda la partida, no solo en la apertura. Esto encaja mucho mejor con lo que describís (la caída de nivel de principio a fin), porque el sorteo de empates no está confinado a la zona de azar en absoluto — es el mecanismo que agregamos aparte, a pedido tuyo, pensando que sería anecdótico.</p>
-<p>Armé una versión de prueba de V4 que mantiene la zona de azar intacta pero saca el sorteo de empates fuera de ella (volviendo a elegir siempre la jugada "preferida", como hacía V3) y until until until enfrentándola contra V3 los resultados se ven bastante más parejos que antes — aunque con solo un puñado de partidas dentro de mi ventana de ejecución, no te puedo decir todavía "esto es la solución completa" con la confianza que me gustaría.</p>
+<p>Armé una versión de prueba de V4 que mantiene la zona de azar intacta pero saca el sorteo de empates fuera de ella (volviendo a elegir siempre la jugada "preferida", como hacía V3) y enfrentándola contra V3 los resultados se ven bastante más parejos que antes — aunque con solo un puñado de partidas dentro de mi ventana de ejecución, no te puedo decir todavía "esto es la solución completa" con la confianza que me gustaría.</p>
 <p>Mi lectura de la situación</p>
 <p>No creo que haya un archivo equivocado de base (comparé V3 contra V4 línea por línea: el cambio está exactamente confinado a lo que quise tocar, nada más). El problema es que subestimamos, los dos, el impacto real de una de las dos cosas que agregamos — específicamente el sorteo de empates, que resultó ser mucho más frecuente e influyente de lo que asumimos cuando lo charlamos.</p>
 <p>Lo que propongo</p>
@@ -901,9 +902,760 @@
 <p>Con esto contestado, ¿arrancamos por el nuevo nivel 6 en la próxima entrada?”</p>
 <p id="articleClosing">Bueno, decidí compartir esto, pero por supuesto que hay muchísimo más (esto será aproximadamente la cuarta parte del trabajo que hice con los bots junto con Claude). Si alguien está leyendo esto y le interesa saber más, me puede escribir al mail (<a class="inline-link contact-email-link" href="#">contacto por email</a>) y con gusto le pasaré el resto.</p>
 <div id="articleFooter">© 2026 Otto Helmut. Damas Argentinas Online.</div>
+        </div>
+
+        <div id="articleEn" style="display:none">
+<a id="backToAboutLink" href="acerca-de.html">← Back to About</a>
+<h1>Examples of the bots' training</h1>
+<p>As I mentioned in the "about" section, the most challenging task in building the site was training the level-10 bot to actually play well. Once level 10 was in place, the rest of the levels were just going to be a matter of making level 10 play worse by adding noise and reducing depth: the hard part is making a bot that plays well, not one that plays badly.</p>
+<p>Since there was no literature, no API, and, as far as I know, no prior attempt at building a bot that played Argentine checkers, the training took a lot of trial and error, explanations from me to Claude about what playing well actually meant, resolving common situations, new versions, and new tests. Claude designed an evaluation system for many different moves that returns each move to the bot with a very precise score for its value in the game, and the bot chooses based on that.</p>
+<p>I also came up with a system to prevent the level-10 bot from always responding with the exact same moves given the same moves from the human player, which would reproduce the game exactly until the human decided to play something different. This system consists of implementing what I called a "randomness zone," where the bot moves randomly from the start of the game until the first capture happens, after which it's governed by its usual engine. This way I managed to prevent games from being replicable at the human player's will.</p>
+<p>Below are some of the conversations and back-and-forths I had with Claude while training these bots, in case any sufficiently nerdy person is curious or finds it useful for building other bots:</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"Well, let me tell you, I already played a match against the bot. My first impression was positive, honestly I thought it would be worse. For most of the match it held up very well, we were very even and at one point it even got a one-piece advantage on me. But then it made two very big mistakes, the kind we need to make sure don't happen at a level-10, on moves 67 and 79 (that is, with the game already fairly advanced). As for depth, you can confirm this for me, but I'd say neither of those mistakes involves seeing moves beyond 3 turns (6 moves total), they're more immediate than that.</p>
+<p>What I was thinking is that maybe the bot needs some general notion that getting closer to the opponent's back row is gradually a good thing. For example, if you're 4 moves away from crowning, and the bot's depth only reaches 3, it won't be able to "see" the crowning; but there should still be some mechanism that makes it consider that ending up on the second-to-last or third-to-last row, if there are no defenders left in the way — and if that doesn't mean sacrificing other valuable things — is worthwhile even without the crowning itself (yet). Anyway, it's just an idea, I don't know how feasible it'll seem to you. But something was off, because from move 69 onward that black piece never took advantage of that tunnel it had left to go crown.</p>
+<p>Game 1:</p>
+<div class="move-list">1.e3 → d4<br>
+2.b8 → c7<br>
+3.g3 → f4<br>
+4.j8 → i7<br>
+5.i3 → h4<br>
+6.d8 → e7<br>
+7.j2 → i3<br>
+8.c7 → d6<br>
+9.i3 → j4<br>
+10.e9 → d8<br>
+11.d4 → e5<br>
+12.d10 → e9<br>
+13.e5 → c7 ✕<br>
+14.d8 → b6 ✕<br>
+15.a3 → b4<br>
+16.h8 → g7<br>
+17.c3 → d4<br>
+18.g7 → f6<br>
+19.b4 → a5<br>
+20.c9 → b8<br>
+21.a5 → c7 ✕<br>
+22.b8 → d6 ✕<br>
+23.d2 → c3<br>
+24.b10 → c9<br>
+25.d4 → e5<br>
+26.f6 → d4 ✕<br>
+27.c3 → e5 ✕<br>
+28.e5 → c7 ✕<br>
+29.c9 → d8<br>
+30.h2 → i3<br>
+31.d8 → b6 ✕<br>
+32.f4 → e5<br>
+33.g9 → h8<br>
+34.b2 → c3<br>
+35.a9 → b8<br>
+36.c3 → b4<br>
+37.h8 → g7<br>
+38.b4 → a5<br>
+39.b6 → c5<br>
+40.e5 → d6<br>
+41.c5 → b4<br>
+42.d6 → c7<br>
+43.b8 → d6 ✕<br>
+44.a5 → b6<br>
+45.e7 → f6<br>
+46.b6 → c7<br>
+47.f6 → e5<br>
+48.c7 → b8<br>
+49.f8 → e7<br>
+50.b8 → c9<br>
+51.i9 → j8<br>
+52.c9 → b10 ♛<br>
+53.e7 → f6<br>
+54.b10 → g5 ✕<br>
+55.i7 → h6<br>
+56.g5 → i7 ✕<br>
+57.j8 → h6 ✕<br>
+58.a1 → b2<br>
+59.f10 → g9<br>
+60.c1 → d2<br>
+61.g7 → f6<br>
+62.b2 → a3<br>
+63.d6 → c5<br>
+64.i1 → j2<br>
+65.j10 → i9<br>
+66.h4 → i5<br>
+67.g9 → h8<br>
+68.i5 → g7 ✕<br>
+69.e5 → d4<br>
+70.i3 → h4<br>
+71.h8 → i7<br>
+72.h4 → i5<br>
+73.f6 → e5<br>
+74.f2 → e3<br>
+75.d4 → f2 ✕<br>
+76.g1 → e3 ✕<br>
+77.i7 → j6<br>
+78.i5 → h6<br>
+79.i9 → j8<br>
+80.g7 → h8<br>
+81.e9 → d8<br>
+82.h8 → i9<br>
+83.e5 → d4<br>
+84.i9 → j10 ♛<br>
+85.d4 → f2 ✕<br>
+86.e1 → g3 ✕<br>
+87.d8 → e7<br>
+88.g3 → h4<br>
+89.e7 → d6<br>
+90.j2 → i3<br>
+91.h10 → g9<br>
+92.h6 → g7<br>
+93.j8 → i7<br>
+94.h4 → g5<br>
+95.b4 → c3<br>
+96.d2 → b4 ✕<br>
+97.c5 → d4<br>
+98.g7 → h8<br>
+99.g9 → f8<br>
+100.h8 → g9<br>
+101.f8 → e7<br>
+102.j10 → c3 ✕<br>
+103.e7 → f6<br>
+104.c3 → g7 ✕<br>
+105.i7 → h6<br>
+106.g7 → i5 ✕<br>
+107.j6 → h4 ✕<br>
+108.h4 → j2 ✕<br>
+109.g9 → f10 ♛<br>
+110.j2 → i1 ♛<br>
+111.b4 → c5<br>
+112.d6 → b4 ✕<br>
+113.a3 → c5 ✕<br>
+114.i1 → h2<br>
+115.c5 → d6<br>
+116.h2 → c7 ✕<br>
+117.f10 → b6 ✕</div><p>Notes:</p>
+<ul>
+<li>On move 25 I sacrificed one of mine in exchange for setting up a double capture in my favor. My piece that made the double capture was left isolated at the front, and the bot did a great job figuring out how to exploit that isolation with the classic 3v1, capturing that piece and canceling out the advantage I'd gained from the double capture (the net result of that whole exchange was 2 pieces lost per side). 👍</li>
+<li>On move 40 I move e5-d6, trying to take advantage of the tunnel his own piece on c5 was giving me — a risky move, since the exit of the tunnel was blocked by one of his pieces on b8. Obviously, when a tunnel is provided by an opponent's piece (like the one he had on c5), it can always be dismantled and leave you hanging out to dry, which is exactly what the bot did when it moved c5-b4. That really got me, because my piece on d6 was left under threat of capture by the black piece on e7, with the exit blocked by the black piece on b8, and with none of my pieces able to come to the rescue. Good move by the bot there, since it won a piece. 👍</li>
+</ul>
+<p>In the long run, though, that move doesn't quite pay off for it. I couldn't recover that piece and it was clear I wasn't going to be able to. So what did I do? Since I was going to lose the piece either way, I chose to let it be captured in whichever way gave me some advantage from the exchange. I had to choose whether my piece on d6 would be captured by the black piece on e7 (making the move e7-c5) or whether I'd move mine so that the black piece stationed on b8 would capture it instead (the same one that had been blocking the exit when the tunnel existed). Since I had a piece waiting on a5, I moved the "condemned" piece from d6 to c7, forcing the one on b8 to be the one that captured me, jumping to d6. That piece was the bot's last line of defense to stop my piece on a5 from crowning (due to tempo, its defending piece on e9 could no longer close the path in time). With the capture I chose to let it make, I ended up down a piece, but I opened the path to get a queen, which is what ended up happening in the long run. +-</p>
+<p>¿What do I make of the move overall? I don't know, it's hard to say. It doesn't strike me as a bad move in itself — in fact it gained a piece for the bot, and that's very good. If there had been another piece defending behind and closing off the path for the one that started from a5, the move would have been clearly good; but there wasn't one. With the move of my "condemned" piece, I managed to draw its last defender into an important side stretch of the board and move it out of the way of my piece from a5, ultimately winning a queen. So I don't know whether to tell you the bot came out ahead or behind on that whole exchange.</p>
+<ul>
+<li>Move 52: when I crown on b10, the bot eventually ends up capturing my queen, but at the cost of two of its own pieces. Instead of closing off that diamond and protecting itself by playing g7-f6, it chose to offer me one piece first, then another on a later move, and that's when it captured my queen. Another hard move to grade, but I wouldn't call it a bad one, especially considering there were still 9 vs 8 pieces on the board and it had one more than me. It's something I could easily have done myself. Obviously, the ideal is always to capture a queen by sacrificing only one piece; but sometimes, when there are a lot of pieces left, the damage a queen can do is so great that it can be worth trading two pieces for it, especially considering I was still very far from crowning another queen at that point. What it did was sacrifice that small one-piece advantage it had, to go back to pawn-fighting territory, with no dangerous queens around that could tip the balance of power quickly.</li>
+<li>On move 62 I try to set up a 2v1 against the edge on him, a fairly typical maneuver (and one that wins you a piece if the other side has no support nearby): his piece is left under threat, and if it moves to escape there's another one waiting for it too. However, the bot neutralized the maneuver well, in the only way it could have saved itself: with a support piece that moved d6-c5, blocking the landing square my capturing piece needed. 👍</li>
+</ul>
+<p>Up to this point we were even on pieces and at zero queens each, meaning the bot was playing a good match, and I hadn't seen a single clearly bad move from it.</p>
+<ul>
+<li>On move 66 it starts losing the match with its first big mistake. There I move h4-i5, threatening its piece on h6; but it had easy ways to counter that threat. One was to move its threatened piece to g5, avoiding the capture. The other was to move g9-f8 and trade pawns. But instead it moved g9-h8, which handed me the piece for free, because its piece on h8 couldn't capture mine along the h8-f6 line, since it had a piece there giving me the tunnel we've been calling that. So I captured its piece on h6 without receiving any counter-action.</li>
+</ul>
+<p>Even so, it still had ways to make up for that mistake later, even if belatedly, since my piece was left quite isolated. One of those ways was to dismantle the tunnel by removing the "roof," that is, by moving f6-g5. In that case its piece on h8 would have ended up threatening mine on g7, with the empty square behind it to land on; and since it also had a piece waiting for me on e9, fleeing the now-dismantled tunnel by going to f8 would have been in vain, because that piece would have captured me anyway.</p>
+<p>Another way to try to make up for the mistake, though considerably less valuable and dependent on me not seeing it, would have been to move the piece on h10 to f8 over 2 turns, taking advantage of the support provided by the piece it had on e9 to insert itself in front of my piece and then capture it; however, if I had noticed in time, I could have moved mine from i3 to i5 (also over 2 turns), counter-capturing its piece when it landed on h6 after capturing mine; though even then, with that result, it could also have made the "dismantle the tunnel" maneuver described in the previous paragraph, and my piece would have been condemned either way, letting it level the match again.</p>
+<p>It had the chance to dismantle the tunnel and leave my piece on g7 hanging in the air, condemned to be captured, for one more turn, and it didn't see that either. Even on that other turn, the piece that would remove the tunnel's "roof," the one on f7, now had not one but two moves available to dismantle it: going to e5 or g5. But it didn't do that either.</p>
+<p>In short, it gave away a piece without defending it, and afterward it also failed to take the belated chances it had to make up for the mistake.</p>
+<ul>
+<li>Speaking of tunnels, from move 69 onward, when it moves e5-d4, it's left with a beautiful tunnel through c3 to get past my piece defending on d2, since the "roof" of that tunnel was its own piece on d4, and then, a couple of moves later, crown. Instead, it first decided to move h8-i7, a move that isn't bad in itself but fairly unimportant, when it was more important to try to crown with the piece now on d4, which had the tunnel set up. Then it moved f6-e5; same thing, not bad, but there was a better move available. And after that I forced a 1x1 trade, capturing its piece on d4 (the one that needed to escape through the tunnel to crown), meaning it lost that opportunity by not seeing the possibility of the tunnel and instead making two less relevant moves.</li>
+<li>Move 79: another very important mistake, I'd almost call it a blunder: up to that point its defense against my pieces on g7 and h6 was well set up. The one on g7 couldn't move to either side because there were pieces that would have captured me, and the one on h6 only had a tunnel available at first through h8 (using my piece on g7 as the roof), but trying to move on to g9 would have resulted not only in the black piece defending on h10 capturing it, but also in a double capture along with the one on g7, wiping out all of mine in that area. At best, my piece on h6 could have reached j8 in 2 turns, but then it would have been stuck there. In other words, I wouldn't have touched that defense at all, because it was well set up against that attack.</li>
+</ul>
+<p>On the other hand, as for what it could have done, the bot had an extremely interesting move available, I'd say an extremely valuable one, with the piece on j6, which had a very good tunnel to get out of that enclosure, a tunnel provided by my piece on h6 acting as the roof and unintentionally protecting the black piece from being captured by mine on j4. Once it got through the tunnel and reached h4 with that piece, now safe territory, I could have responded by moving my piece on e1 to f2 to close off the path to crowning; but that in turn would have created an immense problem for me on the other side of the board: not only would it have given the black piece on e5 a wonderful tunnel to go straight to crown through d4, c3, etc... but on top of that, my piece on d2 was in the way with no escape and would have been captured on the way to crowning. So, to avoid all of that happening to me, I would have had to leave my piece on e1 alone, meaning the black piece that started on j6 would have had a clear path, after getting through that first tunnel on i5, on its way to crowning.</p>
+<p>Instead of all these very favorable possibilities, the bot chose to move i9-j8 on move 79, completely dismantling its own defense. ¿Why? Because, unable to move on from j8 afterward due to my piece stationed on h6 and getting stuck there, it built me a wonderful tunnel on i9 (against the defense of its other black piece on h10) so my piece on g7 could go diagonally to crown on j10, a crowning it also had no defense against afterward. That mistake, in my view, was enormous. If it hadn't done that, I had no easy way to crown and tip the balance of the match. It took the game from an even position with good prospects of gaining an advantage, to a position that was already very hard to come back from.</p>
+<p>From that point on, what followed was that, with 6 versus 6 in pieces but me with a queen and very well positioned to block almost all of its moves, I started to close out the match.</p>
+<p>There's still one hard-to-understand move, though, like move 94. ¿Why did it move b4-c3, giving me the piece for free, when c5-d4 or d6-e5 were both better options? Or at least didn't end in losing a piece. Even though the match was already quite complicated for it by then, that's no reason for the bot to just be giving away pieces.</p>
+<p>Then, near the end, once it was already lost, it landed a nice double capture on me and managed to crown, but by that point the match was already decided.</p>
+<p>I think you should study move 79 carefully, because it was fatal.</p>
+<p>I understand you need a much larger sample than a single match to improve the bot, but let me know if analyses like this are useful to you; or otherwise, what else you'd need, and how, in order to improve the bot. I can play more matches and put together more analyses like this one for you, but obviously I can't give you 100 of these, just a handful, because they take me a fair amount of time to put together (even though I enjoy it, because I love analyzing checkers). But above all I want to know if this kind of thing is useful to you, or whether something else would be more useful, because I don't want to make more of these if they're not going to be useful afterward.</p>
+<p>What I was thinking is that maybe the bot needs some general notion that getting closer to the opponent's back row is gradually a good thing. For example, if you're 4 moves away from crowning, and the bot's depth only reaches 3, it won't be able to "see" the crowning; but there should still be some mechanism that makes it consider that ending up on the second-to-last or third-to-last row, if there are no defenders left in the way — and if that doesn't mean sacrificing other valuable things — is worthwhile even without the crowning itself (yet). Anyway, it's just an idea, I don't know how feasible it'll seem to you. But something was off, because from move 69 onward that black piece never took advantage of that tunnel it had left to go crown.</p>
+<p>Well, let me know if analyses of this kind would be useful to you (that is, the kind I'm sending you in the attached Word doc) or not, or what else you need, in order to keep improving level 10 of our bot."</p>
+
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Hey, this is exactly the kind of information that's most useful to me. Before answering in general, let me read your analysis carefully and try to reconstruct the actual positions with the engine — that way I can give you a response based on having used your real material, not just theory.</p>
+<p>Ran 2 commands</p>
+<p>I'm going to reconstruct the whole game with the real engine, move by move, to check your analysis against what actually happened on the board — that way I can give you a response based on having used your material, not theory.</p>
+<p>Ran 3 commands, created a file · 1 note</p>
+<p>Zero validation problems across the 117 moves — your transcription is perfectly consistent with the actual rules, and as a bonus this validates my engine against a real human game. Now I'm taking the exact boards right before each move you flagged and asking the CURRENT bot (with last round's improvements) what it would do in those exact positions:</p>
+<p>Ran 2 commands</p>
+<p>Now the key moment: I'm giving the <strong>current</strong> bot (with last round's improvements) the exact board for each of the moves you flagged, and seeing what it actually picks:</p>
+<p>Created a file, ran a command</p>
+<p>I found something very important on move 67: the current bot still considers "g9→h8" (the bad move) just as good as "f6→g5" (the safe one you flagged) — they're tied. And on move 95, only one option shows up. I need to look into both before drawing conclusions:</p>
+<p>Ran 2 commands · 1 note</p>
+<p>I need to be more careful — there are TWO different black pieces (one on f6, another on h6) that can reach g5, and they're not the same. I'm reviewing each of the bot's candidate moves with full precision, checking whether the piece on h6 survives in each one:</p>
+<p>Ran 3 commands · 1 note</p>
+<p>Interesting: at a pure depth of 6, h6→g5 DOES clearly win (33 to 26). But the real iterative deepening search didn't return it. I need to see exactly what depth it reached and what happened there — it could be a genuine horizon effect at greater depth, or it could be a real bug:</p>
+<p>Ran a command</p>
+<p>This doesn't add up for me — the best move oscillates erratically across depths, and at depth 10 there are NINE tied moves (including some very different from each other), which doesn't look like genuine complexity but a real problem. I'm comparing the raw scores of the two key moves across depths to understand what's going on:</p>
+<p>Ran 2 commands · 1 note</p>
+<p>Hey, I found something genuinely important, and I want to explain it well because it changes the diagnosis a bit. I'm going to cut the technical investigation off here (I don't want to keep pulling on a thread without being able to properly back up every step for you) and tell you precisely where I stand.</p>
+<p><strong>First, your main question: yes, this format is extremely useful to me — more than I expected.</strong> I validated your entire transcription (117 moves) against the real rules engine: zero inconsistencies. That alone is valuable — your manual record is a perfectly faithful account of what happened. But the most important part is that I was able to take the <strong>exact</strong> board for each of the positions you flagged and ask the current bot (last round's version, with quiescence and improved evaluation) what it would do there. That's far more precise information than anything I could make up with hand-built boards.</p>
+<p><strong>The good news, move 79 (the serious one):</strong> in that exact position, the current bot <strong>no longer picks</strong> <strong>i9→j8</strong> — that move doesn't even show up among its candidates anymore. Instead, j6→i5 shows up, which is exactly the extremely valuable tunnel you identified as the best option. This particular mistake looks resolved.</p>
+<p><strong>The most important finding, move 67:</strong> there I found something I wasn't expecting. In isolation (looking only at that decision at a fixed depth), the bot correctly recognizes that h6→g5 is the right move — it saves the piece. But when I let the real-time search (the one used in production) run through greater depths, the result starts oscillating erratically: sometimes it goes back to preferring the bad move, sometimes completely irrelevant moves. I confirmed this isn't a problem with the quiescence search we added last round (I isolated it by turning that off completely, and the problem persists all the same). It's something more fundamental: a known — and well-documented — feature of minimax search with a heuristic evaluation function (an imperfect one): different depths can genuinely "hold different opinions" about the same move before settling into a stable answer, because each depth sees a different slice of the future, and the static evaluation it uses to cut off the search at each one has its own blind spots.</p>
+<p>This, at bottom, <strong>reinforces your original instinct</strong>, it doesn't contradict it: the underlying problem still has more to do with "how well the engine understands what it sees" than with "how far ahead it sees." A richer, more stable evaluation would make this kind of oscillation between depths much less pronounced.</p>
+<p>I don't want to propose a rushed fix for this without having properly finished diagnosing it — it's genuinely a deeper issue than I thought when I started looking at your move 67. I need one more dedicated round of work on this (probably something called "search stabilization," a standard technique for exactly this problem, on top of continuing down the path of improving the evaluation we'd already been discussing) before showing you anything concrete.</p>
+<p>About your idea of a "tunnel with gradual value even if it doesn't reach crowning within the horizon": it makes sense, and it fits directly with what I just found — it's exactly the kind of improvement to the evaluation (not the depth) that can help stabilize this kind of decision. I've noted it down for the next round.</p>
+<p>¿Should we continue with this in the next entry, or would you rather I first send you back a more finalized summary of what I plan to do before I start coding again?</p>
+<p>"</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"glad what I gave you was useful. I can do it with more matches, but if in your opinion this match already gave you enough material to improve the bot, I'll send you other matches only once we have a new, improved version of the bot.</p>
+<p>As for what we do in this entry, let's go with the second thing you're offering: give me a summary of what you're planning to do; only after that will we move on to actually doing it and you programming it.</p>
+<p>In the meantime, let me take the chance to ask you something I'm curious about: as the bot keeps getting more and more complex, does client-side JavaScript keep holding up well? Does it have that much room, or could it become a limiting factor at some point if the bot keeps getting more complex?"</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Let's go with both things.</p>
+<p><strong>The plan for the next entry, summarized</strong></p>
+<p><strong>1) Move ordering and tie-breaking based on continuity across depths.</strong> This is the piece that directly attacks the move-67 finding. Instead of each depth of the search starting "from scratch" with no memory of what the previous depth found, I'm going to make the move that won at the previous depth get tried first at the next one — this is a standard technique (real chess engines use it) that does two things at once: it prunes better (a move we already know is good, tried first, lets us cut more branches) and it stabilizes the result (if a tie shows up at the new depth between the "usual" move and a new suspicious one, there's a reasonable basis for preferring the one that's already been holding up, instead of a purely random tie-break like we have now).</p>
+<p><strong>2) A richer evaluation</strong>, continuing the direction we'd already been discussing, which this finding ends up confirming as the most important one. This is where your tunnel-with-gradual-value idea comes in: right now the bonus for advancing is linear and even, without distinguishing "I'm advancing with a clear path" from "I'm advancing toward a wall of enemy pieces." I'm going to add a notion of "clear path toward crowning" — not exactly recognizing the full tunnel as a concept (that would require simulating several turns, which is the search's job, not the evaluation's), but rewarding an advanced piece with no rivals nearby more than one that's advanced but surrounded.</p>
+<p><strong>3) Re-testing with the same rigor as always</strong>, adding something new: I'm going to add the exact position from your move 67 as a permanent test — that way, from now on, any future change to the engine also gets validated against that real position, not just against hand-built boards.</p>
+<p>About sending me more matches: your instinct makes sense, save the next ones for when we have this round ready — that way you can use them to confirm whether this actually improved things, instead of diagnosing on top of a version I already know has this underlying problem.</p>
+<p><strong>Your question about JavaScript and the complexity ceiling</strong></p>
+<p>Good question, and the short answer is: <strong>no, we still have a good amount of headroom left.</strong> JavaScript in a modern browser (the engine that runs Chrome, V8) is genuinely fast for this kind of work — not as fast as a real chess engine written in C++, but nowhere near being today's bottleneck. And since it already runs in its own Worker, we have an entire CPU thread dedicated exclusively to this, without competing with anything from the interface.</p>
+<p>That said, there is a ceiling, and it's worth knowing what the steps look like before we get there, so it doesn't catch you by surprise:</p>
+<ul>
+<li><strong>First step (cheap, and what I'm going to touch in the next entry anyway):</strong> algorithmic improvements — right now, for example, every node of the search copies the entire board instead of doing make-move/undo-move on the same array, which creates extra work for JavaScript's garbage collector. Fixing that, together with a technique called a "transposition table" (caching positions that have already been calculated, so the same position isn't recalculated twice if it's reached by two different paths — very common in this kind of game), can free up quite a bit of extra headroom without changing technology.</li>
+<li><strong>Second step, if it's ever needed:</strong> WebAssembly — compiling the engine (or just the heaviest part of the calculation) from a language like C++ or Rust into a format the browser runs at near-native speed. This is what, for example, the web versions of serious chess engines like Stockfish use. It's not a small change, but it's not science fiction either — it's a well-known, proven path, not a dead end.</li>
+</ul>
+<p>Given the size of our game (10x10, a limited number of pieces, much smaller than chess or Go), I think it's very unlikely we'll ever need that second step. But if at some point in the future we aim for level 10 to be truly superhuman and not just "a good player," that would be the moment to reconsider it — and the good news is that it wouldn't mean throwing away anything we've already built, just replacing the internal calculation engine while keeping the whole outer architecture (the Worker, the game integration, all of that) intact.</p>
+<p>Whenever you want, ask me for the next entry with high effort and I'll get to programming all of this."</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"after that match I gave you all the information about, I kept playing more times against the bot and it's got a better level than I'd estimated, in fact we must have played 6 matches and it beat me twice, while another was technically a draw because we ended up queen against queen. And more than once it surprised me with a genuinely well-thought-out move I wasn't expecting. So, as a reference, it's good for a level 6 or 7, maybe I'd say 7. I'm telling you this just so you have it noted, but it doesn't change anything. Keep working, because level 10 definitely has to be better than that, but I wanted you to know that this second version of the bot is clearly better than the first one — which I'd place at roughly a level 5)</p>
+
+<p>In short, I'm telling you this just so you have it noted and we have a more accurate picture of the bot's current state, but it doesn't change the task you need to do at all, so keep developing it as you were</p>
+<p>"</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>(at one point the response glitched and then continued in English, for inexplicable reasons. I'm copying it as-is)</p>
+<p>"Picking back up. Noting what you're telling me about the 6 matches (level 6-7, improved quite a bit compared to the first version) — valuable data for when we calibrate, doesn't touch anything I'm doing right now. Continuing with part 2: the "clear path" bonus.</p>
+<p>Ran 8 commands, viewed a file, edited a file · 4 notes</p>
+<p>I found something important: my "continuity" criterion had a problem — it could latch onto an early, poorly-informed opinion (from depth 1-3) instead of something genuinely confirmed by more recent depths. I'm redesigning it so it only trusts what holds up between the <strong>last two</strong> consecutive depths, not some old origin point:</p>
+<p>Ran 2 commands, edited a file · 1 note</p>
+<p>Confirmed, and I want to be honest with you: within the real production budget (8 seconds), the bot <strong>still</strong> fails to find h6→g5 in this specific position — it needs depth 9-10 to see it clearly, and that depth alone takes ~20 seconds on this particular board. My continuity fix isn't enough to solve this on its own. Before reporting back to you, I'm checking that last round's most important finding (move 79) is still resolved, and testing the clear-path bonus on the actual corridor (moves 69-79):</p>
+<p>Ran 3 commands · 1 note</p>
+<p>Found the explanation: my clear-path bonus only looks at the 2 immediate rows, and there really are white pieces there (d2, e1) — it's not a calculation error, it's that your real scenario is subtler than my simple heuristic can capture (you yourself describe it with nuance: "I would have left my piece on e1..."). My bonus works well for genuinely clear tunnels, but it doesn't manage to capture this finer situation. I'm checking that at least the clean synthetic case still works, and running the final regression battery:</p>
+<p>Ran 6 commands, edited 2 files, created a file · 6 notes</p>
+<p>But continuing the investigation... <em>(at this point the response glitched, repeating a single broken word dozens of times, before catching itself)</em></p>
+<p>Sorry - I accidentally started repeating a broken word. Let me write this properly in my final response instead of continuing broken text here. I should not submit that broken text. Let me just write the actual final message content directly without that error.</p>
+<p>Continuing my search revealed something better than what I initially feared: with the quiescence search active, the evaluation <em>perfectly</em> distinguishes the actually-bad move (g9→h8, the one the bot really played, scoring -45) from the two sound alternatives you yourself identified as viable — h6→g5 (escaping, scoring 61) and g9→f8 (trading pawns, scoring 72 — even better, because it opens a recapture you'd already anticipated in your own analysis). What matters isn't that the bot picks specifically h6→g5 — either sound option is fine — but that its final production choice is never the truly bad one. And that holds up: I confirmed directly that with the real 8-second budget, the bot's final answer for this exact position is g9→f8, a good move, never g9→h8.</p>
+<p>So the "instability between depths" I found is real and still worth knowing about (I kept the technical note in the code for whoever touches this next), but it turned out to be less alarming in practice than my first read suggested — the noise happens between two <em>good</em> options, not between good and bad.</p>
+<p><strong>Everything still checks out:</strong> full rule-correctness suite (17,892 positions cross-checked against the trusted reference, zero discrepancies), alpha-beta+quiescence still mathematically exact against an unpruned reference, all five hand-crafted rule cases, the synthetic clear-path pattern, move 79 from your game still correctly avoided, self-play sanity (no crashes, no illegal moves), and the Worker integration in a real browser (level 1 and level 10 both respond correctly, no errors).</p>
+<p><strong>On your calibration note</strong> (6 games, 2 wins for you, 1 draw at queen-vs-queen, level 10 now feels like a 6-7): noted and appreciated — that's exactly the kind of signal that'll matter once we get to formal calibration. Doesn't change anything about what I did this round, but it's good to have as a marker of how far the second version already moved things.</p>
+<p><strong>What's genuinely still open, worth having in mind for later:</strong> the clear-path bonus, as built, only looks 2 rows ahead — it correctly rewards a truly open corridor (confirmed with a clean synthetic test) but doesn't capture the more nuanced situation from your actual game (moves 69-79), where there's real resistance nearby that needs tactical calculation, not just a proximity count. That's a deeper evaluation question for a future round, not something I want to patch hastily."</p>
+<p>"</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"OK, I have to say I'm genuinely impressed now. The new bot has beaten me to a pulp on repeated occasions. I haven't been able to beat it once, and I haven't even come particularly close (I've played 5 or 6 matches). It has extraordinary move planning and seems to be constantly setting up "traps." At one point it even lured me into a quadruple capture with its queen that completely tipped the match in its favor. It handles queens very well, and has a great sense of how much it's worth sacrificing in order to gain something bigger. Honestly, really good work. 👏 We might be looking at our level 10, or at the very least our level 8.</p>
+<p>Either way, before finding out whether it's good enough for level 10, or whether it can still be tightened up further based on some avoidable mistake it makes, let me have a friend of mine try it — he's got a lot of brainpower for this kind of game and is better than me at checkers. I'm going to ask him to record the matches, and if he wins one, to send it to me, and also to spot and flag any mistakes the bot makes. This would mean putting the bot up against a more demanding level than me, to see how it holds up. Once I have that I'll come back and let you know, and based on that we'll see whether we leave it as is or whether we can improve it even more (for what it's worth, at the end of your response you laid out some guidelines for how we might improve it further... we'll keep that in mind too).</p>
+
+<p>Either way, before finding out whether it's good enough for level 10, or whether it can still be tightened up further based on some avoidable mistake it makes, let me have a friend of mine try it — he's got a lot of brainpower for this kind of game and is better than me at checkers. I'm going to ask him to record the matches, and if he wins one, to send it to me, and also to spot and flag any mistakes the bot makes. This would mean putting the bot up against a more demanding level than me, to see how it holds up. Once I have that I'll come back and let you know, and based on that we'll see whether we leave it as is or whether we can improve it even more (for what it's worth, at the end of your response you laid out some guidelines for how we might improve it further... we'll keep that in mind too).</p>
+<p>At the same time, I'm going to keep testing it a bit more myself, to see if I can catch some mistake, but like I said, I think at this level the test my friend can run is going to be more useful. But I can tell you there's a world of difference between this third version's level and the previous one, the second — so we're headed in a good direction. 👍</p>
+<p>"</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Hey, that's great news — and the quadruple capture with the queen is exactly the kind of thing I was hoping would start showing up once the quiescence search was working well: that's tactically much more sophisticated than simply "not giving away pieces," it's setting up a trap that only pays off several moves later.</p>
+<p>The plan with your friend sounds great to me. A genuinely strong player is going to give you a much more precise signal than piling on more simulated games from me or more of yours — if the bot holds up against someone who plays better than you, that's the real test we need before saying "level 10, done." And if it makes some specific mistake, a recording with exact coordinates is exactly the format that was most useful to me last time — so if your friend can note down moves with that same precision (origin and destination squares, marking captures), even better.</p>
+<p>In the meantime, there's nothing for me to do on my end — you don't need to ask me for a new entry for this. Once you have your friend's results, come back and we'll look at it together: if it holds up well, it's probably time to consider level 10 done and start seriously on calibrating the 8 intermediate levels (which is the work we'd paused several rounds back so we could get the top ceiling right first). If something comes up, we'll diagnose it with the same rigor as always.</p>
+<p>One thing that occurs to me to ask you, not for now but for when you have your friend play: if at any point the bot takes noticeably longer than usual to respond (quite a bit more than the 1-2 seconds you've seen so far), let me know anyway even if there's no move mistake involved — it's useful extra data for me on how the time budget behaves against an opponent who plays differently than you did."</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"Change of plans.</p>
+<p>Let me tell you about it.</p>
+<p>I'm not going to hand the bot over to my friend to play against and do what I said yet, because before that I noticed something I'd like to discuss with you. Because before giving it to my friend I was playing quite a few matches against the bot, and I saw something I'd like to see if we can fix.</p>
+<p>As for the bot, well, honestly, I can confirm it: it's excellent. Really, really good. And I still can't beat it. I've come a bit closer sometimes, more even, but it always ends up beating me. It's genuinely good. But what I wanted to tell you isn't about that, it's about the following:</p>
+<p>I've noticed that when I make a certain exact pattern in the opening, when the match starts, I move the pieces in a specific way, the bot reacts in a specific way (not mirroring my moves, but always making the same sequence of moves of its own). And if my piece moves are the exact same sequence I used in the previous match, the bot reacts with exactly the same sequence of its own from the previous match. I think this must come from the fact that it always evaluates the best move and always gets the same result, so it always chooses to react to my moves in the same way. Well, I'd like to avoid this for a couple of reasons.</p>
+<p>The first reason is that it feels very unhuman. When you open the same way three or four times, you end up noticing the bot always reacts the exact same way, exactly. So it becomes very obvious that you're playing against a robot, right? Whereas if you moved the same way, but it didn't always move the same way, that would feel more human. (Here I'm only talking about the beginning part of the match, when the pieces start spreading out and positioning themselves on the map, but there's still no damage between the two sides, no aggression, so to speak. After that, obviously, once the aggression starts, then yes, it always has to make the best possible decision and the system works perfectly.)</p>
+<p>Second reason: if a human being, by repeating the same pattern, is able to always get the machine to repeat the same pattern, in a sense they have control over what the machine does. So, what could that human being do? They could always steer the match toward the same point, a point where they haven't taken any damage yet and consider a "safe point." Then, when they start losing or making bad moves, they take note, and the next time, after reaching the safe point, they correct that move or try a new move until they discover the move that works best for them, all of this with the guarantee that the bot will always react the same way. If they land on that successful move, or at least a neutral one, they update the safe point by adding that move to it, and try again from there. And well, if the human then starts to slip up, they just repeat everything up to where it was successful (the safe point), and the next time try a new move until they find a new safe point further along. And that gives the human a predictable, foreseeable path, with limited possibilities, to gradually decode the bot and beat it. ¿Do I make sense? Because if the bot always does the same thing in response to each move, and the map repeats identically, piece by piece, the entire board repeats identically piece by piece, the human steers it every round toward the last point where they were at least tied, if not ahead, tries a new move, and if it goes well, folds it into what had been the safe path up to that point, and the next round starts trying things from there, until they eventually fully decode the bot, helped precisely by the fact that the bot always reacts the exact same way.</p>
+<p>Not just anyone would do this, since it takes a certain amount of patience and work, but a dedicated player could try it.</p>
+<p>So, how do I imagine we could fix this? I think there's a fairly easy solution, one that's not very costly in terms of the bot's playing strength. I'm going to propose it to you and you tell me whether it's feasible, whether it's good, or whether you have a better one, because maybe you have a better way to solve it that I didn't foresee or couldn't have foreseen. Well, what I propose is to wrap the first however-many moves — I don't know how many we'd set, ten, say, something like that, or eight — inside a bracket to which some slightly different rules apply. For instance, say, that within that bracket it returns the best four — just to give a number — possible moves, and picks one of those at random.</p>
+<p>Remember Argentine checkers isn't like chess, where hostilities — to use that word for contact and capture situations between pieces — can start very quickly, with checkmates as fast as scholar's mate. In Argentine checkers there are four whole free rows between both "armies" at the start of the match, so it always takes a fair number of positioning moves for each army before capture threats, piece trades, and captures begin (a stage where, yes, the engine does need to be running normally, because that's when good moves genuinely need to be chosen). In fact many players move very quickly at the start of the match, without thinking too much, because not much is going to happen right away.</p>
+<p>So, in what would be the "randomness zone," where that bracket would apply and the bot would follow these other rules, the match is at a very early stage where hostilities are still far off, and the cost — or potential damage to your own side — of picking the fourth-best option over the best one is minimal. So subjecting it to these rules is going to produce different results each time, even if I, the human, always move the same pieces. What's more, once the bot has moved just one (!) piece differently from the ones it had been moving in the structured, predictable sequence in response to what the human moved, everything that follows will likely change too, because in the moves that come after, the program might no longer return that a given move is still the best one, but a different one, because the pieces are positioned differently. And if several of these moves were subject to this randomness component, then the difference in moves between each match, even when the human always moves the same way, is going to be enormous, and practically impossible — and unpredictable — for the bot to play the same way twice, even if the human starts the match doing exactly that.</p>
+<p>You might tell me: "making the bot play like that comes at a cost, the cost of not always picking the best move, a situation that will surely lead to a piece positioning at the start that could be suboptimal." Yes, it's true that it comes at a cost, but a cost that, as I imagine it (I could be wrong), would be:</p>
+<p>1) Tiny: I think it's going to be tiny, because what happens in the first 10 moves usually isn't decisive for the match at all, unless someone gives away pieces (which I imagine won't happen if the bot stays within the 4 best options). Also, at that point there are usually plenty of harmless moves, if not good ones, meaning it's very unlikely that any of the best moves would be damaging to its own side.</p>
+<p>2) Worth it, because as I explained, it makes the bot feel more human, harder to decode, and gives us a different match every time, regardless of whether the human repeats their sequence.</p>
+<p>3) Easily recoverable: if the resulting positioning from the algorithms meant to keep the bot from always playing the same sequence in response to the same human sequence isn't as optimal as it would otherwise be, it would be by a very small margin, one the bot still has plenty of skill to make up for later, once that "randomness zone" bracket ends and it goes back to normal mode. My guess is that by choosing among several good moves at a point in the match where the potential for damage is very low, it's not going to end up complicated or at a significant disadvantage because of it. Ultimately, if it really did turn out to matter, it could be seen as a small window of opportunity the level-10 bot occasionally gives the human, but I don't think it would be anything significant.</p>
+<p>What I'm not entirely clear on, and this is what I want to ask you about, is how far the "randomness zone" should extend. I think it should be, at minimum, five bot moves, and could go up to ten. Other possibilities are that the "randomness zone" isn't always the same length, and is itself subject to randomness to determine how many rounds, within a preset range, it stays active in each match. Another would be for the bot to choose at random among the best 4 options for the first 5 rounds, among the best 3 for the next 3 rounds, among the best 2 for the next 2 rounds, and then go back to normal."</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Sure, let's discuss it — but the empirical part first, like you asked: I'll check exactly what you're describing before opining on anything, so we talk with real data, not with what I think should be happening based on the code.</p>
+<p>Ran 2 commands</p>
+<p>Confirmed: noise: 0 for level 10 (and also for 9, worth keeping in mind further down). Now the real test — I simulate the same human opening twice and compare the bot's reaction move by move:</p>
+<p>Ran a command</p>
+<p>Confirmed with hard data, exactly as you describe it: three independent runs of the same human opening, the bot's response identical letter for letter all three times. Now, let's talk.</p>
+<p><strong>Your diagnosis is technically accurate.</strong> Level 10 today has noise: 0, which means "always pick the best move according to the search, never randomly." And since the search is deterministic (same board → same result, always), the logical, unavoidable consequence is exactly what you noticed: same human path → same bot path, identical. It's not a bug or some odd side effect — it's the direct, expected consequence of "always the optimal move, never random." As an aside, same data point: level 9 also has noise: 0 today, so it has the same problem (though it isn't calibrated yet, it's worth noting for when we get to that part).</p>
+<p><strong>Your exploitation scenario doesn't strike me as exaggerated, it strikes me as real.</strong> The "safe point" strategy you describe — always going back to the last point where things went well for you, trying a variation, keeping whichever one improves things, repeating — is exactly the same logic that, historically, has been used to solve openings in other board games against predictable opponents. You don't need to be a genius to pull it off, just patience and thoroughness — and you're going to hand the bot over to your friend, who, from what you're telling me, knows quite a bit about this game. It strikes me as a genuine risk, not a hypothetical one.</p>
+<p><strong>About your proposal itself: I think the underlying idea is sound, and I agree on the point that matters most — the scale of the cost.</strong> You're right that the opening (before any contact) is exactly where there's room to spare to introduce variety without giving up real strength: there are many reasonable moves, none of them catastrophic, and the engine isn't yet dealing with the fine tactical situations we know are harder for it (you saw this firsthand analyzing your own game).</p>
+<p>Now, two concrete adjustments I'd propose to your idea, aiming to make it a bit more precise:</p>
+<p><strong>1) The boundary of the "randomness zone" — I'd tie it to whether any captures have happened, not to a fixed number of moves.</strong> You yourself gave the key insight: "as long as hostilities are far off, the cost is minimal." That's not exactly the same as "the first N moves" — sometimes contact comes before move 8, sometimes after move 12, depending on how both sides play. I'd propose: the randomness zone lasts <strong>as long as neither side has lost a single piece yet</strong> (material intact on both sides), with a move cap as a safety net in case the match drags on strangely with no contact at all. This has an extra advantage for your own goal: at the exact moment you'd execute your "safe point" strategy (while the board is still complete, with no piece captured), that's precisely when the bot is being least predictable — it attacks the problem at exactly the point where it matters, instead of at a fixed number picked by eye.</p>
+<p><strong>2) The selection criterion — instead of a fixed "top 4," I'd choose among the moves that fall within a small score margin of the best one.</strong> With a fixed number, it can happen that in a given position there are only 2 genuinely close moves and the other 2 are considerably worse (and then a "top 4" adds too much noise), or the other way around, that there are 6 nearly identical good moves and "top 4" cuts off too much variety. A margin (for example, "any move within X points of the best one") self-adjusts to each particular position, and fits better with your own argument that "the cost has to be minimal" — because it directly excludes any move that isn't genuinely almost as good as the best one, instead of including it just because it lands in fourth place in the ranking.</p>
+<p>A couple more things that occur to me, for you to keep on your radar:</p>
+<ul>
+<li><strong>This would need to be applied to any level with </strong><strong>noise</strong><strong> at zero</strong> (today that's 9 and 10), not just 10 — same problem, same solution.</li>
+<li><strong>An honest caveat:</strong> the moves the evaluation sees as "tied" in the opening aren't necessarily perfect ties in reality — sometimes they're ties because the evaluation, in that specific position, can't quite tell them apart well (we already saw our evaluation has blind spots). But it's precisely in the opening, with no contact yet, that the board is at its simplest and most symmetric, and where these blind spots are least likely — so your instinct to limit this to that specific zone already covers this risk well, no extra safeguard is needed.</li>
+<li>At the implementation level (for when I code it, not now): right now the search only returns the move (or moves exactly tied on score) that won — to choose among "the ones that are close without being exactly equal" I'll need it to return a bit more information (the ranking with margin, not just the winner). It's a minor change, I'll note it down.</li>
+</ul>
+<p>In short: I think your proposal is solid and well-reasoned, and with these two adjustments (tying it to "no captures yet" instead of a fixed number, and using a score margin instead of a fixed top-K) it would become more precise without losing any of the original idea. Let me know what you think, and if you agree, we'll leave it designed like this for whenever you want me to code it".</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"OK, dear Claudio, the news isn't good. I've been testing the new bot, it works fine, legal moves, no bugs. It does what it's supposed to do in terms of not repeating the same reactions to the same sequence of moves from the human player in the opening. But, for some reason I can't quite explain, its level of play has dropped enormously, enormously. It no longer resembles that bot that used to beat me to a pulp, and I'd say it's at the level of the very first bot you built.</p>
+<p>I don't know if you remember how the evolution went, but the first level-10 bot you built was pretty bad. I beat it almost every time and it made somewhat inexplicable moves, gave away pieces, and made other dumb, easily avoidable mistakes. That was, let's say, version 1 of the bot. Then you improved it a bit, version 2 came along, which was more even with me, sometimes it beat me, sometimes I beat it. That's when I sent you all the coordinates of a match, flagging some mistakes the bot had made. And then, when you made version 3, which was the one before this one, it was unbeatable, it was excellent. That one was already at level-10 in terms of playing strength, but it had the flaw of always reacting the same way to the same sequence of moves from the person, which is what we tried to fix in your last piece of work. This new bot, which we could call version 4 or V4, for some reason didn't keep that overwhelming way of playing that version 3 (or V3) had.</p>
+<p>It seems odd to me that the bot's entire playing strength dropped because of the improvement we wanted to make to it, because that shouldn't have happened. The moves we wanted to influence, or wanted to modify, in other words, only cover from the first move up to the first capture (and even there it was moving based on good moves), and well, then there's that exception about ties in move score, which happens very rarely and also shouldn't explain such a dramatic overall drop in playing strength. Fixing that shouldn't have lowered the bot's playing strength, not as drastically as it dropped. This bot, as it stands now, V4, to give you an idea, has a playing strength like V1, like the first bot you made, which is a level of play that would fit a level 4 or 5, I think. Because it's genuinely very weak when playing and doesn't plan good moves like the other one did, it gives away pieces inexplicably, it misses a ton of moves. There's a world of difference between this V4 and V3, V3 used to run circles around you. But I'll say it again: I don't understand how, by touching certain things in V3 that shouldn't have affected the rest of its play, we ended up affecting its entire play. And this next thing I'm going to tell you is important: its play was affected not just in the "randomness zone," it was affected from the start of the match to the end. In everything. It's as if the engine of the overwhelming bot that would be version V3 never kicks in, never activates, and you're left playing against a very weak bot that you beat easily.</p>
+<p>I'm convinced we must have done something wrong along the way. It strikes me as odd, because when I read the steps you were implementing, everything seemed to be in order, but to me the result of subjecting bot V3 to those two modifications can't be bot V4. It shouldn't be. For what it's worth, we should be debating how well or poorly the bot plays within the "randomness zone," which is what we modified; but as soon as that "randomness zone" closes with the first capture, the bot should start playing exactly like V3, because we haven't touched what comes after the "randomness zone" (with the caveat, which should be nearly irrelevant, about tied moves); or we shouldn't have touched it (if you did, that was a mistake). One possibility that occurs to me is that you might have mistakenly applied these two modifications not to the latest version we had (V3) but to V1 or even V2 (given its level, it looks more like V1 to me).</p>
+<p>Look, I know you probably don't need it since you have them in the message history, but I'm going to attach V3 and V4 anyway; maybe that helps somehow in finding what's wrong. If you want, pit one against the other, and I have no doubt V3 is going to completely destroy V4 — if I had to bet, I'd say 100% of the time.</p>
+<p>I'm not a great programmer, but I've programmed things involving randomness before (by hand, back before AI existed to help you code) and I've always managed to pull it off successfully. Conceptually it's something I'm sure should be doable, and shouldn't result in such a noticeable deterioration of the bot's playing strength throughout the whole match. It's about keeping the same bot (V3), except that instead of always using the best move, for one part of the match (from the start until the first capture) it randomly picks among options within a qualitative range not too far from the optimal move; and on top of that, throughout the whole match, in the unlikely case of a tie in move quality, it's settled by chance. I'll say it again: those modifications shouldn't tank the bot's level in such a way.</p>
+<p>¿What alternatives occur to me while trying to find a solution?</p>
+<p>1) Try it again, making sure you use V3 as the starting point, and that you make those modifications on top of it.</p>
+<p>2) That we try to improve V4 (whose only advantage over V3 is that it doesn't repeat its sequences in response to identical human sequences), maybe with some feedback from me regarding the matches I play against it, like we did before. It's true that when we did that the results were very successful (that's how V3 was born), but nothing guarantees it'll work out that way again and that we'll get back to a version as good as V3; and besides, we'd already reached a version with the level we wanted (just with the robotic-repetition flaw). So I don't like this option as much.</p>
+<p>3) That we try to debug V4, to see why it turned out this way. This should include looking back a bit too, at V3, and seeing how, starting from such a good point, we ended up here.</p>
+<p>4) That we start over from V3, and try to introduce changes more gradually or less ambitiously (limiting, maybe, from the start, the "randomness zone" to 10 moves, an idea we'd already discarded because we liked the first-capture one better since it gave more variety, but maybe the 10-move one could be safer; or introducing just the "randomness zone" rule first and leaving the tied-moves rule for a later modification).</p>
+<p>I don't know, those are the possibilities that occur to me. Like I said, here we're brainstorming to see which way forward is best at this point. I'm listening to your ideas and proposals on that.</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Hey, this is serious and you're right not to settle for "this shouldn't be happening" — let's diagnose it with the real files in front of us, not from memory. First I'll do a textual comparison of V3 against V4 to see EXACTLY what changed, line by line, before theorizing about anything.</p>
+<p>Ran a command</p>
+<p>The diff confirms I correctly used V3 as the base — the change is exactly confined to what I wanted to touch, nothing more. So it's not a case of the wrong file. I have a concrete and fairly strong hypothesis: the full-window search during the randomness zone is much more expensive, so it probably reaches much less depth on each of those moves — and since the randomness zone can last several moves in a row (up until the first capture, which can take a while to happen), the bot could be starting the rest of the match already at a real positional disadvantage, not because of one specific bad move but because of an accumulation of opening moves weaker than they looked. I'm going to measure this directly.</p>
+
+<p>Ran 2 commands · 1 note</p>
+<p>Confirmed empirically, and it's exactly what I suspected: in the starting position, with the same 8-second budget, V3 reaches depth 7, but V4 (during the randomness zone) only reaches depth 6 — one fewer move of lookahead, on EVERY opening move, potentially for several moves in a row before the first capture. Before proposing a fix, I'm checking whether this is enough to explain what you're seeing — I'm actually pitting V3 against V4:</p>
+<p>Ran a command</p>
+<p>The result came out even, which surprises me given the depth finding. I need to review my test methodology — it's possible the short budget (2.5s) or the number of games aren't enough for the effect to show up. First I'm checking whether the depth gap really exists at that smaller budget, and fixing the test to use each version's real getBotMove:</p>
+<p>Ran a command</p>
+<p>The gap also exists at 2.5s (5 vs 4). I'm redoing the matchup using each version's real getBotMove (not my own reimplementation) and with more games, to better capture the cumulative effect:</p>
+<p>Ran a command</p>
+<p>The matchup still isn't showing a dramatic gap, which is odd given the depth finding. I need to reconsider: besides the depth cost in the randomness zone, there's another change I made at your request — breaking EXACT ties at any point in the match, not just always picking the "preferred" move. I'm going to measure how frequent those ties are in practice, because if they're more common than we thought, that could be contributing too:</p>
+<p>Ran a command</p>
+<p>I found something much more important than the depth gap: I measured how often EXACT ties show up in post-capture positions (outside the randomness zone, where it should behave the same as V3) — and the result is that 47% of positions have an exact tie for first place, with 3 to 6 tied moves. This is far more frequent than either of us imagined when we talked about it being "very rare." This affects the whole match, not just the opening — it fits much better with what you're describing. Before proposing anything, I'm checking whether this is the main cause:</p>
+<p>Ran a command</p>
+<p>Hey, I found something genuinely important, and I want to show you the numbers exactly as they came out — no dressing them up, even where they're not 100% conclusive.</p>
+<p>The two concrete findings</p>
+<p>1) The randomness zone really does cost depth. In the starting position, with the same time budget, V3 reaches depth 7; V4, during the randomness zone, only reaches 6. The full-window search I need for the margin to be accurate is more expensive, and since the randomness zone can last several moves in a row (until the first capture shows up, which sometimes takes a while), that loss of one move of lookahead repeats several times before the "real" game gets going.</p>
+<p>2) This is the one I think matters more, and it's a genuine surprise: I measured how often EXACT ties show up in post-capture positions — where the bot should behave the same as V3 — and the result is that 47% of positions have an exact tie for first place, with anywhere from 3 to 6 moves tied at once. You and I talked about this assuming it would be "very rare" — the reality is it's flipping a coin on almost half of its decisions, throughout the whole match, not just the opening. This fits much better with what you're describing (the drop in level from start to finish), because the tie-breaking-by-chance isn't confined to the randomness zone at all — it's the mechanism we added separately, at your request, thinking it would be anecdotal.</p>
+<p>I put together a test version of V4 that keeps the randomness zone intact but takes the tie-breaking-by-chance out of it (going back to always picking the "preferred" move, like V3 did), and pitting it against V3, the results look considerably more even than before — though with only a handful of games within my execution window, I can't yet tell you "this is the complete fix" with the confidence I'd like.</p>
+<p>My read on the situation</p>
+<p>I don't think there's a wrong base file (I compared V3 against V4 line by line: the change is exactly confined to what I meant to touch, nothing more). The problem is that both of us underestimated the real impact of one of the two things we added — specifically the tie-breaking-by-chance, which turned out to be much more frequent and influential than we assumed when we discussed it.</p>
+<p>What I propose</p>
+<p>Before reprogramming anything, I want to validate this with more rigor than this first pass allowed (more games, the real production time budget, not the reduced one I used to fit the tests within my execution window). But my working hypothesis, for us to discuss before I start touching code, is:</p>
+<ul>
+<li>Keep the randomness zone (it works, and it's what you most wanted fixed), but make it computationally cheaper — probably using a fixed, modest depth there instead of competing for the same iterative depth V3 achieved with efficient pruning, since you yourself argued that the opening doesn't need maximum strength.</li>
+<li>Go back to V3's deterministic choice for the rest of the match, leaving the tie-breaking-by-chance as something we DON'T add for now — not because the idea was conceptually wrong, but because in practice it turned out to have a much higher cost than expected, and the benefit (de-roboticizing a "very rare" case) doesn't justify it if it isn't actually rare.</li>
+</ul>
+<p>This looks a lot like your option 4 (go back to V3, introduce the changes in a more limited way) combined with having found the real cause via your option 3 (debugging). It was your instinct of "this shouldn't be happening" that made me dig until I found it, so thank you for not settling for an easy explanation.</p>
+<p>¿Does this direction sound good to you? If you confirm it, in the next entry I'll implement the fix (lighter randomness zone + going back to deterministic choice outside of it) and this time I'll put it through much more exhaustive validation — full games, the real time budget — before handing it to you, precisely so we don't repeat this same scare."</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"Wow, 47% ties is absurd! I thought we'd be talking about somewhere between 1% and 2% ties. The fact that it's 47% — and on top of that, ties among many moves — could be explaining a good chunk of this, if not all of it.</p>
+<p>Either way, I wanted to ask you three questions about this that I'm curious about, to understand it better:</p>
+<p>A) If I remember correctly, you told me the score returned for moves was a value between 0 and 100, meaning they're very precise values. They're not 3 categories, like "bad move, average move, good move." Nor are they 5 categories with scores "1, 2, 3, 4, 5." They're 100 levels of evaluation, it's super specific. ¿Given this, how is it that there's a tie for the best option 47% of the time?</p>
+
+<p>B) If, in that context of precise move evaluation, there are several moves tied at once, ¿how is it that, in practice, there's such a big difference in quality among the moves that were tied?</p>
+<p>C) ¿What is the deterministic choice, the one bot V3 uses? If moves came back tied on score, how is it that, within that tie, this version of the bot always picks the one that's better?</p>
+<p>Well, now that I've asked those questions, yes, I think what you're proposing is excellent, your working hypothesis, to try and find the solution along those lines. We keep the "randomness zone" but make it lighter; and we completely remove the tie-breaking-by-chance for the rest of the match, going back to the deterministic choice, to see if that way we get back to that ruthless, killer-instinct bot that V3 was, once the "randomness zone" ends. After all, changing a handful of moves at the start should already, as a consequence, change everything that comes after — both on the bot's side and the human's — always producing unique matches even when the human tries to always repeat the same thing.</p>
+<p>So I'm confirming everything, and let's just go ahead and try that fix, and see what comes out. I'm setting you to "extra" effort mode to give you a good amount of time and tools so you can — hopefully — do everything the way you have it planned. Let's go with that!"</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"All three are great questions — they deserve precise answers, not approximate ones. Before answering, I'm going to look at real examples of those ties so I'm not speculating in the abstract.</p>
+<p>Ran 2 commands</p>
+<p>Great questions, and all three have a concrete answer — I'll answer them with a real example I found, not in the abstract.</p>
+<p><strong>A) ¿How does it tie so often if the score is so precise?</strong></p>
+<p>First, a correction on my part: the score isn't a 0-to-100 scale — it's a point difference between both sides that can take any integer value (material worth 100/175 per piece, plus about a dozen small positional terms on top). It genuinely has fine resolution, it's not "5 categories." Take a look at this real ranking I found in a post-capture position:</p>
+<p>a7->b6    score: -119</p>
+<p>j8->i7    score: -119</p>
+<p>f8->e7    score: -119</p>
+<p>e9->d8    score: -119</p>
+<p>f8->g7    score: -122</p>
+<p>h8->g7    score: -122</p>
+<p>...</p>
+<p>Notice: there are quite distinct, specific values (-119, -122, -123, -127) — the precision is there. But <strong>four completely different pieces, in four different spots on the board</strong>, all four end up at exactly -119. That doesn't happen because the system is imprecise — it happens because, for the set of things the evaluation knows how to measure (material, advancement, mobility, support, hanging pieces, clear path), those four quiet development moves objectively "look" the same to it: none of them changes the material, none activates the hanging-pieces bonus, the impact on mobility is of the same order. The resolution is fine, but the evaluation only measures a handful of things — and when none of those things tells the moves apart, the result is the exact same number, no matter how specific the scale is.</p>
+<p><strong>B) If they tie on score, ¿how can there be a real difference in quality between them?</strong></p>
+<p>Here's the heart of the problem, and it's the same issue we've been chasing since your first recorded game: a tie in the evaluation's score is a tie according to what the evaluation <em>knows how to look at</em> — it's not a guarantee that they're objectively equal. It can perfectly well happen that, of those four moves at -119, one has a subtle structural weakness that only costs something several moves later, something none of our current terms detects (that's why we kept patching specific things: hanging pieces, clear path — each one plugged a specific hole, but didn't turn the evaluation into an omniscient one). When this happened once in a while, as we assumed, the damage was anecdotal. Happening in almost half the decisions of the entire match, the margin of error becomes the entire match.</p>
+<p><strong>C) ¿How does V3 pick "the best one" within a tie, if they're tied?</strong></p>
+<p>Here's the honest answer: V3 doesn't magically know which of the tied moves is "the true best one" — nobody knows, not even the engine itself, at that exact moment. What it does is use an additional, cheaper clue than searching deeper: <strong>it checks which of the tied moves ALSO showed up among the best ones in the previous, shallower pass of the time-based search</strong> (¿remember the "continuity across depths" mechanism we built for the move-67 problem from your first recorded game?). The logic: if a move holds up well both looking a little and looking more, it's more likely to genuinely be solid, rather than having landed in the tie by chance at this particular depth. It's not an absolute guarantee — it's a reasonable clue, more informed than flipping a coin, and it turned out to be far more valuable than either of us suspected.</p>
+<p><strong>The fix, with this in mind</strong></p>
+<p>Now that this is confirmed, I'm going to implement exactly what we discussed, but in the safest way possible: instead of continuing to touch the same shared function (which is exactly what introduced the problem this time), I'm going to <strong>restore V3's function exactly as it was, untouched, for everything that happens outside the randomness zone</strong> — and I'm going to build the randomness zone as a separate, standalone path, with a fixed, cheap depth (not competing for the same depth as the rest of the match, just as you yourself reasoned wasn't necessary there). Less surface area for change, fewer places where something can go wrong without me noticing.</p>
+<p>Getting to coding it now.</p>
+<p>Ran a command</p>
+<p>Depth 5 (675ms) gives a good balance: fast, with plenty of margin, and consistent with the fact that maximum strength isn't needed there. I'm using it as the randomness zone's fixed depth.</p>
+<p>Ran 5 commands, edited 3 files, viewed a file · 4 notes</p>
+<p>10/10 exact matches — outside the randomness zone, the fixed version behaves identically to V3. Now I'm confirming the randomness zone still works (real variety) and that timing stays low:</p>
+<p>That error was mine — a bash comparison issue with multi-line content, nothing to do with the files themselves. I'm fixing it by using diff directly, which is what I should have used from the start.</p>
+<p>Ran 2 commands, read a file · 1 note</p>
+<p>Only one file changed. Let me summarize how it turned out and what I validated before sending it to you.</p>
+<p><strong>How it's built now:</strong> I literally started by copying your V3 without touching a single line, and added the randomness zone as a completely separate branch at the start of getBotMove — zero shared code between the "randomness zone" and "the rest of the match" this time, on purpose, so we don't repeat the same kind of problem.</p>
+<p><strong>What I validated, in order:</strong></p>
+<ul>
+<li><strong>Outside the randomness zone: 10 out of 10 tested positions give exactly the same move as V3</strong>, letter for letter — not "similar," identical. This is exactly what your question C helped me understand properly: it now goes back to using the continuity-across-depths clue to choose within ties, instead of picking blindly at random.</li>
+<li><strong>The randomness zone still gives real variety</strong> (4 out of 4 different runs with the same opening repeated), and it's now much faster (fixed depth of 5, with the full window we found out was needed for the margin to be genuinely accurate) — each move takes well under 1 second, versus 5+ seconds for the previous version.</li>
+<li><strong>The direct matchup you asked for</strong>: V3 against the fixed version, several games — it came out even, with the fixed version even slightly ahead in the count, nothing like last time's disaster.</li>
+<li>Full rules battery (12,691 positions cross-checked, zero discrepancies), self-play with no crashes or illegal moves, and the full pipeline tested in a real browser via the Worker (1.48 seconds per move during the opening, no errors).</li>
+</ul>
+<p>Hey, I want to acknowledge something: the underlying cause of this scare was that both of us, in good faith, underestimated how much the tie-breaking-by-chance actually weighed in practice — you thought of it as "a rare case, why not," and to me it seemed like a reasonable, cheap extension of the same mechanism. The numbers said otherwise (47%, not the 1-2% you imagined). I think there's something valuable in this for the rest of the project: when we touch "the rest of the match" again — for example, when we calibrate levels 2 through 9 — it's probably worth measuring the real impact of a change before assuming it'll be marginal, even if the logic behind it sounds sensible. This time we learned it with a good scare, but a contained one, so on net it didn't come out too costly.</p>
+<p>Play it with confidence, and let me know what you think of this version."</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"okay, now we're talking. Now we finally have what we wanted. The bot always opens differently no matter how much I always open the same way, and that's really great and to me it makes a big difference compared to V3, it feels a lot more like playing against another human. And after the first capture it really does get a lot more intense, like V3. I played 5 matches and it beat me in all of them. In a couple I stayed even for quite a while, but it still ended up finding its way and beating me clearly (in no match was I really close to winning). Now we might really have our level 10... but I'll reserve judgment until my friend I told you about, the one who's better than me and has a lot of brainpower for board games, has tested it.</p>
+<p>So, I'm uploading V5 to the website, I'll ask my friend to test it, and once I have his feedback I'll come back to you, and we'll see whether we need to make another adjustment or whether we already have our level 10 to then use as a reference for building all the others. ¿Sound good?</p>
+<p>"</p>
+<p>Training the other bot levels:</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"So, let me tell you: I've been testing level 5 and level 6. Overall they're good, they have a fairly reasonable playing strength for a level 5 and a level 6. I beat level 5 every time, level 6 beat me once, and it came close to beating me another time too, which I think is fine. Like I said, overall their playing strength is good. There's one little thing both levels share that doesn't quite sit right with me, and I didn't want to leave out mentioning it, which is the following: sometimes, these two levels give away pieces in a very crude way — especially level 5, of course, has a somewhat greater tendency than 6, right? But 6 does it sometimes too. They give away pieces way too much, for no reason at all. And since these are intermediate levels, I'd like to reserve that kind of pointless piece-giveaway for the three levels below them, right?</p>
+<p>But let me describe the problem a bit better. They give them away with no prospect of countering it and gaining pieces back afterward. I mean, checkers is played with a very strong sense of sacrifice, right? Checkers is, to a large extent, about sacrificing pieces, generally to gain something bigger. And there are some cases where you don't sacrifice to immediately gain something bigger, but to clear an area, even if you don't come out ahead on pieces (this is the classic piece trade, let's say, one for one or two for two, where you don't come out ahead on pieces in the overall move, you come out even, but you consider the resulting position more advantageous). Well, these are the logical reasons a player would want to sacrifice pieces, right? It can also happen that someone tries something and it doesn't work out, or it goes badly and the move ends up backfiring on them, which can happen and which is allowed to happen to these two models, since they're intermediate.</p>
+<p>But I'll say it again: when, for example, there are two pieces — one from each side — somewhat isolated in a corner of the map, and the models move their piece against yours so you eat it, with no prospect of anything positive for them in return, it sounds kind of odd, you know? It feels off. An intermediate-level player would never do something so brutal, so crude, to you. They commit between 0 and 4 of these per match, with level 5 being somewhat more prone to committing them (and yes, zero means they don't make mistakes like this in every match, I've had a couple of matches where they had none of those). And besides, I don't think that if you took away this piece-giveaway tendency from these two levels, they'd suddenly become too good, because the rest of their level is decent but not brilliant, and you can still beat them — even fairly comfortably — without them making those mistakes. Obviously I could be wrong. But they make other kinds of mistakes (the ones that do seem acceptable and logical to me for a level 5 and 6, which, as we said, aren't expected to be excellent), more logical ones, more along the lines of trying a move that ultimately doesn't work out, of not having guessed the human's intention, or of trying a piece trade that went wrong and it lost 3 of its pieces for 2 of yours... in short, mistakes that feel more human and less crude, ones a good enough player can take advantage of to beat them, which would make those levels genuinely feel like 5 and 6, just without the overly clumsy mistakes.</p>
+<p>Of course, I'm saying all this, but I don't know how hard or costly it'll be for you to computationally identify this type of mistake in order to isolate it and try to suppress or reduce it without the bot becoming too good.</p>
+<p>Look, what I can do, if you want to see practical examples — maybe that'll help you — is send you matches the way I sent you once before in a Word file, the analysis of a couple of matches and certain moves I wanted you to look at, which was extremely useful to you. That was when we went from V2 to V3. There I could point out when the bot makes mistakes of the kind I'm talking about. That would be so you can see whether it's possible to get these two bot levels to stop making, or reduce to a more acceptable minimum, this particular type of mistake (the mild ones, or the ones that seem to have some purpose behind them, those obviously need to be left as they are).</p>
+
+<p>Honestly, another option is to leave them as they are and keep building the others, because overall their level isn't bad; but suddenly these crude mistakes, with no chance of gaining anything in return, throw off too much what might otherwise be an even, entertaining match for the human player up to that point, and sometimes those mistakes are so big they decide the whole match.</p>
+<p>¿What do you think? ¿Would it be worth trying a tweak there, or would it be too difficult?"</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Hey, I think it's worth trying, and let me tell you why before I ask you for anything. Before opining blindly, I want to check something specific: the evaluation already has a specific term ("hanging pieces") that, in theory, should stop exactly this kind of pointless sacrifice. If that mechanism works well in the simplest possible case, the real problem is probably something more specific (maybe related precisely to isolated pieces with few movement options), which would be good news — a limited bug, not "the whole evaluation needs to be rebuilt."</p>
+<p>Ran 2 commands</p>
+<p>I ran a quick test before answering you, and it gave me useful information. I built the simplest possible version of the scenario you describe: an isolated black piece with two options (a safe one, and one that gives it away for free to a nearby isolated white piece), plus another black piece with good development available as an alternative. <strong>Level 6 correctly chose the safe move</strong>, ignoring the free sacrifice — the mechanism that should prevent this (the "hanging pieces" term we added a while back) works well in the simplest case.</p>
+<p>This is actually good news: it means what you're seeing isn't "the mechanism doesn't work at all," but something more specific that my synthetic test failed to reproduce — probably something that shows up in more complex positions or in some particular configuration I didn't guess right on the first try. That's exactly the kind of problem where real examples pay off far more than continuing to make up test boards blindly, as already happened (for the better) with the transition from V2 to V3 and with diagnosing move 67.</p>
+
+<p>"Bot V6 (levels 1 and 10 already satisfactorily done, working on 5 and 6)</p>
+<p>Level 5</p>
+<div class="move-list">1.i3 → j4<br>
+2.b8 → c7<br>
+3.g3 → h4<br>
+4.a9 → b8<br>
+5.c3 → b4<br>
+6.c7 → d6<br>
+7.e3 → d4<br>
+8.j8 → i7<br>
+9.f2 → g3<br>
+10.f8 → g7<br>
+11.d4 → e5<br>
+12.d6 → f4 ✕<br>
+13.g3 → e5 ✕<br>
+14.d8 → e7<br>
+15.d2 → c3<br>
+16.i7 → j6<br>
+17.e1 → f2<br>
+18.b8 → c7<br>
+19.f2 → g3<br>
+20.g9 → f8<br>
+21.g1 → f2<br>
+22.c9 → d8<br>
+23.c1 → d2<br>
+24.d10 → c9<br>
+25.f2 → e3<br>
+26.h8 → i7<br>
+27.b4 → c5<br>
+28.i9 → h8<br>
+29.a3 → b4<br>
+30.h10 → g9<br>
+31.b2 → a3<br>
+32.c7 → d6<br>
+33.e5 → c7 ✕<br>
+34.d8 → b6 ✕<br>
+35.b6 → d4 ✕<br>
+36.d4 → f2 ✕<br>
+37.a1 → b2<br>
+38.j6 → i5<br>
+39.j4 → h6 ✕<br>
+40.h6 → j8 ✕<br>
+41.j10 → i9<br>
+42.j8 → h10 ✕ ♛<br>
+43.f2 → g1 ♛<br>
+44.d2 → e3<br>
+45.g1 → i3 ✕<br>
+46.i3 → g5 ✕<br>
+47.g5 → d2 ✕<br>
+48.b4 → a5<br>
+49.d2 → b4 ✕<br>
+50.a3 → c5 ✕<br>
+51.e7 → d6<br>
+52.c5 → e7 ✕<br>
+53.f8 → d6 ✕<br>
+54.h10 → f8 ✕<br>
+55.f8 → h6 ✕<br>
+56.h6 → d10 ✕<br>
+57.d10 → b8 ✕<br>
+58.b8 → e5 ✕<br>
+59.e5 → i9 ✕<br>
+60.f10 → e9<br>
+61.i9 → f6<br>
+62.e9 → d8<br>
+63.f6 → c9 ✕<br>
+64.b10 → d8 ✕<br>
+65.a5 → b6<br>
+66.d8 → e7<br>
+67.b2 → c3<br>
+68.e7 → d6<br>
+69.g3 → f4<br>
+70.d6 → c5<br>
+71.b6 → c7<br>
+72.c5 → d4<br>
+73.c3 → e5 ✕</div><p>Move 42: That's completely useless, with no prospect of anything good for the bot. It's giving away a piece, and it does double damage since it also lets me crown a queen with a piece (on j8) that had been blocked by the black piece on h10.</p>
+<p>Let me also mention that if we go back one more move, to 38, there's a decision that also isn't very smart and ends up handing me an unanswered double capture (with my piece going from j4 to j8, bouncing through h6 in between). That was a clearly bad move for it, but there I'm not sure it would be risky to try to limit it (I'll defer to your judgment there), because it could pass as a trade attempt that went wrong due to a miscalculation (maybe you could say the bot "expected" to get the capture back with its piece on g7, which did have backing on h8; but, so to speak, it could pass as "not foreseeing" that its piece on i7 had no backing on j8, which let me capture it on the second capture)... I don't know, even though it's clearly bad, at least there were black pieces around the area. Move 42, on the other hand, has no trap set for my queen in the area, no hope of anything good for it in the area, whether the attempt failed or not... it just let me crown for free.</p>
+<p>If you string together those two consecutive moves, the result is: 3 of the bot's pieces captured by me, zero of mine captured by the bot, and my piece going from row 4 all the way to crowning on row 10 in just 2 moves, when I had no plan and wasn't developing any offensive action on that side of the board. That might be a bit too much of a gift for a level-5 bot, it's not a level 2 or 3, where you might expect more of that kind of thing.</p>
+<p>Then, on move 44, I make a huge blunder and the bot captures 3 of my pieces unanswered with its queen (my own mistake)... meaning I give it the chance to recover from its mistake...</p>
+<p>...and then, well, on move 51, something rather unfortunate happens for it: in what was basically a 1x1 piece trade, it ends up leaving its piece on g9 unprotected against my queen, with such bad luck that everything was set up for me to make a sextuple capture (!) that completely closed out the match (the queen that makes the capture is the very piece the bot itself forced me to crown, moving from j4 to h10 through all the captures described in the previous moves). Still, I want to say this was an exceptional occurrence, I haven't seen this in other matches against either level 5 or level 6, and I don't think it's worth trying to do anything about this one.</p>
+<p>But anyway, the move that bothered me most here is without a doubt 42. It's worth keeping an eye on 38, but I'll leave that one to your judgment.</p>
+<p>Level 6:</p>
+
+<p>Level 6:</p>
+<p>g3 → h4</p>
+<div class="move-list">2.h8 → i7<br>
+3.c3 → d4<br>
+4.b8 → c7<br>
+5.i3 → j4<br>
+6.g9 → h8<br>
+7.d2 → c3<br>
+8.h8 → g7<br>
+9.e1 → d2<br>
+10.i7 → h6<br>
+11.h4 → g5<br>
+12.h6 → f4 ✕<br>
+13.e3 → g5 ✕<br>
+14.g7 → h6<br>
+15.g5 → i7 ✕<br>
+16.j8 → h6 ✕<br>
+17.f2 → g3<br>
+18.a9 → b8<br>
+19.g3 → f4<br>
+20.i9 → h8<br>
+21.h2 → g3<br>
+22.c7 → d6<br>
+23.j2 → i3<br>
+24.d6 → e5<br>
+25.f4 → d6 ✕<br>
+26.j10 → i9<br>
+27.d4 → c5<br>
+28.d8 → c7<br>
+29.a3 → b4<br>
+30.c7 → e5 ✕<br>
+31.d2 → e3<br>
+32.b8 → c7<br>
+33.e3 → d4<br>
+34.c9 → d8<br>
+35.d4 → f6 ✕<br>
+36.f8 → g7<br>
+37.g3 → f4<br>
+38.g7 → e5 ✕<br>
+39.e5 → g3 ✕<br>
+40.i3 → h4<br>
+41.e9 → f8<br>
+42.b4 → a5<br>
+43.f8 → e7<br>
+44.c5 → b6<br>
+45.e7 → f6<br>
+46.b6 → a7<br>
+47.b10 → c9<br>
+48.c3 → d4<br>
+49.f10 → g9<br>
+50.b2 → c3<br>
+51.h8 → g7<br>
+52.a1 → b2<br>
+53.g9 → h8<br>
+54.c1 → d2<br>
+55.c7 → d6<br>
+56.c3 → b4<br>
+57.f6 → g5<br>
+58.h4 → f6 ✕<br>
+59.g7 → e5 ✕<br>
+60.e5 → c3 ✕<br>
+61.c3 → a1 ✕ ♛<br>
+62.a5 → b6<br>
+63.d6 → c5<br>
+64.b4 → d6 ✕<br>
+65.g3 → h2<br>
+66.i1 → g3 ✕<br>
+67.h6 → i5<br>
+68.j4 → h6 ✕<br>
+69.d8 → e7<br>
+70.d6 → f8 ✕<br>
+71.h8 → i7<br>
+72.h6 → j8 ✕<br>
+73.a1 → h8<br>
+74.b6 → c7<br>
+75.h8 → f10<br>
+76.c7 → b8<br>
+77.f10 → a5<br>
+78.d2 → e3<br>
+79.a5 → e1<br>
+80.g1 → f2<br>
+81.e1 → d2<br>
+82.e3 → d4<br>
+83.d2 → c1<br>
+84.b8 → a9<br>
+85.c1 → i7<br>
+86.g3 → h4<br>
+87.i7 → f10<br>
+88.d4 → e5<br>
+89.f10 → i7<br>
+90.e5 → f6<br>
+91.i7 → g5<br>
+92.a9 → b10 ♛<br>
+93.g5 → i3 ✕<br>
+94.i3 → e7 ✕<br>
+95.e7 → g9 ✕<br>
+96.b10 → d8 ✕<br>
+97.g9 → f10<br>
+98.d8 → a5<br>
+99.f10 → h8<br>
+100.f2 → g3<br>
+101.d10 → c9<br>
+102.g3 → h4<br>
+103.c9 → d8<br>
+104.a5 → e9 ✕<br>
+105.h8 → c3<br>
+106.a7 → b8<br>
+107.c3 → h8<br>
+108.b8 → c9<br>
+109.h8 → g9<br>
+110.c9 → b10 ♛<br>
+111.g9 → h8<br>
+112.h4 → i5<br>
+113.h8 → c3<br>
+114.e9 → d10<br>
+115.i9 → h8<br>
+116.b10 → f6<br>
+117.c3 → g7 ✕<br>
+118.g7 → j4 ✕<br>
+119.d10 → c9<br>
+120.j4 → g7<br>
+121.c9 → d8<br>
+122.g7 → e5<br>
+123.d8 → f10<br>
+124.e5 → g3<br>
+125.f10 → i7 ✕<br>
+126.g3 → b8<br>
+127.i7 → e3<br>
+128.b8 → c9<br>
+129.e3 → c5<br>
+130.c9 → i3<br>
+131.c5 → a7<br>
+132.i3 → g1<br>
+133.a7 → d10<br>
+134.g1 → j4<br>
+135.d10 → a7<br>
+136.j4 → h2<br>
+137.a7 → b8</div><p>In this match against level 6, it makes a great move that ends in a triple capture and crowning (moves 57 to 61, that batch), putting it 10 to 7 on pieces (3 ahead), with the added detail that one of those pieces was a queen. A hugely advantageous position to win from.</p>
+<p>From there, several of these mistakes I'm talking about happen in a row, giving away pieces with no hope of anything. Let me show you:</p>
+<ul>
+<li>Move 63: it moves d6-c5, putting a piece in front of me for me to capture (b4-d6) unanswered and for no visible reason.</li>
+<li>Move 65 (that is, the next one): it moves g3-h2, offering a piece to 2 of mine at once, meaning I could choose which one to capture with. That alone tells you there was no plan behind it, since plans where it's fine for either of two pieces to capture the same piece are very, very rare. You generally need to know exactly which of the other player's pieces is going to do the capturing in order to build a reliable plan. That was another piece given away.</li>
+<li>Move 67 (the next one): it moves h6-i5, giving me yet another piece with nothing nearby to back it up. I capture it by playing j4-h6.</li>
+</ul>
+<p>That is, in 3 consecutive moves, it gives away a piece for no reason, throwing away that 3-piece advantage that had taken it 61 moves to earn, since after this sequence where it gives me one piece after another, we end up tied at 7 pieces (though it still has a queen). But the disastrous sequence doesn't end there.</p>
+<p>The only positive thing you could find here is that it manages to pull several of my pieces away from the edges and leave them isolated and scattered around the map, fairly unprotected, and with it having a queen; but it has no plan to capitalize on that. And it did all of this at a brutal cost that, under no circumstances, would be worth it, even accounting for risk.</p>
+<ul>
+<li>Move 69 (the next one!): it moves d8-e7, giving me yet another pointless piece. I capture it by playing d6-f8. All of this unanswered.</li>
+<li>Move 71 (the next one!): it offers me yet another piece, this time moving h8-i7. To make matters worse, mine is going to land against the edge (capturing by playing h6-j8), meaning it couldn't have been captured afterward. Fifth piece given away in a row, just like that.</li>
+</ul>
+<p>So, this was a sequence of 5 consecutive moves from it, involving 5 pieces completely given away, none of them answered. It went from being up 10-7 (in pieces) to being down 5-7 just 5 of my own moves later. A level-6 bot can make mistakes sometimes, it might give away a piece every once in a while, but this sequence is too bad for a level 6, and I think you'll agree with that.</p>
+<p>So, I'll walk back a bit of what I said earlier: level 6's strength isn't entirely right, it's a bit below where it should be. But just by reducing the number of these absolutely crude mistakes (reducing, not necessarily bringing it down to zero, because after all it is a level 6, not a 9 or 10), the level is going to go up on its own, no doubt about it. Up until that moment when that disastrous sequence started, the bot had been playing well against me (though when I'm testing I play very relaxed and without stopping to think much, so I make blunders, but it's still useful for testing the bots), but then it's as if it had a mental lapse and made blunder after blunder until it flipped the match against itself all on its own (I didn't do anything to cause that, I only captured because I was forced to).</p>
+<p>Up until that point it had played well, and had even pulled off that great move that had given it a three-piece advantage, only to immediately throw it all away with those five consecutive giveaways. One could be a mistake... but there's too much of a tendency toward pointless giveaways for a level 6, in my opinion.</p>
+<p>The match went on afterward, I made my own blunders and we ended up tied anyway, but don't pay attention to that part, since by then I wasn't even really thinking about it anymore. But that earlier sequence was the one I wanted to show you.</p>
+<p>Keep in mind that, with both level 5 and level 6, these bots do need to make mistakes, they do need to give up some advantages, because they're intermediate bots. But in cases like these, I feel they give up too many advantages, more than I'd like at these two levels.</p>
+<p>Look, in the attached Word file I put one match with level 5, and another with level 6, with several examples so you can see what I mean.</p>
+<p>I want to stress again that these levels are supposed to give away some advantages, since they're intermediate; but sometimes it feels like the only thing you need to do to beat them is play it safe and wait, because sooner or later they're going to give you pieces, and that puts them a bit below what I'd want for these levels.</p>
+<p>Mind you, they don't make this many crude mistakes in every match, but these two examples aren't "one-offs" or exceptions either. They play like this, with this level of mistakes, I'd say in 50%-60% of matches.</p>
+<p>If, as a result of this improvement, the middle and upper levels end up a bit more "bunched together" or "compressed" in terms of level differences, and the lower ones more spread out, I don't mind that too much, but I genuinely feel they're a bit low for a 5 and a 6.</p>
+<p>Take your time reading what I sent you, I'll set you a reasonable effort level, and if you end up needing more examples don't hesitate to tell me. And let me know what conclusions you reach. ¿Can this be improved without the bot getting too close to the very high levels? ¿Can the very crude mistakes be separated from the more subtle ones? Whatever conclusion you reach, let me know.</p>
+<p>"</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Sure, let's look at it with the same rigor as always — I'll reconstruct the real boards and ask the engine, step by step, why it chose what it chose at each point you flag.</p>
+<p>Ran 2 commands</p>
+<p>Very rich document, with very clear sequences to investigate. I'm reconstructing both full matches against the real rules engine — first I validate that the transcription is consistent, then I extract the exact boards for each move you flagged.</p>
+<p>Ran 6 commands, created 2 files · 3 notes</p>
+<p>Understood — reconstructing the sequence precisely, I can see the move that actually needs investigating is 41 (j10 → i9, the bot's), not 42 (which is Otto's capture and crowning, the CONSEQUENCE). The bot voluntarily moved its piece from a safe corner into a square where Otto's piece on j8 could eat it for free and crown. I'm checking what options the bot had at that exact moment:</p>
+<p>Ran 2 commands</p>
+<p>Found it — something very odd is going on: even though hangingMaterialValue DOES correctly detect the danger (it returns 100, confirming the piece is left hanging), the move j10→i9 still scores 223, way above all the alternatives (which hover around 90 or less). This isn't "the mechanism doesn't work" — it's something stranger. I'm investigating which term is generating that anomalous score:</p>
+<p>Ran a command</p>
+<p>f2→g1 is a crowning (black pawn crowns on row 9). The jump is +350 points, far more than a normal crowning should contribute (~75 points for the pawn/queen difference). I'm going to break down exactly where that number comes from:</p>
+<p>Ran a command</p>
+<p>hangingMaterialValue(white) jumps from 0 to 300 after black crowns on g1 — that's what generates the +350-point jump. I need to see whether this is a LEGITIMATE finding (the newly crowned queen genuinely threatens a devastating capture) or a bug in how that threat is calculated:</p>
+<p>Ran 2 commands</p>
+
+<p>Ran 2 commands</p>
+<p>I found the root cause, and it's an important finding: the piece freshly crowned on g1 does, in theory, have a devastating triple capture available (300 points) — but it's WHITE's turn next, not black's. The "hanging pieces" term is adding that bonus as if the bot were about to execute that capture right away, when in reality the opponent moves first and will almost certainly neutralize it before the bot gets to use it. It's a real temporal asymmetry in the evaluation: the same mechanism that correctly detects danger to ITSELF (because the opponent does move next) is miscalibrated for danger to THE OPPONENT (because there, the bot does NOT move next). I'm checking whether the same pattern explains the level-6 examples:</p>
+<p>Ran a command</p>
+<p>The exact same pattern — the five moves you flagged all come out on TOP of the ranking, above the safe alternatives, and several show the same "hanging-opponent(phantom)" pattern. This isn't an isolated case, it's systematic. Before proposing a fix, I'm quickly checking whether removing that phantom bonus fixes the ranking in both cases:</p>
+<p>Ran a command</p>
+<p>Hey, I found the root cause, and it's the same in both cases — a solid finding, not a hunch.</p>
+<p>The diagnosis</p>
+<p>The "hanging pieces" term we added a few rounds back has an underlying asymmetry. It works in two directions:</p>
+<ul>
+<li>"¿Are my own pieces left exposed?" — this is calculated correctly, because the opponent does move next.</li>
+<li>"¿Are the opponent's pieces left exposed?" — here's the problem: the bot credits itself with that bonus as if it were about to execute that capture right away, but it's not its turn next, it's the opponent's. The opponent moves first and, almost always, is going to neutralize that threat before the bot gets a chance to cash it in.</li>
+</ul>
+<p>I found the exact case in your level-5 game: on move 41 (j10→i9), the bot gives Otto the piece for free (who crowns for free on move 42). Breaking down the score, the anomalous move was actually the bot's later response (f2→g1, crowning its own queen) — that crowning theoretically opens up a devastating triple capture for that new queen... but white gets to move first, so that threat is purely a phantom. The score jumped from -127 to +223 purely because of that miscalculated bonus, and that artificially high number is what ends up dragging the whole analysis toward that losing sequence from several moves earlier.</p>
+<p>I tested the same hypothesis on your level-6 game, on move 63 (the first of the sequence of five consecutive giveaways): the five moves you flagged all land in first place in the ranking, above safe alternatives, with the same phantom-bonus pattern.</p>
+<p>The confirmation</p>
+<p>I built a version of the evaluation without that phantom bonus (leaving the part that does work intact, the one for your own pieces) and re-ranked both positions:</p>
+<ul>
+<li>Move 41 (level 5): j10→i9 disappears completely from the top — now e9→d8, f2→e1, and h8→i7 win out, all reasonable development moves.</li>
+<li>Move 63 (level 6): d6→c5 also disappears from the top — h8→i7, a1→f6, and h6→g5 win out, none of the five moves you flagged show up at the top anymore.</li>
+</ul>
+<p>Answering your specific questions</p>
+<p>¿Can the crude mistakes be separated from the subtle ones? Yes, and fairly cleanly: this is a calculation error, not a feature of the playing strength. The real captures and threats the bot DOES execute correctly (the ones we saw in moves 57-61 of level 6, for example) are found by the real search, actually simulating the board turn by turn — the phantom term contributes nothing to that, because for genuine, well-calculated threats, the quiescence mechanism we already have does that job correctly. Removing the broken term shouldn't touch that kind of move.</p>
+<p>¿Does this bring the middle levels closer to the high ones? It shouldn't, or very little: this is removing a bonus that was miscalculated, not adding new strength. If anything, the search becomes more accurate, not deeper or more aggressive — nothing about the configured depth or noise changes.</p>
+<p>What I propose</p>
+<p>Remove the broken half of the term (leaving the half that works, the one for your own pieces) and put it through the usual battery: the correctness tests, the synthetic patterns already in place (including the one that specifically checks that real multiple captures are still correctly detected), and a quick pass to confirm the 5-vs-6 calibration we already closed out hasn't shifted much (it shouldn't, since the bug affected both colors equally, but I'd rather confirm it with numbers than assume it).</p>
+<p>¿Do you want me to go ahead with this?"</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"yes, the plan sounds great to me, go ahead with that and make all the changes you need to make to fix it, and afterward test it with the 5-v-6 calibration.</p>
+<p>Go right ahead!"</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Let's go. I'll start with the specific fix in evaluateBoard, then the full regression battery, and I'll finish with the 5-vs-6 recalibration.</p>
+<p>Ran 9 commands, viewed a file, edited a file · 5 notes</p>
+<p>Understood — it's not a problem with the engine, it's a flaw in my own test: the "irrelevant" piece I used as the alternative also had an equally good clear path (233 versus 243, a tiny margin), so it was never really isolating what I wanted to measure. I'm fixing it with a genuinely worse alternative:</p>
+<p>Ran a command</p>
+<p>Still winning by a small margin — there's something structural in how pieces are counted that I'm not interested in chasing down in this artificial test. I'll redesign the comparison more directly instead: the SAME piece, same destination, comparing the "genuinely safe tunnel" scenario against the "genuinely dangerous tunnel" one — that way I isolate exactly what matters to me without noise from other pieces:</p>
+<p>Ran a command</p>
+<p>Much cleaner: the same move goes from 132 (safe) to -92 (dangerous) depending on whether the opponent's landing square is actually blocked — exactly what I wanted to confirm, with no noise from other pieces. Now a general sanity check, and on to the 5-vs-6 recalibration you asked for:</p>
+<p>Ran 8 commands, created 2 files, edited a file · 6 notes</p>
+<p>Done. Only one file changed, with the fix confirmed at several layers before sending it to you.</p>
+<p><strong>The change:</strong> one line, no more — I removed the "opponent's hanging pieces" bonus (score += hangingMaterialValue(..., opponentColor)), leaving intact the half that does work (the penalty for one's own hanging pieces). I documented the reasoning well right in the code, with the explanation of the temporal asymmetry we found.</p>
+<p><strong>What I validated, in order:</strong></p>
+
+<ul>
+<li><strong>The two real positions we diagnosed</strong> (move 41 from level 5, move 63 from level 6): with the fixed engine, neither of the two moves that gave away pieces shows up among the top options anymore. I added them as permanent tests, with the exact boards generated by code (not typed by hand), so they hold up as a reference from now on.</li>
+<li><strong>Full rules battery</strong>: 12,927 positions cross-checked against the reference engine, zero discrepancies; alpha-beta pruning + quiescence still give exactly the same value as an unpruned search.</li>
+<li><strong>The three synthetic patterns from previous rounds</strong>: here I found something interesting I want to tell you about — one of my old tests (the "tunnel" one) started failing with the new fix. Looking into it, it wasn't a problem with the engine: my test board, without me noticing, had TWO pieces with equally clear paths, and my test assumed only one of them was good. I redesigned it more directly (the same move, comparing a genuinely safe scenario against a genuinely dangerous one), and now it clearly confirms what I wanted to measure.</li>
+<li><strong>5-vs-6 recalibration</strong>: 83% for level 6 (versus 79% before the fix) — practically unchanged, within the same range we'd already validated. The edges (1-vs-5, 6-vs-10) also remain healthy.</li>
+<li><strong>Full pipeline in the browser</strong> via the real Worker, no errors.</li>
+</ul>
+<p>Play it whenever you like, and let me know if you notice those pointless giveaways happening less often."</p>
+<div class="speaker-label speaker-otto">OTTO</div>
+<p>"First of all, the whole process of changes was extremely positive, very, very positive. The crude mistakes were eliminated, the giving away of pieces and pointless moves, and that's very good. They were eliminated, to whatever extent they needed to be, because every so often level 5 makes some small mistake, which no longer consists of those crude piece giveaways, but some small move that isn't quite as good, but (and this is the important part!) that's exactly what we need from a level 5. If it stopped making those micro-mistakes (which aren't all that noticeable, only an experienced player would spot them), you'd end up with level 5 way too strong. So that's perfect, we need that for it to be a level 5.</p>
+<p>I mean, they do have to give you some level of advantage, otherwise we wouldn't be talking about levels 5 and 6. And they do give it to you. ¿How much? Well, that's what we need to discuss now. Level 5, to me, is perfect and stays firmly as level 5. I'm ready to call it the official level 5. It's a level that plays fairly solidly and fairly logically. It leaves a few small windows of advantage so a human who plays well can take some advantage from them. But what's really good is that those catastrophic moves that immediately tipped the match in one move, or two, or three in a row, like before, no longer happen — instead, to beat it you have to build a victory gradually, bit by bit, the way it should be. You made a well-executed maneuver and managed to take a piece here, you made a well-executed maneuver and managed to take a piece there, with another well-executed maneuver you managed to crown a queen, and so, bit by bit, you build a victory against level 5, well-earned, and with luck you end up winning it fairly clearly, but you have to work for that victory gradually, brick by brick, which didn't used to happen before. It's not like it just hands it to you all at once like it used to. So, for me, level 5 is very good and should stay right there. By the way, against level 5 I've won, by a larger or smaller margin (sometimes by as little as ending up with just one queen), something like 80% of matches; and as that number implies, it's beaten me some, not many, but it has beaten me.</p>
+<p>Now let's talk about level 6, which brings a bit more trouble here. Level 6 also improved, no longer having those giveaways it used to have. Just as I suspected might happen, it improved a bit too much for a level 6. In my opinion it's a level 7, at minimum a level 7. For an 8 it might be too much, because I have to keep in mind that I'm not that good a player and that very good players, of a much higher level than me, might end up joining the site, and they also need to be given a small, respectable range of levels (that would be 7 to 10, or 8 to 10). Let me tell you, my results against it were mostly losses for me. I'd say 70% of the time, 75% of the time, it beat me. It was hard for me to beat it, I beat it maybe 4 or 5 times out of, I don't know, 20 I must have tried. Or I don't know if it was 20, maybe 16, 18. It plays genuinely very solidly, really solid. Every so often it has some very well-planned long-term move. Not like level 10's, of course, level 10 pulls off some brilliancies set up several moves in advance that are insane. This one, level 6, strings a few together well, and, especially if you leave it any small opportunity, it usually takes advantage of it. And on top of that, it gives very few of those little windows of opportunity for the human player to tip things in their favor. It's a good, demanding level. It's hard for me, it takes real work for me to beat it. Even though some of the matches I won against it, I won by quite a wide margin, that was exceptional; but I have to do almost everything right (within my own level) to beat it. So to me it's too much for a level 6. It plays very well, gives few opportunities, and also — and here I could be wrong — I don't imagine there being that many levels of difference with level 10, I picture those more as 3 gaps (7-8, 8-9, and 9-10) than as 4 (6-7, 7-8, 8-9, and 9-10); it seems like too much, 4 gaps of difference from the best one (level 10), for a level that already plays very solidly on its own. That would leave too many levels that are too good, even though the idea, as I said before, is to give several options to potential "pro" players (professional... we call them that just as a level reference, not because anyone actually makes a living off this, obviously).</p>
+<p>So, where does this leave us, with level 5 being fine and the level you gave me as 6 needing to actually be moved to 7? It means we'd need to create a level in between these two, level 6.</p>
+<p>I think what would make sense is to bump the current level 6 up to be level 7, and create an intermediate level between these two you gave me in your last round. And I can tell you this with a fair amount of confidence — why? Because my own playing strength happens to be right in this zone. It's right in the zone of these levels we're building now. And I clearly land above 5 and clearly below what you measured as 6. I'm in that in-between zone. I play against 5 and I'll most likely win, with a fairly high probability. I play against 6 and I'll most likely lose, also with a fairly high probability. 5 is the level I'd play against on a day I'm tired, sleepy; and the current 6 (if you agree, the future 7) is the one I'd play against when I want a big challenge — for me, beating it feels like an accomplishment. But I'm missing my "everyday opponent." That's why I say 6 needs to be bumped up to 7 and given an intermediate level that would be the one more even with me. In other words, since I'm right in that zone, in that range, I can say with fair confidence that we need one more, because I can't find either of the two that's even with me. And I think that, just as I'm at this level, other potential players could be at a very similar level. So, in that zone, the mid-to-upper level zone, let's say, we should offer one more option. Because I'd like to try to find a level where I'm closer to 50-50 with it. Even though it'll never be exactly 50-50, at least one where I can say "well, this is the level I'm even with." Maybe in the future, if I improve a bit, I could end up even with this level we're now moving toward 7. But right now, it beats me a lot more than I beat it. So I think there's room for one more little step there, and also, that 83% in favor of the current level 6 in direct matchups between both levels (which is a clear dominance) makes me think there's enough room for a hypothetical intermediate level (if that's not the case, you'll tell me).</p>
+<p>By the way, I wanted to ask, ¿do you have some variable — and I don't mean variable in the programming sense, but a factor that can be intentionally varied — through which you can introduce micro-changes, micro-corrections to the bots' level? For example, if I told you level 7, I'd like to lower it just a tiny, tiny bit, ¿is there something very small, very subtle, almost imperceptible, that you can inject, giving it very small doses until it's calibrated exactly where I want it? I'm asking this not because I want to do it now, I think I'd leave level 6 as level 7, as it is, without doing anything else to it. But I'm saying, later, once all the bots are done and maybe I notice one could use a tiny bump up or down, ¿do you have some factor you can inject like that, mini correction doses up or down, until it lands exactly where I want? Just to know.</p>
+<p>And I'll also take the chance to ask you another question, to see what you think. That thing about levels 5 and 6 of V6 (the previous version, the one we fixed) giving away pieces, you classified it as a bug, because you found there was a problem with how it planned turns, that it didn't plan turns well, and that's why those giveaways happened. Let me ask you this: for those levels that come with the bug's flaw, ¿do you think they could actually be used as low levels, say 2 and 3, as they came, I mean, with those giveaways, or would you rather build your own levels 2 and 3, controlling the level of mistakes they make a bit better?</p>
+<p>Well, let's not code anything now, just read what I'm telling you and give me your opinions and recommendations on how to proceed, besides answering my questions."</p>
+<div class="speaker-label speaker-claude">CLAUDE</div>
+<p>"Hey, what a great report — very detailed, with the qualitative comparison (your own experience playing many matches) backing up the cold number (the 83%). Let's go through it all, in order.</p>
+<p>About renaming the current 6 to 7, and creating a new 6</p>
+<p>I fully agree, and I think you've read it correctly. Two things line up:</p>
+<ul>
+<li>Your playing experience is the strongest data point we have: beating level 5 80% of the time and losing 70-75% of the time against the current level 6, across dozens of real matches, is too big a jump for a single step — you put it better than I could: you're missing an "everyday opponent" in between.</li>
+<li>The number we'd already measured (83% for 6 over 5 in self-play) points in exactly the same direction: 83% sits right at the ceiling of the 60-85% range we defined as a "healthy gap between neighbors" — when a number lands right at the edge of that range AND human experience confirms it that emphatically, it's a pretty clear sign there's room (or need) for an intermediate step, not that it's "almost fine."</li>
+</ul>
+<p>And your structural argument checks out for me too: going from 4 steps (6→7→8→9→10) to 3 (7→8→9→10) to get from the new "promoted 6" up to the ceiling is more proportional, given how solidly it already plays.</p>
+<p>Revised plan, then. The fixed points become 1, 5, 7 (the current 6, renamed), 10. What's left to calibrate: 2, 3, 4, 6 (new), 8, 9. I'd prioritize it like this:</p>
+<ul>
+<li>The new level 6 first — it's the most urgent gap you identified, and with 5 and 7 already fixed on both sides, it's the easiest one to bound properly.</li>
+<li>8 and 9, between 7 (already fixed) and 10 (already fixed).</li>
+<li>3, between 1 and 5.</li>
+<li>2 and 4, filling in what's left.</li>
+</ul>
+<p>Your question about the "micro-dose"</p>
+<p>Yes, it exists, and it's exactly what we've already been using without me calling it that: noise is that fine dial. It's a continuous probability from 0 to 1 — I can move it from 0.15 to 0.16 and you'll feel a small, proportional change, not a jump. Depth, on the other hand, is a coarse dial: going from depth 3 to 4 can be a big jump in strength, not something smooth (we already saw that with level 10 itself).</p>
+<p>My way of working, in practice, is: first I pick the right depth to put the level in the general neighborhood it needs to be in, and then I fine-tune with noise until the self-play percentage lands exactly where I want it. That's literally what I did to calibrate 5 and 6 — same depth for both, noise as the only difference. So if in the future a level comes out "almost right, but a bit too strong" or "a bit too weak," that's the dial I'll touch first, with no need to redo anything structural.</p>
+<p>Your question about reusing the buggy V6 for levels 2 and 3</p>
+<p>My honest recommendation: I wouldn't reuse it, I'd build 2 and 3 in a controlled way, with the same tool as always (depth + noise). Let me explain why, because it's not just "for tidiness":</p>
+<p>The bug didn't produce an evenly, well-distributed pattern of mistakes — it produced occasional, catastrophic, unpredictable jumps, mechanically triggered by a very specific technical condition (a leaf position with the opponent to move, involving a piece with a devastating capture available if it were the bot's turn again). That doesn't really resemble "a beginner player who sometimes makes mistakes" so much as "a player who almost always plays reasonably well, but every once in a while stumbles into something random and severe" — which is exactly the pattern you yourself described as undesirable when you first reported it, and why we called it a bug instead of a "difficulty level."</p>
+<p>A well-designed level 2 or 3 should have frequent but even mistakes (with high noise, as 1-4 already do today), not rare but disproportionately huge mistakes. Also, technically, reintroducing the bug just for a couple of levels would mean keeping two different versions of the evaluation floating around — more surface area for future headaches, for something I don't even think would give us the result we're after.</p>
+
+<p>A well-designed level 2 or 3 should have frequent but even mistakes (with high noise, as 1-4 already do today), not rare but disproportionately huge mistakes. Also, technically, reintroducing the bug just for a couple of levels would mean keeping two different versions of the evaluation floating around — more surface area for future headaches, for something I don't even think would give us the result we're after.</p>
+<p>With that answered, ¿shall we start with the new level 6 in the next entry?"</p>
+<p id="articleClosing">Well, I decided to share this, but of course there's a whole lot more (this will be roughly a quarter of the work I did on the bots together with Claude). If anyone reading this is interested in knowing more, feel free to write to me by email (<a class="inline-link contact-email-link" href="#">contact by email</a>) and I'll gladly send you the rest.</p>
+<div id="articleFooter">© 2026 Otto Helmut. Damas Argentinas Online.</div>
+
+        </div>
     </div>
 
     <script>
+        // Esta página vive dentro de un iframe (cargada desde el modal de
+        // Acerca de en index.html/laboratorio.html), así que no tiene
+        // acceso directo a la variable currentLang de esas páginas -- pero
+        // sí comparte el mismo localStorage (mismo origen), así que lee
+        // ahí la preferencia de idioma ya guardada, sin necesitar nada más.
+        (function () {
+            var lang = localStorage.getItem('damas_lang') || 'es';
+            document.getElementById('articleEs').style.display = (lang === 'es') ? 'block' : 'none';
+            document.getElementById('articleEn').style.display = (lang === 'en') ? 'block' : 'none';
+            document.documentElement.lang = lang;
+            if (lang === 'en') {
+                document.title = 'Examples of the bots\' training — Damas Argentinas Online';
+            }
+        })();
+
         // El mail nunca aparece como texto plano en el HTML (ni siquiera
         // partido en el propio código, más allá de "usuario" y "dominio"
         // por separado) -- se arma recién acá, al cargar la página. Para
@@ -925,3 +1677,4 @@
 </body>
 
 </html>
+

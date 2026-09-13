@@ -4,6 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
     <title>El Laboratorio - Damas Argentinas Online</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -393,6 +397,14 @@
             left: 0;
             width: 100%;
             z-index: 2100;
+
+        .footer-logo {
+            width: 15px;
+            height: 15px;
+            vertical-align: -2px;
+            margin-right: 5px;
+            opacity: 0.9;
+        }
             background: rgba(0, 0, 0, 0.55);
             color: #cfd8e3;
             font-size: 11px;
@@ -729,6 +741,7 @@
 <body>
 
     <footer id="siteFooter">
+        <img src="assets/logo.png" alt="" class="footer-logo">
         <span data-i18n="footerCopyright">© 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.</span>
         <a href="#" onclick="openTerms(); return false;" data-i18n="footerTermsLink">Ver Términos de Uso</a>.
     </footer>

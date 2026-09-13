@@ -14,6 +14,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="copyright" content="© 2026 Otto Helmut. Todos los derechos reservados.">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
     <title>Damas Argentinas</title>
 
     <!-- EB Garamond: la usamos para el pergamino de las reglas (aire de libro antiguo, bien legible) -->
@@ -1309,6 +1313,14 @@
             left: 0;
             width: 100%;
             z-index: 2100;
+
+        .footer-logo {
+            width: 15px;
+            height: 15px;
+            vertical-align: -2px;
+            margin-right: 5px;
+            opacity: 0.9;
+        }
             /* Por encima del overlay de entrada/lobby (2000), pero por debajo
                de los botones de Reglas, el chat y los modales (2500+), así
                que siempre está visible sin taparle el click a nada. */
@@ -1343,6 +1355,25 @@
             /* 40px más que el espacio que había antes (medido: 16px),
                a pedido de Otto -- separa visualmente el título del resto. */
             margin-bottom: 54px;
+        }
+
+        /* El escudo de Godofredo: el logo del sitio, en los dos lugares
+           donde Otto pidió que apareciera dentro de la página (además del
+           favicon de la pestaña del navegador, que se agrega aparte en el
+           <head>). Mismo archivo en los dos casos, dos tamaños distintos
+           según el peso visual que le corresponde a cada pantalla. */
+        .site-logo-entrance {
+            width: 112px;
+            height: 112px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+        }
+
+        .site-logo-salon {
+            width: 58px;
+            height: 58px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
         }
 
         /* La leyenda que invita a jugar contra un bot si no hay humanos
@@ -1796,6 +1827,7 @@
 <body>
 
     <footer id="siteFooter">
+        <img src="assets/logo.png" alt="" class="footer-logo">
         <span data-i18n="footerCopyright">© 2026 Otto Helmut. Damas Argentinas Online. Todos los derechos reservados.</span>
         <a href="#" onclick="openTerms(); return false;" data-i18n="footerTermsLink">Ver Términos de Uso</a>.
     </footer>
@@ -1857,6 +1889,7 @@
     <!-- La Puerta de Entrada y el Lobby de Godofredo -->
     <div id="waitingOverlay" class="entrance-bg">
         <div id="entranceSection">
+            <img src="assets/logo.png" alt="Damas Argentinas Online" class="site-logo-entrance">
             <h1 data-i18n="entranceTitle">🇦🇷 Damas Argentinas 🇦🇷</h1>
             <h3 data-i18n="entranceSubtitle">Identifíquese, noble Caballero</h3>
             <input type="text" id="usernameInput" data-i18n-placeholder="usernamePlaceholder" placeholder="Tu nombre o apodo..." maxlength="15">
@@ -1870,6 +1903,7 @@
 
         <div id="lobbySection" style="display: none;">
             <div class="lobby-header-group">
+                <img src="assets/logo.png" alt="Damas Argentinas Online" class="site-logo-salon">
                 <h2 data-i18n="salonTitle">Salón de los Caballeros</h2>
                 <p data-i18n="salonSubtitle">Seleccione un oponente o espere un desafío...</p>
             </div>
@@ -5416,4 +5450,3 @@
 </body>
 
 </html>
-

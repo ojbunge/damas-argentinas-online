@@ -435,6 +435,109 @@
             font-size: 18px;
         }
 
+        /* Punto 4 (pedido de Otto): "Turno: Blancas" es apenas más ancho
+           que "Turno: Negras" (y lo mismo pasa en inglés, "White" contra
+           "Black") -- una diferencia de unos pocos píxeles, pero
+           suficiente para que, en ciertos anchos de pantalla puntuales,
+           el botón de Rendirse (que vive en esta misma fila, más a la
+           derecha) salte de renglón según de quién sea el turno, porque
+           el flex-wrap de .status-container reacciona a esa diferencia.
+           Y una fila CON un botón es más alta que una fila sin él, así
+           que ese salto de renglón le cambiaba la altura a todo el
+           panel en cada cambio de turno -- lo cual empujaba el tablero
+           (y todo lo de abajo) unos píxeles hacia arriba o abajo cada
+           vez. 106px cubre con margen las cuatro variantes posibles
+           (los dos colores, en los dos idiomas), así que ese ancho deja
+           de variar según el turno, y el punto de quiebre del
+           flex-wrap deja de depender de esto. */
+        .turn-indicator-wrap {
+            min-width: 106px;
+        }
+
+        /* --- EL CARTEL DE FIN DEL DUELO --- */
+        /* Antes todo esto vivía como estilos inline puestos a mano desde
+           JS (ver announceGameEnd) -- lo que hacía imposible darle un
+           tamaño distinto en mobile sin duplicar cada valor a mano ahí.
+           Ahora la forma y los tamaños viven acá, y JS solo pone el
+           contenido y la posición vertical (que sí necesita calcularse
+           en tiempo real, según dónde esté el tablero en cada momento). */
+        #victoryBanner {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            color: gold;
+            padding: 40px;
+            font-size: 24px;
+            border: 5px solid gold;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 3000;
+            /* Por encima de todo (menos un desafío entrante, que va a 3100) */
+        }
+
+        #victoryBanner h1 {
+            font-size: 40px;
+            color: gold;
+            border: none;
+        }
+
+        #victoryBanner p {
+            margin-bottom: 20px;
+        }
+
+        #victoryBanner .victory-buttons-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        #victoryBanner button {
+            padding: 15px 25px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        #victoryBanner #rematchBtn {
+            background: #27ae60;
+            color: white;
+        }
+
+        #victoryBanner .victory-leave-btn {
+            background: #f1c40f;
+            padding: 15px 30px;
+            font-size: 20px;
+        }
+
+        /* Punto 5 (pedido de Otto): con los mismos tamaños fijos que en
+           desktop, este cartel terminaba ocupando muchísimo más de la
+           pantalla en un celular (llegó a medir 612px de alto en una
+           pantalla de 800px), tapando por completo el dialogo del
+           personaje que queda justo arriba. Achicando letra, relleno y
+           botones -- sin tocar nada de esto en desktop -- el cartel
+           sigue siendo perfectamente legible y deja ver el diálogo de
+           arriba. */
+        @media (max-width: 700px) {
+            #victoryBanner {
+                padding: 18px 22px;
+                font-size: 15px;
+            }
+
+            #victoryBanner h1 {
+                font-size: 22px;
+            }
+
+            #victoryBanner button,
+            #victoryBanner .victory-leave-btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+        }
+
         #resetBtn {
             padding: 8px 15px;
             background: #e74c3c;
@@ -835,6 +938,18 @@
                 justify-content: center;
                 width: 100%;
                 margin: 10px auto 0 auto;
+            }
+
+            /* Punto 1 (pedido de Otto): a este interletrado, "DAMAS
+               ARGENTINAS" + las dos banderitas no entran en una sola
+               línea en varios celulares (la bandera derecha cae sola a
+               un renglón nuevo). Achicar el interletrado (en vez de la
+               fuente, para no perder altura de título) le devuelve
+               margen de sobra sin tocar nada más. Solo al título de la
+               Entrada -- el h1 genérico (usado en otras pantallas) no
+               se toca. */
+            #entranceSection h1 {
+                letter-spacing: 2px;
             }
         }
 
@@ -1712,9 +1827,12 @@
             letter-spacing: 2px;
             /* Centrado DENTRO de su propio contenedor (que va del borde
                derecho del círculo hasta el borde derecho del tablero) --
-               a pedido de Otto. No es el centro exacto del tablero (el
-               círculo se come una porción de la izquierda), pero se ve
-               mucho mejor que pegado contra la izquierda. */
+               a pedido de Otto, mirando la pantalla de escritorio (tablero
+               ancho): pegado a la izquierda ahí se veía descolgado, con
+               un hueco enorme a la derecha. Se mantiene así en desktop
+               sin cambios. En mobile, la regla de más abajo (dentro del
+               media query) lo pisa con text-align:left -- ver ese
+               comentario para el porqué. */
             text-align: center;
             white-space: nowrap;
             /* A propósito, SIN overflow:hidden acá -- eso recortaría el
@@ -1724,6 +1842,22 @@
                propósito de comprimir para que entre completo. El recorte
                queda reservado para .truncate-fallback, el último recurso
                si ni comprimiendo al máximo razonable alcanza. */
+        }
+
+        /* Punto 3 (pedido de Otto): en mobile, con la columna del
+           tablero mucho más angosta, ese mismo centrado de arriba deja
+           un hueco feo entre el círculo de la foto y el nombre -- acá
+           conviene lo opuesto de lo que conviene en desktop. Alineado a
+           la izquierda, el nombre nace pegado al círculo (que en sí no
+           se mueve de lugar -- esto solo cambia cómo se reparte el
+           texto DENTRO de su propio espacio disponible). Tiene que ir
+           DESPUÉS de la regla de arriba en el archivo (misma
+           especificidad -- un media query no gana solo por ser media
+           query, gana por venir después en la hoja de estilos). */
+        @media (max-width: 700px) {
+            .bot-name-text {
+                text-align: left;
+            }
         }
 
         /* Último recurso: si ni comprimiendo el nombre hasta el piso de
@@ -1849,7 +1983,7 @@
     <h1 class="hidden-before-game" data-i18n="gameTitle">Damas Argentinas</h1>
 
     <div class="status-container hidden-before-game">
-        <div>
+        <div class="turn-indicator-wrap">
             <span id="turnIndicator">Turno: Blancas</span>
         </div>
         <div class="score-box">
@@ -2772,7 +2906,7 @@
 
                 // --- Entrada al castillo ---
                 entranceTitle: "🇦🇷 Damas Argentinas 🇦🇷",
-                entranceSubtitle: "Identifíquese, noble Caballero",
+                entranceSubtitle: "Identifíquese, noble Caballero o doncella",
                 usernamePlaceholder: "Tu nombre o apodo...",
                 acceptTermsPrefix: "Acepto los",
                 termsLinkText: "Términos de Uso",
@@ -2909,7 +3043,7 @@
 
                 // --- Castle entrance ---
                 entranceTitle: "🇦🇷 Argentine Checkers 🇦🇷",
-                entranceSubtitle: "Identify yourself, noble Knight",
+                entranceSubtitle: "Identify yourself, noble Knight or Lady",
                 usernamePlaceholder: "Your name or nickname...",
                 acceptTermsPrefix: "I accept the",
                 termsLinkText: "Terms of Use",
@@ -3900,7 +4034,14 @@
             if (el.scrollWidth > el.clientWidth + 1) {
                 const scale = Math.max(0.6, el.clientWidth / el.scrollWidth);
                 el.style.transform = `scaleX(${scale})`;
-                el.style.transformOrigin = "center";
+                // El origen de la compresión sigue a la alineación real
+                // vigente (que cambia sola según el media query de
+                // mobile visto arriba): centrado en desktop, para que
+                // encoja simétrico y siga viéndose centrado; a la
+                // izquierda en mobile, para que encoja desde el lado
+                // pegado al círculo y no vuelva a alejarlo un poco.
+                const alineacionActual = getComputedStyle(el).textAlign;
+                el.style.transformOrigin = (alineacionActual === "left") ? "left" : "center";
                 // Si ni comprimiendo hasta el piso de legibilidad (0.6)
                 // alcanza para que el nombre entre completo, ahí sí
                 // recortamos con puntos suspensivos como último recurso
@@ -4032,16 +4173,17 @@
 
             const banner = document.createElement("div");
             banner.id = "victoryBanner";
-            banner.style.position = "absolute";
-            // Antes "top:50%" centraba el cartel en TODA la página. Ahora
-            // se centra específicamente sobre el TABLERO (a pedido de
-            // Otto, para que las frases de los personajes al pie del
-            // banner de arriba no queden tapadas) -- el tablero, al ser
-            // más alto que el cartel, va a sobresalir por arriba y abajo,
-            // y eso está bien así, tal como pidió. Si por algún motivo
-            // el tablero no estuviera en el DOM (no debería pasar nunca
-            // en este punto), cae de vuelta al centrado de toda la
-            // página, para no romper nada.
+            // Posición: se centra específicamente sobre el TABLERO (a
+            // pedido de Otto, para que las frases de los personajes al
+            // pie del banner de arriba no queden tapadas) -- el
+            // tablero, al ser más alto que el cartel, va a sobresalir
+            // por arriba y abajo, y eso está bien así, tal como pidió.
+            // Si por algún motivo el tablero no estuviera en el DOM (no
+            // debería pasar nunca en este punto), cae de vuelta al
+            // centrado de toda la página, para no romper nada. El resto
+            // de la apariencia (tamaños, colores, bordes) vive en la
+            // clase #victoryBanner del CSS, con su propia versión
+            // reducida para mobile.
             const boardEl = document.getElementById("board");
             if (boardEl) {
                 const boardRect = boardEl.getBoundingClientRect();
@@ -4050,16 +4192,6 @@
             } else {
                 banner.style.top = "50%";
             }
-            banner.style.left = "50%";
-            banner.style.transform = "translate(-50%, -50%)";
-            banner.style.backgroundColor = "rgba(0,0,0,0.9)";
-            banner.style.color = "gold";
-            banner.style.padding = "40px";
-            banner.style.fontSize = "24px";
-            banner.style.border = "5px solid gold";
-            banner.style.borderRadius = "20px";
-            banner.style.textAlign = "center";
-            banner.style.zIndex = "3000"; // Por encima de todo (menos un desafío entrante, que va a 3100)
 
             // El botón de Revancha solo tiene sentido si hay a quién desafiar:
             // nunca para espectadores, y nunca cuando el motivo del cartel es
@@ -4068,16 +4200,16 @@
             // contra algo sin ego, así que decimos simplemente "jugar de nuevo".
             const rematchLabel = currentBotId ? t('playAgainBtn') : t('rematchBtnLabel');
             const rematchButtonHtml = (allowRematch && myColor !== 'spectator')
-                ? `<button id="rematchBtn" onclick="requestRematch()" style="padding:15px 25px; font-size: 18px; cursor:pointer; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold;">${rematchLabel}</button>`
+                ? `<button id="rematchBtn" onclick="requestRematch()">${rematchLabel}</button>`
                 : '';
 
             // El mensaje ahora es dinámico y los botones nos dan la opción de revancha o de salir
             banner.innerHTML = `
-        <h1 style="font-size: 40px; color: gold; border: none;">${t('endOfDuelTitle')}</h1>
-        <p style="margin-bottom: 20px;">${message}</p>
-        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <h1>${t('endOfDuelTitle')}</h1>
+        <p>${message}</p>
+        <div class="victory-buttons-row">
             ${rematchButtonHtml}
-            <button onclick="leaveAndReload()" style="padding:15px 30px; font-size: 20px; cursor:pointer; background: #f1c40f; border: none; border-radius: 10px; font-weight: bold;">
+            <button class="victory-leave-btn" onclick="leaveAndReload()">
                 ${t('leaveLobbyCaps')}
             </button>
         </div>

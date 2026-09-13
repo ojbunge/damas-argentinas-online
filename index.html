@@ -3200,6 +3200,10 @@
             // que el resto -- no hace falta que el modal esté abierto para
             // llamar a esto, si está oculto simplemente no se nota.
             showTermsLang(currentLang);
+            // El título de la Entrada puede cambiar de largo entre
+            // idiomas ("Damas Argentinas" vs "Argentine Checkers"), así
+            // que lo volvemos a medir acá también.
+            fitEntranceTitle();
         }
 
         function updateLangSwitcherUI() {
@@ -4022,6 +4026,82 @@
         // más allá de un piso de legibilidad (0.6), por debajo del cual
         // preferimos que trunque con puntos suspensivos antes que
         // volverse ilegible.
+        // Punto 1, segunda vuelta (pedido de Otto): el letter-spacing
+        // reducido en mobile (ver el media query más arriba) alcanza en
+        // la enorme mayoría de los casos, pero no en todos -- distintos
+        // fabricantes empaquetan su propia fuente de emojis (Samsung
+        // usa la suya propia, distinta de la que trae Android de
+        // fábrica), y el emoji de la bandera 🇦🇷 puede dibujarse
+        // apenas más ancho en algunos teléfonos que en otros, sin que
+        // haya ningún valor de CSS que lo prediga de antemano para
+        // todos los casos. En vez de perseguir ese número imposible,
+        // medimos en el propio dispositivo si el título entra en una
+        // sola línea, y si no entra lo comprimimos horizontalmente lo
+        // justo y necesario -- misma idea que ya usa
+        // checkBotNameOverflow() de acá abajo para los nombres largos
+        // de los bots.
+        function fitEntranceTitle() {
+            const h1 = document.querySelector('#entranceSection h1');
+            if (!h1) return;
+            // Reseteamos antes de medir, para no arrastrar una
+            // compresión o un nowrap de una medición anterior (por
+            // ejemplo, si cambiamos de idioma y el título nuevo es de
+            // otro largo).
+            h1.style.transform = "";
+            h1.style.whiteSpace = "";
+
+            // El h1 normalmente ajusta línea con normalidad, así que
+            // para saber cuánto ocuparía en una sola línea medimos
+            // sobre un clon invisible con nowrap forzado, sin afectar
+            // el layout real.
+            const clone = h1.cloneNode(true);
+            clone.style.whiteSpace = "nowrap";
+            clone.style.position = "absolute";
+            clone.style.visibility = "hidden";
+            clone.style.transform = "";
+            document.body.appendChild(clone);
+            const anchoNatural = clone.scrollWidth;
+            document.body.removeChild(clone);
+
+            const anchoDisponible = h1.parentElement.getBoundingClientRect().width;
+            if (anchoNatural > anchoDisponible + 1) {
+                const scaleIdeal = anchoDisponible / anchoNatural;
+                // OJO acá, porque no es intuitivo: scaleX por sí solo NO
+                // alcanza para esto. El navegador decide el ajuste de
+                // línea ANTES de aplicar cualquier transform visual --
+                // si el título ya se partió en dos líneas durante ese
+                // cálculo, comprimirlo después solo lo achica ya partido,
+                // no lo vuelve a unir en una sola línea. Por eso, para
+                // que la compresión realmente evite el corte, hay que
+                // FORZAR nowrap al mismo tiempo (igual que hace
+                // checkBotNameOverflow con los nombres de los bots) --
+                // eso obliga a una sola línea (aunque se desborde) y
+                // recién ahí la compresión tiene margen real para
+                // corregir ese desborde.
+                //
+                // Piso de 0.85: para un título tan grande y visible, más
+                // compresión que eso ya se notaría como una distorsión
+                // fea. Si hiciera falta MÁS compresión que eso, es mejor
+                // dejar el ajuste de línea normal (dos líneas, sin
+                // distorsionar) que forzar una sola línea comprimida al
+                // punto de desbordarse igual por los costados.
+                if (scaleIdeal >= 0.85) {
+                    h1.style.whiteSpace = "nowrap";
+                    h1.style.transform = `scaleX(${scaleIdeal})`;
+                    h1.style.transformOrigin = "center";
+                }
+            }
+        }
+        window.addEventListener("resize", () => { fitEntranceTitle(); });
+        // Los emojis pueden llegar como parte de una fuente que carga
+        // por separado del resto de la página -- si en el primer
+        // pintado todavía no cargó, medimos de nuevo apenas termine de
+        // cargar, para no quedarnos con una medición hecha sobre un
+        // emoji de reemplazo más angosto (o más ancho) que el real.
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => fitEntranceTitle());
+        }
+
         function checkBotNameOverflow() {
             const el = document.querySelector(".bot-name-text");
             if (!el) return;

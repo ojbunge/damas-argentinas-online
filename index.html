@@ -665,6 +665,25 @@
             background-repeat: no-repeat;
         }
 
+        /* La Mesa de Myrth la Grande: fondo especial SOLO para las
+           partidas contra ese bot puntual (nivel 7) -- a pedido de
+           Otto, ya que sus diálogos hacen referencia constante a "su
+           mesa" y "su tablero". El resto de los bots (y las partidas
+           entre humanos) siguen usando el tapiz general del body (ver
+           arriba). Mismo criterio visual que el resto de los fondos
+           especiales del sitio: overlay oscuro parejo + cover + center,
+           para que el tablero y las fichas sigan resaltando por
+           encima. Se aplica a <body> y se agrega/saca con JS al
+           arrancar cada partida nueva, según contra qué bot se esté
+           jugando (ver el handler de start-game). */
+        body.myrth-table-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.40), rgba(0, 0, 0, 0.40)), url('assets/bots/backgrounds/myrthlagrandebackground.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
         #usernameInput {
             padding: 12px;
             font-size: 18px;
@@ -2906,7 +2925,7 @@
 
                 // --- Entrada al castillo ---
                 entranceTitle: "🇦🇷 Damas Argentinas 🇦🇷",
-                entranceSubtitle: "Identifíquese, noble Caballero o doncella",
+                entranceSubtitle: "Identifíquese, noble Caballero o Doncella",
                 usernamePlaceholder: "Tu nombre o apodo...",
                 acceptTermsPrefix: "Acepto los",
                 termsLinkText: "Términos de Uso",
@@ -4426,6 +4445,13 @@
                 // usa requestRematch() para saltearse el trámite de desafío,
                 // y acá abajo para mostrar el retrato del bot en el estandarte.
                 currentBotId = data.vsBot ? data.botId : null;
+                // La Mesa de Myrth la Grande: fondo especial solo para
+                // partidas contra ese bot puntual. El toggle con force
+                // (segundo argumento) agrega la clase si corresponde y
+                // la saca si no, sin importar el estado de la partida
+                // anterior -- así una partida nueva contra cualquier
+                // otro bot (u otro humano) vuelve sola al tapiz general.
+                document.body.classList.toggle("myrth-table-bg", currentBotId === "myrthlagrande");
                 // El pregonero arranca de cero en cada partida nueva contra
                 // un bot -- nunca se recicla el estado de una partida
                 // anterior (si veníamos de espectar o de una revancha).

@@ -193,10 +193,19 @@
             align-items: center;
         }
 
+        /* Antes #moveHistoryPanel era, él mismo, el contenedor con scroll
+           -- eso incluía al <h3> del título DENTRO de lo que se
+           scrollea, así que al bajar a ver jugadas viejas el título
+           "Crónica" se iba de la pantalla junto con ellas (bug
+           reportado por Otto). Ahora el panel es una columna flex de
+           tres partes: el título (fijo), la lista (la ÚNICA que
+           scrollea, con su propio overflow y max-height acá abajo), y
+           el botón de Copiar Crónica (fijo, siempre visible debajo de
+           la lista, nunca se lo "come" el scroll). */
         #moveHistoryPanel {
             width: min(90vw, 480px);
-            max-height: 220px;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(241, 196, 15, 0.4);
             border-radius: 8px;
@@ -209,6 +218,11 @@
         }
 
         #moveHistoryPanel h3 {
+            flex-shrink: 0;
+            /* cursor:help -- para que quede claro, con un vistazo al
+               puntero, que pasar el mouse por acá revela información
+               (el tooltip nativo del atributo title). */
+            cursor: help;
             color: #f1c40f;
             margin: 0 0 8px 0;
             font-size: 13px;
@@ -217,6 +231,40 @@
             text-align: center;
             border-bottom: 1px solid rgba(241, 196, 15, 0.3);
             padding-bottom: 6px;
+        }
+
+        /* ~22 líneas de jugada (medidas: 21px cada una) -- el número que
+           pidió Otto, elegido para que, sumado al título y al botón de
+           abajo, la Arena no crezca hacia abajo más de lo que ya
+           ocupaba antes en ninguno de los dos tipos de partida (humano
+           vs humano, humano vs bot). */
+        #moveHistoryList {
+            flex: 1;
+            min-height: 0;
+            /* imprescindible: sin esto, un hijo flex no puede encogerse
+               por debajo de la altura de su propio contenido, y el
+               overflow/scroll de acá abajo no llegaría a activarse
+               nunca. */
+            overflow-y: auto;
+            max-height: 462px;
+        }
+
+        #copyChronicleBtn {
+            flex-shrink: 0;
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1c0a;
+            border: 1px solid #7a5a24;
+            border-radius: 6px;
+            font-weight: 700;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        #copyChronicleBtn:hover {
+            filter: brightness(1.1);
         }
 
         .move-entry {
@@ -273,13 +321,13 @@
                    tablero quedara "enganchado" y arrastrado hacia abajo
                    a medida que crecía el historial. Acá quedan
                    completamente desacoplados: el historial tiene su
-                   propio max-height fijo con scroll interno, y el
+                   propio max-height fijo con scroll interno (ver
+                   #moveHistoryList, ~22 líneas en los dos anchos), y el
                    tablero no sabe nada de él. */
                 left: 100%;
                 margin-left: 18px;
                 margin-top: 0;
                 width: 190px;
-                max-height: 608px;
             }
 
             .bot-speech-bubble {
@@ -2034,8 +2082,9 @@
 
         <!-- El Mensajero de Godofredo: crónica de jugadas de la partida -->
         <div id="moveHistoryPanel">
-            <h3 data-i18n="cronicaTitle">📜 Crónica</h3>
+            <h3 data-i18n="cronicaTitle" data-i18n-title="cronicaTooltip" title="Copiá la crónica y pegala en el Reproductor de Crónicas del Laboratorio para volver a ver el partido.">📜 Crónica</h3>
             <div id="moveHistoryList"></div>
+            <button id="copyChronicleBtn" onclick="copyChronicle()" data-i18n="copyChronicleBtn">📋 Copiar Crónica</button>
         </div>
     </div>
 
@@ -2922,6 +2971,10 @@
                 spectatorsNone: "Espectadores: -",
                 spectatorsList: "Espectadores: {0}",
                 cronicaTitle: "📜 Crónica",
+                cronicaTooltip: "Copiá la crónica y pegala en el Reproductor de Crónicas del Laboratorio para volver a ver el partido.",
+                copyChronicleBtn: "📋 Copiar Crónica",
+                chronicleCopiedBtn: "✅ ¡Copiado!",
+                chronicleCopyFailedAlert: "No se pudo copiar la crónica. Probá seleccionar el texto a mano.",
 
                 // --- Entrada al castillo ---
                 entranceTitle: "🇦🇷 Damas Argentinas 🇦🇷",
@@ -3059,6 +3112,10 @@
                 spectatorsNone: "Spectators: -",
                 spectatorsList: "Spectators: {0}",
                 cronicaTitle: "📜 Chronicle",
+                cronicaTooltip: "Copy the chronicle and paste it into the Laboratory's Chronicle Player to watch the game again.",
+                copyChronicleBtn: "📋 Copy Chronicle",
+                chronicleCopiedBtn: "✅ Copied!",
+                chronicleCopyFailedAlert: "Couldn't copy the chronicle. Try selecting the text by hand.",
 
                 // --- Castle entrance ---
                 entranceTitle: "🇦🇷 Argentine Checkers 🇦🇷",
@@ -3570,6 +3627,46 @@
             }
         }
 
+        // Arma el texto completo de la crónica, en orden CRONOLÓGICO
+        // (1, 2, 3... -- al revés del orden en que se dibuja en
+        // pantalla, donde la jugada más reciente va primera) y con el
+        // mismo formato exacto que ya usa cada línea en pantalla
+        // (número, flecha, cruz de captura, corona de coronación). Este
+        // formato es, a propósito, el mismo que en el futuro va a leer
+        // el Reproductor de Crónicas del Laboratorio -- de ahí que
+        // number, flecha y marcas tengan que coincidir siempre con lo
+        // que ya se ve acá, sin inventar un formato paralelo.
+        function buildChronicleText() {
+            const lineas = moveHistory.map((m, index) => {
+                const fromTxt = squareLabel(m.from.row, m.from.col);
+                const toTxt = squareLabel(m.to.row, m.to.col);
+                let suffix = '';
+                if (m.captured) suffix += ' ✕';
+                if (m.crowned) suffix += ' ♛';
+                return `${index + 1}.${fromTxt} → ${toTxt}${suffix}`;
+            });
+            return lineas.join('\n');
+        }
+
+        function copyChronicle() {
+            const texto = buildChronicleText();
+            const btn = document.getElementById('copyChronicleBtn');
+            const etiquetaOriginal = t('copyChronicleBtn');
+            navigator.clipboard.writeText(texto).then(() => {
+                // Confirmación visual breve -- el portapapeles no avisa
+                // nada por sí solo, así que sin esto el usuario no
+                // tendría ninguna señal de que el clic realmente hizo
+                // algo.
+                btn.textContent = t('chronicleCopiedBtn');
+                setTimeout(() => { btn.textContent = etiquetaOriginal; }, 1500);
+            }).catch(() => {
+                // Si el navegador niega el permiso de portapapeles (poco
+                // común, pero puede pasar), al menos avisamos en vez de
+                // fallar en silencio.
+                alert(t('chronicleCopyFailedAlert'));
+            });
+        }
+
         function renderBoard() {
             boardElement.innerHTML = "";
             highlightedSquares = []; // Limpiamos la lista de elementos visuales
@@ -4028,7 +4125,23 @@
                 // lo que corresponde (el tablero empieza un poco más
                 // abajo que el borde inferior del banner, no justo ahí).
                 const boardMarginTop = parseFloat(getComputedStyle(boardEl).marginTop) || 0;
-                historyPanel.style.top = (banner.offsetHeight + boardMarginTop) + "px";
+                // El propio BANNER también puede tener margen (arriba y
+                // abajo), y offsetHeight NUNCA lo incluye (solo cuenta
+                // borde+relleno+contenido). La versión de bot
+                // (.has-bot-banner) pone margin:0 a propósito, así que
+                // ahí esto suma cero y no cambia nada; pero el banner
+                // "humano" (.player-name-label sin esa clase) tiene
+                // margin:5px 0 -- esos 10px totales (5+5) es justo lo
+                // que hacía que la Crónica apareciera un poco más arriba
+                // que el tablero SOLO en partidas humano vs humano,
+                // reportado por Otto. Midiendo el margen real en vez de
+                // asumir que no existe, la cuenta queda bien para
+                // cualquier valor que tenga cada caso, presente o
+                // futuro.
+                const bannerStyle = getComputedStyle(banner);
+                const bannerMarginTop = parseFloat(bannerStyle.marginTop) || 0;
+                const bannerMarginBottom = parseFloat(bannerStyle.marginBottom) || 0;
+                historyPanel.style.top = (banner.offsetHeight + bannerMarginTop + bannerMarginBottom + boardMarginTop) + "px";
             } else {
                 historyPanel.style.top = ""; // no aplica en el layout apilado (móvil)
             }
@@ -4498,7 +4611,7 @@
                         topLabel.innerHTML = `
                             <div class="bot-banner">
                                 <span class="bot-avatar-wrap">
-                                    <img class="name-indicator-bot" src="assets/bots/caras/${bot.id}cara.jpg" alt="${blackPlayerName}" onerror="this.style.display='none';">
+                                    <img class="name-indicator-bot" src="assets/bots/caras/${bot.id}cara.jpg" alt="${blackPlayerName}" onload="alignMoveHistoryTop();" onerror="this.style.display='none'; alignMoveHistoryTop();">
                                 </span>
                                 <div class="bot-name-text">${blackPlayerName}</div>
                                 <div id="botSpeechBubble" class="bot-speech-bubble"></div>
@@ -4530,7 +4643,28 @@
                 // ahora puede medir distinto según sea el círculo+globo del
                 // bot o la fila simple de un duelo humano) -- se recalcula
                 // acá porque el contenido de arriba recién se determinó.
+                //
+                // OJO: esta primera pasada puede correr ANTES de que la
+                // tipografía de Google Fonts (que cambia la altura del
+                // texto del nombre) haya terminado de descargarse -- eso
+                // fue lo que causaba que la Crónica apareciera "más
+                // arriba" de lo debido justo al arrancar una partida
+                // nueva, en anchos donde ya se ubica al costado del
+                // tablero (reportado por Otto). Cualquier resize
+                // posterior la recalculaba bien porque, para ese
+                // momento, la tipografía ya hacía rato que había
+                // cargado -- de ahí que "se arreglara sola" con solo
+                // cambiar el ancho de la ventana una vez. Ahora esa
+                // segunda pasada, con todo ya asentado, se dispara sola
+                // en cuanto la tipografía esté lista, sin depender de
+                // que el usuario redimensione nada. (La foto del bot,
+                // que también puede tardar en cargar, se cubre aparte
+                // con el onload/onerror puestos directamente en su
+                // <img>, ver más abajo.)
                 alignMoveHistoryTop();
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(() => alignMoveHistoryTop());
+                }
                 // Y comprobamos si el nombre del bot recién puesto entra
                 // en su espacio, comprimiéndolo si hace falta.
                 checkBotNameOverflow();

@@ -426,16 +426,25 @@
         }
 
         /* --- EL REPRODUCTOR DE CRÓNICAS --- */
+        /* display:none por defecto, .visible lo muestra -- a propósito
+           NUNCA como estilo inline (ni en el HTML ni puesto por JS), que
+           le ganaría a cualquier regla CSS sin importar el orden ni la
+           especificidad, incluido el media query de mobile más abajo
+           que necesita poder pisar esto. */
         #chroniclePlayerPanel {
+            display: none;
             background: rgba(0, 0, 0, 0.45);
             border: 1px solid rgba(241, 196, 15, 0.4);
             border-radius: 10px;
             padding: 12px;
             width: min(90vw, 260px);
             box-sizing: border-box;
+            gap: 10px;
+        }
+
+        #chroniclePlayerPanel.visible {
             display: flex;
             flex-direction: column;
-            gap: 10px;
         }
 
         #chronicleInputSection h3 {
@@ -477,12 +486,74 @@
             line-height: 1.4;
         }
 
+        #chroniclePlaybackSection {
+            display: none;
+        }
+
+        #chroniclePlaybackSection.visible {
+            display: block;
+        }
+
         #chroniclePlaybackControls {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 5px;
             margin-bottom: 10px;
+        }
+
+        /* En mobile (mismo quiebre que ya usa #labWrapper para apilar),
+           el panel entero pasaba a una sola columna larga, dejando la
+           lista clickeable bastante lejos del tablero -- a pedido de
+           Otto, ahora se reparte en dos columnas lado a lado, juntas
+           ocupando el mismo ancho que el tablero: a la izquierda el
+           cuadro de texto + Cargar Crónica + los controles de avance, a
+           la derecha la lista, las dos arrancando a la misma altura
+           justo debajo del tablero.
+           #chroniclePlaybackSection en sí no tiene contenido propio que
+           mostrar -- por eso display:contents acá: sus dos hijos
+           (#chroniclePlaybackControls y #chronicleMoveListPanel) pasan a
+           ser ítems DIRECTOS de la grilla de #chroniclePlayerPanel, sin
+           que haga falta reacomodar el HTML para lograrlo. */
+        @media (max-width: 899px) {
+            /* El selector tiene que incluir .visible -- si no, por más
+               que esta regla venga después en el archivo, su
+               especificidad (un id solo) sería menor que la de
+               "#chroniclePlayerPanel.visible" (id + clase) de arriba, y
+               en CSS la especificidad manda por sobre el orden cuando
+               difieren. */
+            #chroniclePlayerPanel.visible {
+                width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                column-gap: 10px;
+                row-gap: 10px;
+                align-items: start;
+            }
+
+            #chronicleInputSection {
+                grid-column: 1;
+                grid-row: 1;
+            }
+
+            #chroniclePlaybackSection.visible {
+                display: contents;
+            }
+
+            #chroniclePlaybackControls {
+                grid-column: 1;
+                grid-row: 2;
+                margin-bottom: 0;
+            }
+
+            #chronicleMoveListPanel {
+                grid-column: 2;
+                /* Arranca a la misma altura que el cuadro de texto (fila
+                   1) y se extiende hasta el final de la fila 2 (donde
+                   terminan los controles), para que las dos columnas
+                   queden parejas de arriba a abajo. */
+                grid-row: 1 / 3;
+            }
         }
 
         .chronicle-nav-btn {
@@ -533,6 +604,15 @@
             max-height: 315px;
             font-size: 12.5px;
             font-family: 'Segoe UI', Tahoma, sans-serif;
+            /* Crucial para el cálculo de scrollTop en JS: sin esto, el
+               offsetTop de cada línea se mide desde <body> (el ancestro
+               "posicionado" más cercano, a falta de uno más próximo), no
+               desde el principio de ESTA lista -- lo que producía un
+               scroll totalmente descolocado, mostrando jugadas muy
+               lejanas a la que realmente estaba resaltada. Con
+               position:relative acá, offsetTop pasa a medirse relativo
+               a esta misma lista, tal como el cálculo siempre asumió. */
+            position: relative;
         }
 
         .chronicle-move-entry {
@@ -971,7 +1051,7 @@
         <!-- El Reproductor de Crónicas: ocupa el mismo lugar visual que
              #pieceTypePanel (uno de los dos siempre está oculto, ver
              switchToChronicleMode/switchToSandboxMode). -->
-        <div id="chroniclePlayerPanel" style="display:none;">
+        <div id="chroniclePlayerPanel">
             <div id="chronicleInputSection">
                 <h3 data-i18n="chronicleInputTitle">Pegá la crónica de una partida</h3>
                 <textarea id="chronicleTextInput" data-i18n-placeholder="chronicleTextPlaceholder"
@@ -979,7 +1059,7 @@
                 <button id="loadChronicleBtn" class="lab-btn" onclick="loadChronicle()" data-i18n="loadChronicleBtn">📖 Cargar Crónica</button>
                 <div id="chronicleErrorMsg"></div>
             </div>
-            <div id="chroniclePlaybackSection" style="display:none;">
+            <div id="chroniclePlaybackSection">
                 <div id="chroniclePlaybackControls">
                     <button id="chronicleFastBackBtn" class="chronicle-nav-btn" onclick="chronicleJumpRelative(-10)" data-i18n-title="chronicleFastBackTitle" title="Retroceder 10 jugadas">⏮️</button>
                     <button id="chronicleBackBtn" class="chronicle-nav-btn" onclick="chronicleJumpRelative(-1)" data-i18n-title="chronicleBackTitle" title="Retroceder 1 jugada">◀️</button>
@@ -2169,7 +2249,7 @@
             document.getElementById('board').classList.add('mode-chronicle');
             document.body.classList.add('mode-chronicle');
             document.getElementById('pieceTypePanel').style.display = 'none';
-            document.getElementById('chroniclePlayerPanel').style.display = 'flex';
+            document.getElementById('chroniclePlayerPanel').classList.add('visible');
             document.getElementById('goToChronicleBtn').style.display = 'none';
             document.getElementById('chronicleModeButtons').style.display = 'flex';
             selectedPosition = null;
@@ -2203,7 +2283,7 @@
             document.getElementById('board').classList.remove('mode-chronicle');
             document.body.classList.remove('mode-chronicle');
             document.getElementById('pieceTypePanel').style.display = '';
-            document.getElementById('chroniclePlayerPanel').style.display = 'none';
+            document.getElementById('chroniclePlayerPanel').classList.remove('visible');
             document.getElementById('goToChronicleBtn').style.display = '';
             document.getElementById('chronicleModeButtons').style.display = 'none';
             clearUndoStack();
@@ -2225,7 +2305,7 @@
             if (!parseResult.ok) {
                 errorBox.textContent = chronicleErrorMessage(parseResult);
                 errorBox.style.display = 'block';
-                document.getElementById('chroniclePlaybackSection').style.display = 'none';
+                document.getElementById('chroniclePlaybackSection').classList.remove('visible');
                 return;
             }
 
@@ -2233,7 +2313,7 @@
             if (!replayResult.ok) {
                 errorBox.textContent = chronicleErrorMessage(replayResult);
                 errorBox.style.display = 'block';
-                document.getElementById('chroniclePlaybackSection').style.display = 'none';
+                document.getElementById('chroniclePlaybackSection').classList.remove('visible');
                 return;
             }
 
@@ -2243,7 +2323,7 @@
             chronicleBoards = replayResult.boards;
             chronicleMoveList = parseResult.moves;
             chronicleListUserScrolled = false;
-            document.getElementById('chroniclePlaybackSection').style.display = 'block';
+            document.getElementById('chroniclePlaybackSection').classList.add('visible');
             renderChronicleMoveList();
             chronicleGoToMove(0);
         }
@@ -2340,8 +2420,22 @@
             if (!chronicleListUserScrolled) {
                 const current = container.querySelector('.chronicle-move-entry.current');
                 if (current) {
+                    // A propósito NO usamos scrollIntoView acá: cuando la
+                    // línea a centrar está cerca del principio de la
+                    // lista (sin margen de sobra para centrarla solo con
+                    // el scroll interno, que no puede bajar de 0),
+                    // scrollIntoView "resuelve" ese faltante moviendo
+                    // TAMBIÉN el scroll de la página entera -- eso era
+                    // la "cámara" que iba bajando de a poco entre las
+                    // jugadas 0 y 6, reportado por Otto. Calculando el
+                    // scrollTop a mano y asignándoselo directo a la
+                    // lista, el cálculo queda confinado puertas adentro
+                    // de la lista, sin que nada de esto pueda tocar el
+                    // scroll de la página.
+                    const target = current.offsetTop - (container.clientHeight / 2) + (current.offsetHeight / 2);
+                    const maxScroll = container.scrollHeight - container.clientHeight;
                     chronicleProgrammaticScroll = true;
-                    current.scrollIntoView({ block: 'center' });
+                    container.scrollTop = Math.max(0, Math.min(target, maxScroll));
                 }
             }
         }

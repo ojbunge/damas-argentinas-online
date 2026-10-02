@@ -233,11 +233,11 @@
             padding-bottom: 6px;
         }
 
-        /* ~22 líneas de jugada (medidas: 21px cada una) -- el número que
-           pidió Otto, elegido para que, sumado al título y al botón de
-           abajo, la Arena no crezca hacia abajo más de lo que ya
-           ocupaba antes en ninguno de los dos tipos de partida (humano
-           vs humano, humano vs bot). */
+        /* ~21 líneas de jugada (medidas: 21px cada una) -- eran 22, pero
+           al sumar el botón de Guardar Crónica se le restó una línea a
+           la lista para hacerle lugar, en vez de estirar la Arena hacia
+           abajo (autorizado explícitamente por Otto: prefiere una línea
+           menos en la lista a que la Arena crezca). */
         #moveHistoryList {
             flex: 1;
             min-height: 0;
@@ -246,10 +246,11 @@
                overflow/scroll de acá abajo no llegaría a activarse
                nunca. */
             overflow-y: auto;
-            max-height: 462px;
+            max-height: 441px;
         }
 
-        #copyChronicleBtn {
+        #copyChronicleBtn,
+        #saveChronicleBtn {
             flex-shrink: 0;
             margin-top: 8px;
             padding: 6px 10px;
@@ -263,7 +264,8 @@
             cursor: pointer;
         }
 
-        #copyChronicleBtn:hover {
+        #copyChronicleBtn:hover,
+        #saveChronicleBtn:hover {
             filter: brightness(1.1);
         }
 
@@ -1495,14 +1497,6 @@
             left: 0;
             width: 100%;
             z-index: 2100;
-
-        .footer-logo {
-            width: 15px;
-            height: 15px;
-            vertical-align: -2px;
-            margin-right: 5px;
-            opacity: 0.9;
-        }
             /* Por encima del overlay de entrada/lobby (2000), pero por debajo
                de los botones de Reglas, el chat y los modales (2500+), así
                que siempre está visible sin taparle el click a nada. */
@@ -1513,6 +1507,14 @@
             padding: 4px 8px;
             font-family: 'Segoe UI', Tahoma, sans-serif;
             box-sizing: border-box;
+        }
+
+        .footer-logo {
+            width: 15px;
+            height: 15px;
+            vertical-align: -2px;
+            margin-right: 5px;
+            opacity: 0.9;
         }
 
         #siteFooter a {
@@ -2082,9 +2084,10 @@
 
         <!-- El Mensajero de Godofredo: crónica de jugadas de la partida -->
         <div id="moveHistoryPanel">
-            <h3 data-i18n="cronicaTitle" data-i18n-title="cronicaTooltip" title="Copiá la crónica y pegala en el Reproductor de Crónicas del Laboratorio para volver a ver el partido.">📜 Crónica</h3>
+            <h3 data-i18n="cronicaTitle" data-i18n-title="cronicaTooltip" title="Copiá o guardá la crónica, y cargala en el Laboratorio para volver a ver el partido.">📜 Crónica</h3>
             <div id="moveHistoryList"></div>
             <button id="copyChronicleBtn" onclick="copyChronicle()" data-i18n="copyChronicleBtn">📋 Copiar Crónica</button>
+            <button id="saveChronicleBtn" onclick="saveChronicle()" data-i18n="saveChronicleBtn">💾 Guardar Crónica</button>
         </div>
     </div>
 
@@ -2971,8 +2974,9 @@
                 spectatorsNone: "Espectadores: -",
                 spectatorsList: "Espectadores: {0}",
                 cronicaTitle: "📜 Crónica",
-                cronicaTooltip: "Copiá la crónica y pegala en el Reproductor de Crónicas del Laboratorio para volver a ver el partido.",
+                cronicaTooltip: "Copiá o guardá la crónica, y cargala en el Laboratorio para volver a ver el partido.",
                 copyChronicleBtn: "📋 Copiar Crónica",
+                saveChronicleBtn: "💾 Guardar Crónica",
                 chronicleCopiedBtn: "✅ ¡Copiado!",
                 chronicleCopyFailedAlert: "No se pudo copiar la crónica. Probá seleccionar el texto a mano.",
 
@@ -3112,8 +3116,9 @@
                 spectatorsNone: "Spectators: -",
                 spectatorsList: "Spectators: {0}",
                 cronicaTitle: "📜 Chronicle",
-                cronicaTooltip: "Copy the chronicle and paste it into the Laboratory's Chronicle Player to watch the game again.",
+                cronicaTooltip: "Copy or save the chronicle, and load it in the Laboratory to watch the game again.",
                 copyChronicleBtn: "📋 Copy Chronicle",
+                saveChronicleBtn: "💾 Save Chronicle",
                 chronicleCopiedBtn: "✅ Copied!",
                 chronicleCopyFailedAlert: "Couldn't copy the chronicle. Try selecting the text by hand.",
 
@@ -3643,7 +3648,7 @@
                 let suffix = '';
                 if (m.captured) suffix += ' ✕';
                 if (m.crowned) suffix += ' ♛';
-                return `${index + 1}.${fromTxt} → ${toTxt}${suffix}`;
+                return `${index + 1}. ${fromTxt} → ${toTxt}${suffix}`;
             });
             return lineas.join('\n');
         }
@@ -3665,6 +3670,41 @@
                 // fallar en silencio.
                 alert(t('chronicleCopyFailedAlert'));
             });
+        }
+
+        // Utilidad genérica de descarga, pensada para reusarse tal cual
+        // en el Laboratorio unificado (Guardar Crónica y Guardar
+        // Posición van a llamar a esta misma función). El patrón
+        // Blob + <a download> + click programático es el estándar para
+        // esto en cualquier navegador, de escritorio o celular.
+        function downloadTextFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            // Pequeña demora antes de liberar la URL: en algunos
+            // navegadores (sobre todo móviles), revocarla de inmediato
+            // puede cortar la descarga que recién se disparó.
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        // Nombres de archivo con caracteres no válidos (/ \ : * ? " < > |)
+        // limpiados, para que la descarga nunca falle por el apodo que
+        // alguien haya elegido.
+        function sanitizeForFilename(str) {
+            return (str || '').replace(/[\/\\:*?"<>|]/g, '').trim();
+        }
+
+        function saveChronicle() {
+            const texto = buildChronicleText();
+            const fecha = new Date().toISOString().slice(0, 10); // AAAA-MM-DD
+            const blanco = sanitizeForFilename(whitePlayerName) || 'Blancas';
+            const negro = sanitizeForFilename(blackPlayerName) || 'Negras';
+            downloadTextFile(`cronica_${blanco}_vs_${negro}_${fecha}.txt`, texto);
         }
 
         function renderBoard() {

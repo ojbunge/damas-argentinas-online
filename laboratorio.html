@@ -34,7 +34,11 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-image: url('assets/laboratorio.jpg');
+            /* SIN background-image acá, a propósito: la imagen la pone
+               una de las dos clases de abajo, según el sorteo. Si el
+               body base tuviera imagen, el navegador a veces llegaba a
+               pedirla antes de que corriera el sorteo, y terminaba
+               descargando las dos. */
             background-size: cover;
             background-attachment: fixed;
             background-position: center;
@@ -50,11 +54,16 @@
             min-height: 100vh;
         }
 
-        /* Fondo propio del Reproductor de Crónicas -- la imagen se
-           precarga por JS apenas entra cualquiera a esta página (ver
-           más abajo), así el cambio de modo es instantáneo la primera
-           vez, sin esperar a que la imagen recién ahí empiece a bajar. */
-        body.mode-chronicle {
+        /* Fondo alternativo (la sala de mapas): se sortea UNA vez al
+           cargar la página, 70% laboratorio / 30% sala de mapas, a
+           pedido de Otto -- el sorteo lo hace un script chiquito justo
+           al abrir el <body>, antes de que se pinte nada, así solo se
+           descarga la imagen que salió (sin parpadeo de la otra). */
+        body.bg-lab {
+            background-image: url('assets/laboratorio.jpg');
+        }
+
+        body.bg-cronicas {
             background-image: url('assets/repcronicas.jpg');
         }
 
@@ -139,14 +148,17 @@
             --board-padding: clamp(3px, 0.51vw, 4.25px);
         }
 
-        /* El color del marco identifica en qué modo se está parado --
-           pedido de Otto, para que sea inconfundible a simple vista.
-           Verde oscuro = Laboratorio (el modo por defecto, reemplaza al
-           marrón que tenía antes). Bordó oscuro = Reproductor de
-           Crónicas (.mode-chronicle, agregada/sacada por JS al cambiar
-           de modo). Los dos son valores de partida: Otto va a afinarlos
-           él mismo a ojo, buscando buen contraste con las etiquetas de
-           filas/columnas. */
+        /* El color del marco dice en qué "territorio" está parado el
+           tablero -- pedido de Otto, para que sea inconfundible a
+           simple vista:
+           - VERDE oscuro (base): territorio hipotético. Todo lo que no
+             pasó en ninguna partida real: armar posiciones a mano, o
+             desviarse de una crónica moviendo/poniendo/sacando fichas.
+           - VIOLETA (.chronicle-territory): el tablero muestra EXACTO lo
+             que pasó en la crónica cargada, en la jugada resaltada. Se
+             activa al cargar una crónica y al navegarla; cualquier
+             edición manual lo devuelve al verde (ver updateFrameMode).
+           Valores elegidos por Otto (el violeta lo afinó él mismo). */
         #board {
             display: grid;
             grid-template-columns: repeat(10, var(--sq-size));
@@ -161,9 +173,9 @@
             position: relative;
         }
 
-        #board.mode-chronicle {
-            border-color: #3d1620;
-            background-color: #3d1620;
+        #board.chronicle-territory {
+            border-color: #3F114D;
+            background-color: #3F114D;
         }
 
         .coord-label {
@@ -317,25 +329,101 @@
             width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
         }
 
-        #modeSwitchRow {
+        /* La fila de herramientas: ocupa EXACTAMENTE el hueco que dejaban
+           los botones de pasaje entre Laboratorio y Reproductor (que ya
+           no existen, porque ahora es todo un solo tablero) -- a pedido
+           de Otto, sin estirar ni comprimir ese espacio: el tablero
+           arranca a la misma altura que antes. A la izquierda el
+           selector de fichas (achatado a una sola fila), a la derecha
+           el Control de Turnos. min-height (y no height) para que, en
+           pantallas angostas donde el texto necesite otro renglón, la
+           fila crezca en vez de desbordar. */
+        #labToolsRow {
             width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
+            min-height: 80px;
             margin-bottom: 8px;
             display: flex;
-            justify-content: center;
-        }
-
-        #chronicleModeButtons {
-            display: flex;
-            align-items: center;
+            justify-content: space-between;
+            align-items: stretch;
             gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
         }
 
-        .mode-switch-note {
-            font-size: 11.5px;
-            color: #c9b48a;
-            font-style: italic;
+        /* --- EL CONTROL DE TURNOS ---
+           Todo el recuadro es un único botón: hundido cuando está
+           activado (SÍ), elevado cuando no (NO). El turno se muestra
+           SIEMPRE -- apagado, con la letra más apagada, como simple
+           referencia; prendido, en amarillo. Así el recuadro nunca
+           cambia de alto según el estado (nada sube ni baja). */
+        #turnTrackerBtn {
+            flex: 0 1 auto;
+            min-width: 190px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(241, 196, 15, 0.45);
+            background: linear-gradient(180deg, rgba(70, 56, 34, 0.92), rgba(32, 25, 15, 0.92));
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+            color: #f1c40f;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 14px;
+            line-height: 1.2;
+            cursor: pointer;
+            text-align: center;
+            transition: box-shadow 0.12s, transform 0.12s;
+        }
+
+        #turnTrackerBtn:hover {
+            filter: brightness(1.1);
+        }
+
+        #turnTrackerBtn.on {
+            border-color: #f1c40f;
+            background: linear-gradient(180deg, rgba(18, 14, 8, 0.95), rgba(42, 33, 20, 0.95));
+            box-shadow: inset 0 3px 9px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(241, 196, 15, 0.22);
+            transform: translateY(1px);
+        }
+
+        #turnTrackerBtn .tt-state {
+            font-weight: 700;
+        }
+
+        /* La línea del turno: apagada (marrón claro) con el control en
+           NO, amarilla con el control en SÍ. */
+        #turnTrackerBtn .tt-turn-line {
+            color: #a8916a;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #turnTrackerBtn.on .tt-turn-line {
+            color: #f1c40f;
+        }
+
+        .turn-dot {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .turn-dot.white {
+            background: #fff;
+            border: 1px solid #555;
+        }
+
+        .turn-dot.black {
+            background: #111;
+            border: 1px solid #999;
+        }
+
+        #turnTrackerBtn:not(.on) .turn-dot {
+            opacity: 0.6;
         }
 
         .lab-btn {
@@ -371,32 +459,41 @@
             white-space: nowrap;
         }
 
-        /* --- EL SELECTOR DE FICHAS (grid 2x2) --- */
+        /* --- EL SELECTOR DE FICHAS (una sola fila de 4) ---
+           Antes era un grid de 2x2 al costado del tablero; ahora vive en
+           la fila de herramientas, arriba del tablero, achatado a una
+           sola fila horizontal para entrar en ese hueco (a pedido de
+           Otto). Sigue reflejando lo que se elija con la ruedita. */
         #pieceTypePanel {
+            flex: 0 0 auto;
             background: rgba(0, 0, 0, 0.45);
             border: 1px solid rgba(241, 196, 15, 0.4);
             border-radius: 10px;
-            padding: 12px;
+            padding: 4px 10px 5px 10px;
             text-align: center;
-            margin: 10px auto 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         #pieceTypePanel h3 {
-            margin: 0 0 8px 0;
-            font-size: 13px;
+            margin: 0 0 4px 0;
+            font-size: 12px;
+            line-height: 1.2;
             color: #f1c40f;
             font-weight: normal;
         }
 
         #pieceTypeGrid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(4, auto);
+            justify-content: center;
+            gap: 6px;
         }
 
         .piece-type-btn {
-            width: 44px;
-            height: 44px;
+            width: 36px;
+            height: 36px;
             background: #1c2833;
             border: 2px solid #566573;
             border-radius: 8px;
@@ -408,8 +505,8 @@
         }
 
         .piece-type-btn .piece {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             cursor: default;
         }
 
@@ -419,20 +516,73 @@
             box-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
         }
 
+        /* Celulares: el tablero mide ~292px de ancho, y el selector y el
+           Control de Turnos tienen que entrar lado a lado en ese ancho
+           (como en el esquema de Otto) -- versiones compactas de los
+           dos. Este bloque va A PROPÓSITO después de las reglas base de
+           arriba: un media query no suma especificidad, así que si
+           estuviera antes, las reglas base (mismo selector, más abajo
+           en el archivo) lo pisarían. Si aun así algún texto no entra,
+           envuelve a un renglón más en vez de desbordar. */
+        @media (max-width: 560px) {
+            #labToolsRow {
+                min-height: 0;
+                gap: 6px;
+            }
+
+            #pieceTypePanel {
+                flex: 0 1 auto;
+                padding: 4px 6px 5px 6px;
+            }
+
+            #pieceTypePanel h3 {
+                font-size: 10px;
+                margin-bottom: 3px;
+            }
+
+            #pieceTypeGrid {
+                gap: 4px;
+            }
+
+            .piece-type-btn {
+                width: 28px;
+                height: 28px;
+            }
+
+            .piece-type-btn .piece {
+                width: 18px;
+                height: 18px;
+            }
+
+            #turnTrackerBtn {
+                flex: 1 1 auto;
+                min-width: 0;
+                padding: 4px 8px;
+                font-size: 11.5px;
+                gap: 4px;
+            }
+
+            .turn-dot {
+                width: 11px;
+                height: 11px;
+            }
+        }
+
         #boardColumnLab {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        /* --- EL REPRODUCTOR DE CRÓNICAS --- */
-        /* display:none por defecto, .visible lo muestra -- a propósito
-           NUNCA como estilo inline (ni en el HTML ni puesto por JS), que
-           le ganaría a cualquier regla CSS sin importar el orden ni la
-           especificidad, incluido el media query de mobile más abajo
-           que necesita poder pisar esto. */
+        /* --- EL REPRODUCTOR DE CRÓNICAS ---
+           Ya no es un "lugar" aparte: es un dispositivo dentro del
+           Laboratorio, siempre visible, que convive con el tablero. A
+           propósito, nada de esto se muestra/oculta con estilos inline
+           puestos por JS (le ganarían a cualquier regla CSS, incluido
+           el media query de mobile de más abajo). */
         #chroniclePlayerPanel {
-            display: none;
+            display: flex;
+            flex-direction: column;
             background: rgba(0, 0, 0, 0.45);
             border: 1px solid rgba(241, 196, 15, 0.4);
             border-radius: 10px;
@@ -440,11 +590,6 @@
             width: min(90vw, 260px);
             box-sizing: border-box;
             gap: 10px;
-        }
-
-        #chroniclePlayerPanel.visible {
-            display: flex;
-            flex-direction: column;
         }
 
         #chronicleInputSection h3 {
@@ -486,48 +631,42 @@
             line-height: 1.4;
         }
 
-        #chroniclePlaybackSection {
-            display: none;
-        }
-
-        #chroniclePlaybackSection.visible {
-            display: block;
-        }
-
         #chroniclePlaybackControls {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 5px;
-            margin-bottom: 10px;
         }
 
         /* En mobile (mismo quiebre que ya usa #labWrapper para apilar),
-           el panel entero pasaba a una sola columna larga, dejando la
-           lista clickeable bastante lejos del tablero -- a pedido de
-           Otto, ahora se reparte en dos columnas lado a lado, juntas
-           ocupando el mismo ancho que el tablero: a la izquierda el
-           cuadro de texto + Cargar Crónica + los controles de avance, a
-           la derecha la lista, las dos arrancando a la misma altura
-           justo debajo del tablero.
-           #chroniclePlaybackSection en sí no tiene contenido propio que
-           mostrar -- por eso display:contents acá: sus dos hijos
-           (#chroniclePlaybackControls y #chronicleMoveListPanel) pasan a
-           ser ítems DIRECTOS de la grilla de #chroniclePlayerPanel, sin
-           que haga falta reacomodar el HTML para lograrlo. */
+           el panel se reparte en dos columnas lado a lado, juntas del
+           mismo ancho que el tablero: a la izquierda el cuadro de
+           texto, el botón y JUSTO DEBAJO los controles de avance (a
+           pedido de Otto, pegados al botón, para dejar libre abajo el
+           lugar de los botones de archivo de las próximas tandas); a la
+           derecha la lista, ocupando toda la columna.
+           El truco de las filas "auto auto 1fr": la lista cruza las
+           tres filas, y como la última es flexible, todo el alto que le
+           sobra a la lista se lo come ESA fila (vacía en la columna
+           izquierda) -- las dos primeras quedan del alto justo de su
+           contenido, sin huecos entre el botón y los controles. (Con
+           filas solo "auto", el navegador repartía ese sobrante entre
+           todas, y por eso los controles quedaban lejos del botón.) */
         @media (max-width: 899px) {
-            /* El selector tiene que incluir .visible -- si no, por más
-               que esta regla venga después en el archivo, su
-               especificidad (un id solo) sería menor que la de
-               "#chroniclePlayerPanel.visible" (id + clase) de arriba, y
-               en CSS la especificidad manda por sobre el orden cuando
-               difieren. */
-            #chroniclePlayerPanel.visible {
+            #chroniclePlayerPanel {
                 width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
                 display: grid;
-                grid-template-columns: 1fr 1fr;
+                /* minmax(0, 1fr), NO "1fr" a secas: "1fr" significa en
+                   realidad "como mínimo, lo que mida el contenido", y la
+                   fila de controles (más ancha que media columna en un
+                   celular) estiraba la columna izquierda y empujaba la
+                   lista FUERA del panel. Así, las dos columnas son
+                   siempre mitades exactas, y es el contenido el que se
+                   acomoda (ver el bloque de ajustes más abajo). */
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                grid-template-rows: auto auto 1fr;
                 column-gap: 10px;
-                row-gap: 10px;
+                row-gap: 8px;
                 align-items: start;
             }
 
@@ -536,23 +675,14 @@
                 grid-row: 1;
             }
 
-            #chroniclePlaybackSection.visible {
-                display: contents;
-            }
-
             #chroniclePlaybackControls {
                 grid-column: 1;
                 grid-row: 2;
-                margin-bottom: 0;
             }
 
             #chronicleMoveListPanel {
                 grid-column: 2;
-                /* Arranca a la misma altura que el cuadro de texto (fila
-                   1) y se extiende hasta el final de la fila 2 (donde
-                   terminan los controles), para que las dos columnas
-                   queden parejas de arriba a abajo. */
-                grid-row: 1 / 3;
+                grid-row: 1 / -1;
             }
         }
 
@@ -566,8 +696,17 @@
             cursor: pointer;
         }
 
-        .chronicle-nav-btn:hover {
+        .chronicle-nav-btn:hover:not(:disabled) {
             filter: brightness(1.12);
+        }
+
+        /* Sin crónica cargada no hay nada que navegar: los controles se
+           ven, pero apagados (así el panel no cambia de forma al cargar
+           una). */
+        .chronicle-nav-btn:disabled,
+        #chronicleGoToInput:disabled {
+            opacity: 0.45;
+            cursor: default;
         }
 
         #chronicleGoToInput {
@@ -597,11 +736,13 @@
             padding-bottom: 6px;
         }
 
-        /* ~15 líneas visibles (7 pasadas + 1 actual + 7 futuras) --
-           valor de partida, ajustable si en la práctica conviene otro. */
+        /* ~15 líneas visibles (7 pasadas + 1 actual + 7 futuras).
+           Alto FIJO (no máximo) a propósito: así el panel mide siempre
+           lo mismo, haya o no crónica cargada y sea corta o larga --
+           nada de lo que esté alrededor se mueve al cargar una. */
         #chronicleMoveList {
             overflow-y: auto;
-            max-height: 315px;
+            height: 315px;
             font-size: 12.5px;
             font-family: 'Segoe UI', Tahoma, sans-serif;
             /* Crucial para el cálculo de scrollTop en JS: sin esto, el
@@ -626,9 +767,98 @@
             background: rgba(241, 196, 15, 0.15);
         }
 
+        /* La jugada resaltada repite la señal del marco (idea de Otto):
+           VIOLETA mientras el tablero muestra exactamente esa jugada,
+           VERDE cuando se la tomó de base y después se movió, agregó o
+           sacó algo -- así se ve de un vistazo cuál fue la última jugada
+           real antes de entrar en territorio hipotético. Tonos un poco
+           más claros que los del marco: los del marco, tal cual, casi
+           no se distinguirían sobre el fondo oscuro del panel. */
         .chronicle-move-entry.current {
-            background: rgba(241, 196, 15, 0.35);
+            background: rgba(118, 50, 150, 0.85);
+            box-shadow: inset 3px 0 0 #c58fe0;
             font-weight: 700;
+        }
+
+        #chronicleMoveList.deviated .chronicle-move-entry.current {
+            background: rgba(38, 104, 66, 0.9);
+            box-shadow: inset 3px 0 0 #7ed6a2;
+        }
+
+        .chronicle-empty-hint {
+            color: #a8916a;
+            font-style: italic;
+            text-align: center;
+            padding: 14px 8px;
+            white-space: normal;
+            line-height: 1.4;
+        }
+
+        /* Ajustes del Reproductor para las dos columnas (pantallas
+           angostas). Van A PROPÓSITO después de todas las reglas base de
+           arriba, para pisarlas por orden y no depender solo de la
+           especificidad. En un celular cada columna mide ~130px: */
+        @media (max-width: 899px) {
+            /* La fila de controles es UNA sola fila con el campito en el
+               medio (como en el esquema de Otto), pero cada botón y el
+               campito se reparten el ancho disponible de la columna en
+               vez de exigir un ancho fijo -- con un tope, para que en
+               anchos grandes no se agiganten. */
+            #chroniclePlaybackControls {
+                gap: 4px;
+            }
+
+            #chroniclePlaybackControls > .chronicle-nav-btn {
+                flex: 1 1 0;
+                min-width: 0;
+                max-width: 40px;
+                padding: 4px 0;
+                font-size: 13px;
+            }
+
+            #chroniclePlaybackControls > #chronicleGoToInput {
+                flex: 1.4 1 0;
+                min-width: 0;
+                max-width: 48px;
+                padding: 4px 1px;
+                -moz-appearance: textfield;
+            }
+
+            /* Sin las flechitas de subir/bajar del campo numérico: en una
+               columna angosta le comen todo el lugar al número. Se
+               escribe el número y Enter, igual que siempre. */
+            #chronicleGoToInput::-webkit-outer-spin-button,
+            #chronicleGoToInput::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            /* Si el texto no entra en el ancho de la columna, pasa a dos
+               renglones en vez de desbordar. */
+            #loadChronicleBtn {
+                white-space: normal;
+            }
+        }
+
+        /* Celulares: un poco más de lugar útil adentro del panel. */
+        @media (max-width: 560px) {
+            #chroniclePlayerPanel {
+                padding: 8px;
+                column-gap: 8px;
+            }
+
+            #loadChronicleBtn {
+                font-size: 12px;
+                padding: 6px 4px;
+            }
+
+            #chronicleMoveList {
+                font-size: 12px;
+            }
+
+            .chronicle-move-entry {
+                padding: 3px 4px;
+            }
         }
 
         @media (min-width: 900px) {
@@ -987,6 +1217,14 @@
 </head>
 
 <body>
+    <!-- El sorteo del fondo va acá, como primerísima cosa del <body> y
+         ANTES de que se pinte nada: así el navegador ya sabe qué imagen
+         usar desde el primer cuadro, sin mostrar una y cambiar a la otra
+         (ni descargar la que no salió). 70% laboratorio, 30% la sala de
+         mapas -- a pedido de Otto. -->
+    <script>
+        document.body.classList.add(Math.random() < 0.3 ? 'bg-cronicas' : 'bg-lab');
+    </script>
 
     <footer id="siteFooter">
         <img src="assets/logo.png" alt="" class="footer-logo">
@@ -1018,39 +1256,43 @@
                 <span id="pieceCounter">⚪ 0 | ⚫ 0</span>
             </div>
 
-            <div id="modeSwitchRow">
-                <button id="goToChronicleBtn" class="lab-btn" onclick="switchToChronicleMode()" data-i18n="goToChronicleBtn">🎬 Ir al Reproductor de Crónicas</button>
-                <div id="chronicleModeButtons" style="display:none;">
-                    <button id="backToLabBtn" class="lab-btn" onclick="switchToSandboxMode()" data-i18n="backToLabBtn">↩️ Volver al Laboratorio</button>
-                    <span class="mode-switch-note" data-i18n="backToLabNote">(descarta lo que estás viendo acá)</span>
-                    <button id="exportToLabBtn" class="lab-btn" onclick="exportChronicleToLab()" data-i18n="exportToLabBtn">📤 Exportar al Laboratorio</button>
+            <div id="labToolsRow">
+                <div id="pieceTypePanel">
+                    <h3><span data-i18n="pieceTypePanelTitle">Ficha a colocar</span><br><span data-i18n="pieceTypePanelHint">(clic derecho en el tablero)</span></h3>
+                    <div id="pieceTypeGrid">
+                        <button class="piece-type-btn" data-type="w" data-i18n-title="pieceWhitePawn" title="Peón blanco">
+                            <div class="piece white"></div>
+                        </button>
+                        <button class="piece-type-btn" data-type="W" data-i18n-title="pieceWhiteKing" title="Dama blanca">
+                            <div class="piece white king"></div>
+                        </button>
+                        <button class="piece-type-btn" data-type="b" data-i18n-title="pieceBlackPawn" title="Peón negro">
+                            <div class="piece black"></div>
+                        </button>
+                        <button class="piece-type-btn" data-type="B" data-i18n-title="pieceBlackKing" title="Dama negra">
+                            <div class="piece black king"></div>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Todo el recuadro es un solo botón (ver toggleTurnTracker). Las
+                     partes fijas se traducen solas por data-i18n; el estado
+                     (SÍ/NO) y el turno los escribe renderTurnTracker(). -->
+                <button id="turnTrackerBtn" type="button" aria-pressed="false" onclick="toggleTurnTracker()"
+                    data-i18n-title="turnTrackerTitle" title="Activar o desactivar el control de turnos">
+                    <span class="tt-label-line"><span data-i18n="turnTrackerLabel">Control de turnos:</span>
+                        <span class="tt-state" id="turnTrackerState">NO</span></span>
+                    <span class="tt-turn-line"><span data-i18n="turnLabel">Turno:</span>
+                        <span id="turnTrackerTurnName">Blancas</span>
+                        <span id="turnTrackerDot" class="turn-dot white"></span></span>
+                </button>
             </div>
 
             <div id="board"></div>
         </div>
 
-        <div id="pieceTypePanel">
-            <h3><span data-i18n="pieceTypePanelTitle">Ficha a colocar</span><br><span data-i18n="pieceTypePanelHint">(clic derecho en el tablero)</span></h3>
-            <div id="pieceTypeGrid">
-                <button class="piece-type-btn" data-type="w" data-i18n-title="pieceWhitePawn" title="Peón blanco">
-                    <div class="piece white"></div>
-                </button>
-                <button class="piece-type-btn" data-type="W" data-i18n-title="pieceWhiteKing" title="Dama blanca">
-                    <div class="piece white king"></div>
-                </button>
-                <button class="piece-type-btn" data-type="b" data-i18n-title="pieceBlackPawn" title="Peón negro">
-                    <div class="piece black"></div>
-                </button>
-                <button class="piece-type-btn" data-type="B" data-i18n-title="pieceBlackKing" title="Dama negra">
-                    <div class="piece black king"></div>
-                </button>
-            </div>
-        </div>
-
-        <!-- El Reproductor de Crónicas: ocupa el mismo lugar visual que
-             #pieceTypePanel (uno de los dos siempre está oculto, ver
-             switchToChronicleMode/switchToSandboxMode). -->
+        <!-- El Reproductor de Crónicas: un dispositivo dentro del
+             Laboratorio, siempre visible y conviviendo con el tablero. -->
         <div id="chroniclePlayerPanel">
             <div id="chronicleInputSection">
                 <h3 data-i18n="chronicleInputTitle">Pegá la crónica de una partida</h3>
@@ -1059,18 +1301,18 @@
                 <button id="loadChronicleBtn" class="lab-btn" onclick="loadChronicle()" data-i18n="loadChronicleBtn">📖 Cargar Crónica</button>
                 <div id="chronicleErrorMsg"></div>
             </div>
-            <div id="chroniclePlaybackSection">
-                <div id="chroniclePlaybackControls">
-                    <button id="chronicleFastBackBtn" class="chronicle-nav-btn" onclick="chronicleJumpRelative(-10)" data-i18n-title="chronicleFastBackTitle" title="Retroceder 10 jugadas">⏮️</button>
-                    <button id="chronicleBackBtn" class="chronicle-nav-btn" onclick="chronicleJumpRelative(-1)" data-i18n-title="chronicleBackTitle" title="Retroceder 1 jugada">◀️</button>
-                    <input type="number" id="chronicleGoToInput" min="0" step="1" data-i18n-title="chronicleGoToTitle" title="Ir a la jugada..."
-                        onkeydown="if(event.key==='Enter') chronicleGoToInputHandler()">
-                    <button id="chronicleForwardBtn" class="chronicle-nav-btn" onclick="chronicleJumpRelative(1)" data-i18n-title="chronicleForwardTitle" title="Avanzar 1 jugada">▶️</button>
-                    <button id="chronicleFastForwardBtn" class="chronicle-nav-btn" onclick="chronicleJumpRelative(10)" data-i18n-title="chronicleFastForwardTitle" title="Avanzar 10 jugadas">⏭️</button>
-                </div>
-                <div id="chronicleMoveListPanel">
-                    <h3 data-i18n="chronicaTitle">📜 Crónica</h3>
-                    <div id="chronicleMoveList"></div>
+            <div id="chroniclePlaybackControls">
+                <button id="chronicleFastBackBtn" class="chronicle-nav-btn" disabled onclick="chronicleJumpRelative(-10)" data-i18n-title="chronicleFastBackTitle" title="Retroceder 10 jugadas">⏮️</button>
+                <button id="chronicleBackBtn" class="chronicle-nav-btn" disabled onclick="chronicleJumpRelative(-1)" data-i18n-title="chronicleBackTitle" title="Retroceder 1 jugada">◀️</button>
+                <input type="number" id="chronicleGoToInput" min="0" step="1" disabled data-i18n-title="chronicleGoToTitle" title="Ir a la jugada..."
+                    onkeydown="if(event.key==='Enter') chronicleGoToInputHandler()">
+                <button id="chronicleForwardBtn" class="chronicle-nav-btn" disabled onclick="chronicleJumpRelative(1)" data-i18n-title="chronicleForwardTitle" title="Avanzar 1 jugada">▶️</button>
+                <button id="chronicleFastForwardBtn" class="chronicle-nav-btn" disabled onclick="chronicleJumpRelative(10)" data-i18n-title="chronicleFastForwardTitle" title="Avanzar 10 jugadas">⏭️</button>
+            </div>
+            <div id="chronicleMoveListPanel">
+                <h3 data-i18n="chronicaTitle">📜 Crónica</h3>
+                <div id="chronicleMoveList">
+                    <div class="chronicle-empty-hint" data-i18n="chronicleEmptyHint">Todavía no hay ninguna crónica cargada.</div>
                 </div>
             </div>
         </div>
@@ -1482,10 +1724,14 @@
                 sys_victory: "🏆 {0} ha derrotado a {1}",
                 sys_draw: "🤝 {0} y {1} han empatado",
 
-                goToChronicleBtn: "🎬 Ir al Reproductor de Crónicas",
-                backToLabBtn: "↩️ Volver al Laboratorio",
-                backToLabNote: "(descarta lo que estás viendo acá)",
-                exportToLabBtn: "📤 Exportar al Laboratorio",
+                turnTrackerLabel: "Control de turnos:",
+                turnTrackerOn: "SÍ",
+                turnTrackerOff: "NO",
+                turnTrackerTitle: "Activar o desactivar el control de turnos",
+                turnLabel: "Turno:",
+                turnWhite: "Blancas",
+                turnBlack: "Negras",
+                chronicleEmptyHint: "Todavía no hay ninguna crónica cargada.",
                 chronicleInputTitle: "Pegá la crónica de una partida",
                 chronicleTextPlaceholder: "Pegá acá la crónica completa, desde la jugada 1...",
                 loadChronicleBtn: "📖 Cargar Crónica",
@@ -1546,10 +1792,14 @@
                 sys_victory: "🏆 {0} has defeated {1}",
                 sys_draw: "🤝 {0} and {1} have drawn",
 
-                goToChronicleBtn: "🎬 Go to the Chronicle Player",
-                backToLabBtn: "↩️ Back to the Laboratory",
-                backToLabNote: "(discards what you're viewing here)",
-                exportToLabBtn: "📤 Export to the Laboratory",
+                turnTrackerLabel: "Turn tracker:",
+                turnTrackerOn: "ON",
+                turnTrackerOff: "OFF",
+                turnTrackerTitle: "Turn the turn tracker on or off",
+                turnLabel: "Turn:",
+                turnWhite: "White",
+                turnBlack: "Black",
+                chronicleEmptyHint: "No chronicle loaded yet.",
                 chronicleInputTitle: "Paste a game's chronicle",
                 chronicleTextPlaceholder: "Paste the full chronicle here, starting from move 1...",
                 loadChronicleBtn: "📖 Load Chronicle",
@@ -1622,6 +1872,13 @@
             applyTranslations();
             updateLangSwitcherUI();
             renderSpectatorsDisplay(lastSpectatorsList);
+            // El estado del Control de Turnos (SÍ/NO, Blancas/Negras) se
+            // escribe dinámicamente, así que applyTranslations no lo
+            // cubre. Se refresca ACÁ y no dentro de applyTranslations a
+            // propósito: esa corre al arrancar la página, antes de que
+            // se declaren las variables del estado (mismo riesgo de
+            // "zona muerta temporal" que el comentario de abajo).
+            renderTurnTracker();
         }
 
         // Se aplica ya mismo (no hace falta esperar a ningún evento de
@@ -1665,33 +1922,35 @@
         const PIECE_TYPE_CYCLE = ['w', 'W', 'b', 'B'];
 
         // ============================================================
-        //  MODO: LABORATORIO (sandbox) vs REPRODUCTOR DE CRÓNICAS
+        //  LA CRÓNICA CARGADA (el Reproductor, dentro del Laboratorio)
         // ============================================================
-        let labMode = 'sandbox'; // 'sandbox' | 'chronicle'
-        // Foto del tablero de sandbox tomada justo al entrar al
-        // Reproductor de Crónicas -- "Volver al Laboratorio" restaura
-        // esto tal cual, sin pisar nada de lo que hubiera antes.
-        let labSandboxSnapshot = null;
-        // Una vez cargada y validada una crónica: un tablero por cada
-        // jugada (índice 0 = posición inicial), y los datos de cada
-        // jugada ya parseados -- ver parseChronicleText/replayChronicle
-        // más abajo.
+        // Ya no hay "modos": el Laboratorio y el Reproductor de Crónicas
+        // comparten un único tablero. Una vez cargada y validada una
+        // crónica: un tablero por cada jugada (índice 0 = posición
+        // inicial), de quién es el turno en cada una, y los datos de
+        // cada jugada ya parseados -- ver replayChronicle más abajo.
         let chronicleBoards = null;
+        let chronicleTurns = null;
         let chronicleMoveList = null;
         let chronicleCurrentIndex = 0;
-        // Si el usuario scrolleó la lista A MANO (no por click ni por
-        // los controles de avance), no le "peleamos" ese scroll
-        // recentrando solos -- se retoma el auto-scroll recién en el
-        // próximo cambio real de jugada actual.
-        let chronicleListUserScrolled = false;
+        // ¿El tablero se apartó de la jugada resaltada? Pasa a true con
+        // CUALQUIER edición manual (mover, colocar/sacar fichas,
+        // Posición inicial, Remover todo) y vuelve a false con
+        // cualquier navegación de la crónica. Es lo que decide el color
+        // del marco y del resaltado: violeta si hay crónica cargada y
+        // NO hubo desvío, verde en todos los demás casos.
+        let chronicleDeviated = false;
 
-        // Precarga silenciosa: para cuando alguien realmente entre al
-        // Reproductor de Crónicas por primera vez, la imagen ya está en
-        // caché del navegador y el cambio de fondo es instantáneo.
-        (function precacheChronicleBackground() {
-            const img = new Image();
-            img.src = 'assets/repcronicas.jpg';
-        })();
+        // ============================================================
+        //  EL CONTROL DE TURNOS
+        // ============================================================
+        // Apagado por defecto. Aun apagado, el turno se sigue anotando
+        // en segundo plano según quién movió último -- así, al
+        // prenderlo, ya muestra el turno correcto. La llave solo decide
+        // si se APLICA la restricción (no se puede seleccionar una
+        // ficha del color al que no le toca).
+        let turnTrackerEnabled = false;
+        let trackedTurn = 'w'; // 'w' | 'b' -- sin antecedente, blancas
 
         const soundMove = new Audio('assets/move.mp3');
         const soundCapture = new Audio('assets/capture.mp3');
@@ -1824,6 +2083,10 @@
             let simBoard = createInitialLabBoard();
             let currentPlayer = 'w'; // blancas siempre arranca
             const boards = [cloneBoard(simBoard)];
+            // De quién es el turno en cada posición (mismo índice que
+            // boards) -- lo usa el Control de Turnos al navegar. En medio
+            // de una captura múltiple, sigue siendo del mismo jugador.
+            const turns = ['w'];
 
             for (let i = 0; i < parsedMoves.length; i++) {
                 const mv = parsedMoves[i];
@@ -1887,9 +2150,10 @@
                 if (!samePlayerContinues) {
                     currentPlayer = (currentPlayer === 'w') ? 'b' : 'w';
                 }
+                turns.push(currentPlayer);
             }
 
-            return { ok: true, boards };
+            return { ok: true, boards, turns };
         }
 
         function chronicleErrorMessage(result) {
@@ -1911,8 +2175,14 @@
         // ============================================================
         //  DESHACER
         // ============================================================
+        // Cada foto guarda, además del tablero, de quién era el turno y
+        // si el tablero ya estaba desviado de la crónica -- así deshacer
+        // restaura el estado COMPLETO. Ejemplo: parado en la jugada 41
+        // (violeta), movés una ficha (verde); al deshacer, el tablero
+        // vuelve a ser exactamente la jugada 41, y el marco vuelve al
+        // violeta, coherente con lo que se ve.
         function pushUndoSnapshot() {
-            undoStack.push(cloneBoard(board));
+            undoStack.push({ board: cloneBoard(board), turn: trackedTurn, deviated: chronicleDeviated });
             if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
             updateUndoButton();
         }
@@ -1928,12 +2198,17 @@
 
         function undoLastMove() {
             if (undoStack.length === 0) return;
-            board = undoStack.pop();
+            const snapshot = undoStack.pop();
+            board = snapshot.board;
+            trackedTurn = snapshot.turn;
+            chronicleDeviated = snapshot.deviated;
             updateUndoButton();
             selectedPosition = null;
             currentAllowedMoves = [];
             pieceMustContinueCapturing = null;
             renderBoard();
+            renderTurnTracker();
+            updateFrameMode();
             syncLabBoard();
         }
 
@@ -2050,6 +2325,13 @@
             // que la cadena termine.
             if (pieceMustContinueCapturing) {
                 if (row !== pieceMustContinueCapturing.row || col !== pieceMustContinueCapturing.col) return;
+            } else if (turnTrackerEnabled && pieceColor !== trackedTurn) {
+                // Control de Turnos prendido: no es el turno de este
+                // color. (Se saltea durante una captura en cadena: esa
+                // ficha ya empezó su jugada y tiene que poder
+                // terminarla, sea cual sea el estado del control.)
+                playSound(soundError);
+                return;
             }
 
             // Tocar la ya seleccionada: deseleccionar.
@@ -2091,8 +2373,14 @@
                 pushUndoSnapshot();
             }
 
+            // Mover una ficha es entrar (o seguir) en territorio
+            // hipotético: si había una crónica a la vista, el tablero ya
+            // no coincide con la jugada resaltada.
+            chronicleDeviated = true;
+
             const fromRow = selectedPosition.row, fromCol = selectedPosition.col;
             const piece = board[fromRow][fromCol];
+            const moverColor = piece.toLowerCase();
             board[fromRow][fromCol] = null;
             board[move.row][move.col] = piece;
 
@@ -2103,26 +2391,34 @@
                 justCrowned = true;
             }
 
+            // ¿Terminó la jugada completa? Solo ahí pasa el turno -- en
+            // medio de una captura en cadena, la jugada sigue siendo del
+            // mismo jugador.
+            let moveComplete = true;
             if (move.type === "capture") {
                 board[move.capturedRow][move.capturedCol] = null;
 
-                if (justCrowned) {
-                    finishTurn();
-                } else {
+                if (!justCrowned) {
                     const nextMoves = getLegalMoves(move.row, move.col);
                     const canCaptureMore = nextMoves.some(m => m.type === "capture");
                     if (canCaptureMore) {
+                        moveComplete = false;
                         pieceMustContinueCapturing = { row: move.row, col: move.col };
                         selectedPosition = { row: move.row, col: move.col };
                         const bestGlobal = getGlobalBestMoves(landedPiece.toLowerCase());
                         const thisPieceMoves = bestGlobal.find(bg => bg.row === move.row && bg.col === move.col);
                         if (thisPieceMoves) currentAllowedMoves = thisPieceMoves.moves;
-                    } else {
-                        finishTurn();
                     }
                 }
-            } else {
+            }
+
+            if (moveComplete) {
                 finishTurn();
+                // El turno pasa al color contrario al que acaba de mover
+                // -- también con el control apagado (seguimiento en
+                // segundo plano): así, al prenderlo, ya muestra el turno
+                // que corresponde según quién movió último.
+                trackedTurn = (moverColor === 'w') ? 'b' : 'w';
             }
 
             if (move.type === "capture") playSound(soundCapture);
@@ -2130,6 +2426,8 @@
             if (justCrowned) playSound(soundCrowning);
 
             renderBoard();
+            renderTurnTracker();
+            updateFrameMode();
             syncLabBoard();
         }
 
@@ -2148,12 +2446,16 @@
 
             if (board[row][col]) {
                 // Saca lo que haya ahí, sin importar tipo ni color.
+                // (Colocar/sacar fichas a mano es territorio hipotético,
+                // pero NO cambia el turno: solo los movimientos lo hacen.)
                 board[row][col] = null;
                 clearUndoStack();
                 selectedPosition = null;
                 currentAllowedMoves = [];
                 pieceMustContinueCapturing = null;
+                chronicleDeviated = true;
                 renderBoard();
+                updateFrameMode();
                 syncLabBoard();
                 return;
             }
@@ -2180,8 +2482,10 @@
             selectedPosition = null;
             currentAllowedMoves = [];
             pieceMustContinueCapturing = null;
+            chronicleDeviated = true;
             if (willCrown) playSound(soundCrowning);
             renderBoard();
+            updateFrameMode();
             syncLabBoard();
         }
 
@@ -2217,86 +2521,99 @@
         // ============================================================
         //  BOTONES: POSICIÓN INICIAL / REMOVER TODO / DESHACER
         // ============================================================
-        document.getElementById('posicionInicialBtn').addEventListener('click', () => {
-            board = createInitialLabBoard();
+        // Los dos son un "volver a empezar": territorio hipotético (marco
+        // verde, aunque haya una crónica cargada), y el turno vuelve a
+        // blancas -- en la posición inicial porque así arranca toda
+        // partida, y en el tablero vacío porque no queda ningún
+        // antecedente del cual agarrarse.
+        function resetBoardTo(newBoard) {
+            board = newBoard;
             clearUndoStack();
             selectedPosition = null;
             currentAllowedMoves = [];
             pieceMustContinueCapturing = null;
+            trackedTurn = 'w';
+            chronicleDeviated = true;
             renderBoard();
+            renderTurnTracker();
+            updateFrameMode();
             syncLabBoard();
+        }
+
+        document.getElementById('posicionInicialBtn').addEventListener('click', () => {
+            resetBoardTo(createInitialLabBoard());
         });
 
         document.getElementById('removerTodoBtn').addEventListener('click', () => {
-            board = Array.from({ length: 10 }, () => Array(10).fill(null));
-            clearUndoStack();
-            selectedPosition = null;
-            currentAllowedMoves = [];
-            pieceMustContinueCapturing = null;
-            renderBoard();
-            syncLabBoard();
+            resetBoardTo(Array.from({ length: 10 }, () => Array(10).fill(null)));
         });
 
         document.getElementById('deshacerBtn').addEventListener('click', undoLastMove);
 
         // ============================================================
-        //  CAMBIO DE MODO: LABORATORIO ⇄ REPRODUCTOR DE CRÓNICAS
+        //  EL CONTROL DE TURNOS
         // ============================================================
-        function switchToChronicleMode() {
+        function toggleTurnTracker() {
             if (isSpectatorMode) return;
-            labSandboxSnapshot = cloneBoard(board);
-            labMode = 'chronicle';
-            document.getElementById('board').classList.add('mode-chronicle');
-            document.body.classList.add('mode-chronicle');
-            document.getElementById('pieceTypePanel').style.display = 'none';
-            document.getElementById('chroniclePlayerPanel').classList.add('visible');
-            document.getElementById('goToChronicleBtn').style.display = 'none';
-            document.getElementById('chronicleModeButtons').style.display = 'flex';
-            selectedPosition = null;
-            currentAllowedMoves = [];
-            pieceMustContinueCapturing = null;
-        }
-
-        // Vuelve al Laboratorio SIN exportar: se descarta lo que se
-        // estuviera viendo en el Reproductor y se restaura tal cual el
-        // tablero de sandbox que había antes de entrar.
-        function switchToSandboxMode() {
-            board = labSandboxSnapshot ? cloneBoard(labSandboxSnapshot) : createInitialLabBoard();
-            finishChronicleModeSwitchBack();
-        }
-
-        // Exporta la posición actual del Reproductor (tal como está
-        // parado en este momento -- tipos de ficha incluidos, peón o
-        // dama) al Laboratorio, pisando lo que hubiera antes. Sin
-        // ningún rastro de historial: el Laboratorio no entiende de
-        // crónicas, solo recibe una posición de fichas, como pizarra en
-        // blanco.
-        function exportChronicleToLab() {
-            if (chronicleBoards) {
-                board = cloneBoard(chronicleBoards[chronicleCurrentIndex]);
+            turnTrackerEnabled = !turnTrackerEnabled;
+            // Si se prende con una ficha del color equivocado ya
+            // seleccionada, se la suelta (salvo en medio de una captura
+            // en cadena, que tiene que poder terminarse).
+            if (turnTrackerEnabled && selectedPosition && !pieceMustContinueCapturing) {
+                const sel = board[selectedPosition.row][selectedPosition.col];
+                if (sel && sel.toLowerCase() !== trackedTurn) {
+                    selectedPosition = null;
+                    currentAllowedMoves = [];
+                    renderBoard();
+                }
             }
-            finishChronicleModeSwitchBack();
+            renderTurnTracker();
         }
 
-        function finishChronicleModeSwitchBack() {
-            labMode = 'sandbox';
-            document.getElementById('board').classList.remove('mode-chronicle');
-            document.body.classList.remove('mode-chronicle');
-            document.getElementById('pieceTypePanel').style.display = '';
-            document.getElementById('chroniclePlayerPanel').classList.remove('visible');
-            document.getElementById('goToChronicleBtn').style.display = '';
-            document.getElementById('chronicleModeButtons').style.display = 'none';
-            clearUndoStack();
-            selectedPosition = null;
-            currentAllowedMoves = [];
-            pieceMustContinueCapturing = null;
-            renderBoard();
-            syncLabBoard();
+        function renderTurnTracker() {
+            const btn = document.getElementById('turnTrackerBtn');
+            if (!btn) return;
+            btn.classList.toggle('on', turnTrackerEnabled);
+            btn.setAttribute('aria-pressed', turnTrackerEnabled ? 'true' : 'false');
+            document.getElementById('turnTrackerState').textContent =
+                t(turnTrackerEnabled ? 'turnTrackerOn' : 'turnTrackerOff');
+            document.getElementById('turnTrackerTurnName').textContent =
+                t(trackedTurn === 'w' ? 'turnWhite' : 'turnBlack');
+            const dot = document.getElementById('turnTrackerDot');
+            dot.classList.toggle('white', trackedTurn === 'w');
+            dot.classList.toggle('black', trackedTurn === 'b');
+        }
+
+        // ============================================================
+        //  EL TERRITORIO: VIOLETA (crónica fiel) / VERDE (hipotético)
+        // ============================================================
+        function isChronicleTerritory() {
+            return chronicleBoards !== null && !chronicleDeviated;
+        }
+
+        // Pinta el marco y el resaltado de la lista según el territorio.
+        // No sincroniza con el servidor: cada camino que llama a esto
+        // llama a syncLabBoard() después, que ya manda el territorio
+        // actualizado junto con el tablero.
+        function updateFrameMode() {
+            boardElement.classList.toggle('chronicle-territory', isChronicleTerritory());
+            document.getElementById('chronicleMoveList').classList.toggle('deviated', chronicleBoards !== null && chronicleDeviated);
+        }
+
+        // Sin crónica cargada no hay nada que navegar.
+        function updateChronicleControlsEnabled() {
+            const enabled = chronicleBoards !== null;
+            ['chronicleFastBackBtn', 'chronicleBackBtn', 'chronicleForwardBtn', 'chronicleFastForwardBtn', 'chronicleGoToInput']
+                .forEach(id => { document.getElementById(id).disabled = !enabled; });
         }
 
         // ============================================================
         //  CARGA Y VALIDACIÓN DE LA CRÓNICA
         // ============================================================
+        // Cargar una crónica reemplaza lo que hubiera en el tablero (sin
+        // confirmación: mismo criterio que Remover todo). Si la crónica
+        // nueva NO es válida, no se toca nada: la que estuviera cargada
+        // sigue cargada, y solo aparece el aviso de qué falló.
         function loadChronicle() {
             const text = document.getElementById('chronicleTextInput').value;
             const parseResult = parseChronicleText(text);
@@ -2305,7 +2622,6 @@
             if (!parseResult.ok) {
                 errorBox.textContent = chronicleErrorMessage(parseResult);
                 errorBox.style.display = 'block';
-                document.getElementById('chroniclePlaybackSection').classList.remove('visible');
                 return;
             }
 
@@ -2313,41 +2629,51 @@
             if (!replayResult.ok) {
                 errorBox.textContent = chronicleErrorMessage(replayResult);
                 errorBox.style.display = 'block';
-                document.getElementById('chroniclePlaybackSection').classList.remove('visible');
                 return;
             }
 
-            // Todo válido: guardamos los tableros y la lista de jugadas,
-            // arrancamos en la jugada 0 (posición inicial).
+            // Todo válido: guardamos los tableros, los turnos y la lista
+            // de jugadas, y arrancamos en la jugada 0 (posición inicial).
             errorBox.style.display = 'none';
             chronicleBoards = replayResult.boards;
+            chronicleTurns = replayResult.turns;
             chronicleMoveList = parseResult.moves;
-            chronicleListUserScrolled = false;
-            document.getElementById('chroniclePlaybackSection').classList.add('visible');
             renderChronicleMoveList();
+            updateChronicleControlsEnabled();
             chronicleGoToMove(0);
         }
 
         // ============================================================
-        //  NAVEGACIÓN
+        //  NAVEGACIÓN -- cualquiera de las cuatro formas (flechas, salto
+        //  de a 10, campito, clic en una línea) termina acá: muestra la
+        //  jugada real y descarta todo lo hipotético (marco violeta).
         // ============================================================
         function chronicleGoToMove(index) {
             if (!chronicleBoards) return;
             const clamped = Math.max(0, Math.min(chronicleBoards.length - 1, index));
             chronicleCurrentIndex = clamped;
             board = cloneBoard(chronicleBoards[clamped]);
+            chronicleDeviated = false;
+            trackedTurn = chronicleTurns[clamped];
+            // Lo hipotético se descarta: no tendría sentido "deshacer"
+            // hacia jugadas que ya no están, ni arrastrar una ficha
+            // seleccionada en una posición que cambió.
+            clearUndoStack();
+            selectedPosition = null;
+            currentAllowedMoves = [];
+            pieceMustContinueCapturing = null;
             renderBoard();
+            renderTurnTracker();
+            updateFrameMode();
             syncLabBoard();
             document.getElementById('chronicleGoToInput').value = clamped;
-            // Cualquier navegación REAL (flechas, salto de a 10, ir a
-            // jugada, o clickear una línea) retoma el auto-scroll, tal
-            // como se lo describí a Otto: "respetar el scroll manual" es
-            // solo para cuando el usuario está navegando CON el scroll
-            // nada más, sin tocar ningún control.
-            chronicleListUserScrolled = false;
-            highlightCurrentChronicleEntry();
+            updateChronicleHighlight();
+            centerCurrentChronicleEntry();
         }
 
+        // Relativo a la jugada RESALTADA (también si el tablero estaba
+        // desviado): parado en la 41 con jugadas hipotéticas, ◀️ lleva a
+        // la 40 real -- tal como se acordó con Otto.
         function chronicleJumpRelative(delta) {
             chronicleGoToMove(chronicleCurrentIndex + delta);
         }
@@ -2363,25 +2689,19 @@
         //  LA LISTA DE JUGADAS: jugada 1 arriba, más reciente/actual
         //  hacia abajo (mismo orden que el texto pegado) -- todas las
         //  jugadas visibles, pasadas y futuras, con la actual resaltada
-        //  y clickeable, y auto-scroll que respeta el scroll manual del
-        //  usuario hasta el próximo cambio real de jugada.
+        //  (violeta o verde, ver CSS) y clickeable.
         // ============================================================
-        // scrollIntoView() (llamado desde highlightCurrentChronicleEntry,
-        // más abajo) dispara un evento 'scroll' igual que uno hecho a
-        // mano por el usuario -- sin distinguirlos, mi propio auto-scroll
-        // se auto-cancelaría al toque, apenas un paso después de
-        // activarse. Esta bandera es la forma de decirle al listener de
-        // scroll "este que viene ahora es mío, no lo cuentes como
-        // manual".
-        let chronicleProgrammaticScroll = false;
-
         function renderChronicleMoveList() {
             const container = document.getElementById('chronicleMoveList');
             container.innerHTML = '';
 
+            // La línea 0 lleva data-i18n: así applyTranslations la
+            // traduce sola al cambiar de idioma, como cualquier otro
+            // texto fijo de la página.
             const initialEntry = document.createElement('div');
             initialEntry.className = 'chronicle-move-entry';
             initialEntry.dataset.index = '0';
+            initialEntry.setAttribute('data-i18n', 'chronicleInitialPositionLabel');
             initialEntry.textContent = t('chronicleInitialPositionLabel');
             initialEntry.onclick = () => chronicleGoToMove(0);
             container.appendChild(initialEntry);
@@ -2393,51 +2713,38 @@
                 let suffix = '';
                 if (mv.declaredCapture) suffix += ' ✕';
                 if (mv.declaredCrown) suffix += ' ♛';
-                entry.textContent = `${mv.declaredNumber}.${mv.fromLabel} → ${mv.toLabel}${suffix}`;
+                entry.textContent = `${mv.declaredNumber}. ${mv.fromLabel} → ${mv.toLabel}${suffix}`;
                 entry.onclick = () => chronicleGoToMove(i + 1);
                 container.appendChild(entry);
             });
         }
 
-        // Se engancha UNA sola vez (fuera de renderChronicleMoveList, que
-        // puede correr de nuevo si se carga una crónica nueva encima de
-        // otra -- enganchar el listener ahí adentro cada vez terminaría
-        // acumulando listeners duplicados).
-        document.getElementById('chronicleMoveList').addEventListener('scroll', () => {
-            if (chronicleProgrammaticScroll) {
-                chronicleProgrammaticScroll = false;
-                return;
-            }
-            chronicleListUserScrolled = true;
-        });
-
-        function highlightCurrentChronicleEntry() {
+        // Solo marca cuál es la línea actual (el color violeta/verde lo
+        // decide el CSS según la clase .deviated de la lista).
+        function updateChronicleHighlight() {
             const container = document.getElementById('chronicleMoveList');
-            if (!container) return;
             container.querySelectorAll('.chronicle-move-entry').forEach(el => {
                 el.classList.toggle('current', Number(el.dataset.index) === chronicleCurrentIndex);
             });
-            if (!chronicleListUserScrolled) {
-                const current = container.querySelector('.chronicle-move-entry.current');
-                if (current) {
-                    // A propósito NO usamos scrollIntoView acá: cuando la
-                    // línea a centrar está cerca del principio de la
-                    // lista (sin margen de sobra para centrarla solo con
-                    // el scroll interno, que no puede bajar de 0),
-                    // scrollIntoView "resuelve" ese faltante moviendo
-                    // TAMBIÉN el scroll de la página entera -- eso era
-                    // la "cámara" que iba bajando de a poco entre las
-                    // jugadas 0 y 6, reportado por Otto. Calculando el
-                    // scrollTop a mano y asignándoselo directo a la
-                    // lista, el cálculo queda confinado puertas adentro
-                    // de la lista, sin que nada de esto pueda tocar el
-                    // scroll de la página.
-                    const target = current.offsetTop - (container.clientHeight / 2) + (current.offsetHeight / 2);
-                    const maxScroll = container.scrollHeight - container.clientHeight;
-                    chronicleProgrammaticScroll = true;
-                    container.scrollTop = Math.max(0, Math.min(target, maxScroll));
-                }
-            }
+        }
+
+        // Centra la línea actual en la lista. Se llama SOLO al navegar:
+        // así, si el usuario scrolleó la lista a mano (sin tocar ningún
+        // control), nada le "pelea" ese scroll -- se recentra recién en
+        // el próximo cambio real de jugada.
+        function centerCurrentChronicleEntry() {
+            const container = document.getElementById('chronicleMoveList');
+            const current = container.querySelector('.chronicle-move-entry.current');
+            if (!current) return;
+            // A propósito NO usamos scrollIntoView: cerca del principio
+            // de la lista (sin margen para centrar solo con el scroll
+            // interno), scrollIntoView movía TAMBIÉN el scroll de la
+            // página entera -- la "cámara" que bajaba sola, reportada por
+            // Otto. El scrollTop calculado a mano queda confinado a la
+            // lista. (Requiere position:relative en la lista: ver CSS.)
+            const target = current.offsetTop - (container.clientHeight / 2) + (current.offsetHeight / 2);
+            const maxScroll = container.scrollHeight - container.clientHeight;
+            container.scrollTop = Math.max(0, Math.min(target, maxScroll));
         }
 
         // ============================================================
@@ -2475,7 +2782,13 @@
         // localmente) ni si por algún motivo el socket no está listo.
         function syncLabBoard() {
             if (isSpectatorMode) return;
-            if (socket) socket.emit('sync-lab-board', { board: board });
+            if (socket) socket.emit('sync-lab-board', {
+                board: board,
+                // El espectador ve el mismo color de marco que el dueño
+                // (violeta = está mostrando la crónica tal cual pasó;
+                // verde = territorio hipotético).
+                frameMode: isChronicleTerritory() ? 'chronicle' : 'hypothetical'
+            });
         }
 
         // Guardamos la última lista real (o null si no hay nadie) para
@@ -2513,23 +2826,33 @@
         const urlParams = new URLSearchParams(location.search);
         const spectateTarget = urlParams.get('spectate');
 
+        // El espectador solo mira: sin botones, sin selector, sin Control
+        // de Turnos y sin Reproductor (la crónica es del dueño). Lo que sí
+        // ve es el color del marco, que le dice si lo que está mirando
+        // es la partida tal cual pasó (violeta) o una hipótesis (verde).
         function enterSpectatorMode(labRoom) {
             isSpectatorMode = true;
             document.getElementById('topControlsRow').style.display = 'none';
-            document.getElementById('pieceTypePanel').style.display = 'none';
-            document.getElementById('posicionInicialBtn').parentElement.style.display = 'none';
+            document.getElementById('labToolsRow').style.display = 'none';
+            document.getElementById('chroniclePlayerPanel').style.display = 'none';
             socket.emit('join-lab-spectator', labRoom);
+        }
+
+        function applySpectatorFrameMode(frameMode) {
+            boardElement.classList.toggle('chronicle-territory', frameMode === 'chronicle');
         }
 
         socket.on('lab-init', (data) => {
             board = data.board;
             const subtitle = document.querySelector('.lab-subtitle');
             if (subtitle) subtitle.textContent = t('spectatingLabOf', data.ownerName || t('spectatingLabOfSomeone'));
+            applySpectatorFrameMode(data.frameMode);
             renderBoard();
         });
 
         socket.on('lab-board-update', (data) => {
             board = data.board;
+            applySpectatorFrameMode(data.frameMode);
             renderBoard();
         });
 
@@ -2746,10 +3069,16 @@
         document.getElementById('chatBubble').style.display = 'flex';
 
         // ============================================================
-        //  ARRANQUE: tablero vacío, tipo de ficha por defecto = peón blanco
+        //  ARRANQUE: tablero vacío, tipo de ficha por defecto = peón
+        //  blanco, Control de Turnos apagado (turno: blancas), sin
+        //  crónica cargada (controles de navegación apagados, marco
+        //  verde).
         // ============================================================
         updatePieceTypeUI();
         renderBoard();
+        renderTurnTracker();
+        updateChronicleControlsEnabled();
+        updateFrameMode();
     </script>
 
 

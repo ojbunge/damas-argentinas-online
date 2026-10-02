@@ -560,6 +560,10 @@ io.on('connection', (socket) => {
         activeLabs[labRoom] = {
             ownerId: socket.id,
             board: Array.from({ length: 10 }, () => Array(10).fill(null)),
+            // "chronicle" (marco violeta: el dueño está mostrando una
+            // crónica tal cual pasó) o "hypothetical" (marco verde) --
+            // se le pasa a los espectadores para que vean el mismo color.
+            frameMode: "hypothetical",
             spectators: []
         };
 
@@ -582,7 +586,10 @@ io.on('connection', (socket) => {
         if (!lab) return;
 
         lab.board = data.board;
-        socket.to(user.room).emit('lab-board-update', { board: lab.board });
+        // Lista blanca: solo se acepta uno de los dos valores conocidos,
+        // nunca se guarda a ciegas lo que mande el cliente.
+        lab.frameMode = (data.frameMode === "chronicle") ? "chronicle" : "hypothetical";
+        socket.to(user.room).emit('lab-board-update', { board: lab.board, frameMode: lab.frameMode });
     });
 
     // Alguien se suma a mirar un laboratorio ajeno -- mismo mecanismo que
@@ -611,6 +618,7 @@ io.on('connection', (socket) => {
 
         socket.emit('lab-init', {
             board: lab.board,
+            frameMode: lab.frameMode || "hypothetical",
             ownerName: connectedUsers[lab.ownerId]?.username
         });
 

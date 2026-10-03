@@ -454,9 +454,21 @@
            Mismo estilo que el resto de los botones del Laboratorio, pero
            más bajos (a pedido de Otto): van de a pares, a todo el ancho de
            la columna. */
+        /* En pantalla ancha el bloque mide lo mismo que la columna
+           izquierda de enfrente: el par de Posición arriba, el de Crónica
+           abajo (pegado al Reproductor), y la línea divisoria queda sola
+           en el medio. */
         #fileButtonsBlock {
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .file-btn-divider {
+            height: 1px;
+            margin: 0 6px;
+            background: rgba(241, 196, 15, 0.35);
+            flex-shrink: 0;
         }
 
         .file-btn-group {
@@ -651,6 +663,29 @@
             margin-top: 6px;
         }
 
+        /* Las dos caras del botón, superpuestas en la misma celda: la
+           visible y la invisible ocupan el mismo lugar, así el botón mide
+           siempre lo de la más larga (ver el comentario en el HTML). */
+        .btn-face-stack {
+            display: grid;
+        }
+
+        .btn-face {
+            grid-area: 1 / 1;
+            /* Centrada en la celda: si una cara ocupa un renglón y la otra
+               dos, la de un renglón queda al medio y no pegada arriba. */
+            align-self: center;
+        }
+
+        #loadChronicleBtn .face-clear,
+        #loadChronicleBtn.is-clear .face-play {
+            visibility: hidden;
+        }
+
+        #loadChronicleBtn.is-clear .face-clear {
+            visibility: visible;
+        }
+
         #chronicleErrorMsg {
             display: none;
             margin-top: 8px;
@@ -713,7 +748,12 @@
                    siempre mitades exactas, y es el contenido el que se
                    acomoda (ver el bloque de ajustes más abajo). */
                 grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-                grid-template-rows: auto auto auto 1fr;
+                /* La fila 3 (la de los botones de archivo) es la flexible:
+                   si la lista es más alta que la columna izquierda, el
+                   sobrante queda debajo de los botones; si es más baja, la
+                   lista se estira hasta igualarla (ver los ajustes de más
+                   abajo) -- las dos columnas terminan parejas. */
+                grid-template-rows: auto auto 1fr;
                 column-gap: 10px;
                 row-gap: 8px;
                 align-items: start;
@@ -731,9 +771,18 @@
 
             /* Los botones de archivo: debajo de los controles, en la
                columna izquierda (como en el esquema de Otto para celular). */
+            /* En celular, al revés que en pantalla ancha: el par de
+               Crónica primero (pegado a los controles del Reproductor), y
+               el de Posición después, más "afuera". */
             #fileButtonsBlock {
                 grid-column: 1;
                 grid-row: 3;
+                flex-direction: column-reverse;
+                justify-content: flex-start;
+            }
+
+            .file-btn-divider {
+                margin: 6px 4px;
             }
 
             #chronicleMoveListPanel {
@@ -893,6 +942,19 @@
                renglones en vez de desbordar. */
             #loadChronicleBtn {
                 white-space: normal;
+            }
+
+            /* La lista se estira hasta donde termine la columna izquierda.
+               OJO: conserva su alto fijo de base (315px) y crece desde ahí
+               (flex-grow), en vez de quedar con alto libre -- con alto
+               libre, la grilla intentaría hacerle lugar a la lista ENTERA
+               (miles de píxeles con una partida larga) y estiraría la caja. */
+            #chronicleMoveListPanel {
+                align-self: stretch;
+            }
+
+            #chronicleMoveList {
+                flex: 1 0 auto;
             }
         }
 
@@ -1472,7 +1534,13 @@
                     <button id="savePositionBtn" class="lab-btn file-btn" onclick="savePosition()" data-i18n="savePositionBtn">💾 Guardar Posición</button>
                     <button id="loadPositionBtn" class="lab-btn file-btn" onclick="openPositionFilePicker()" data-i18n="loadPositionBtn">📁 Cargar Posición</button>
                 </div>
+                <div class="file-btn-divider"></div>
+                <div class="file-btn-group" id="chronicleFileButtons">
+                    <button id="saveChronicleFileBtn" class="lab-btn file-btn" onclick="saveLoadedChronicle()" disabled data-i18n="saveChronicleFileBtn">💾 Guardar Crónica</button>
+                    <button id="loadChronicleFileBtn" class="lab-btn file-btn" onclick="openChronicleFilePicker()" data-i18n="loadChronicleFileBtn">📁 Cargar Crónica</button>
+                </div>
                 <input type="file" id="positionFileInput" accept=".txt,text/plain" hidden>
+                <input type="file" id="chronicleFileInput" accept=".txt,text/plain" hidden>
             </div>
 
         <div id="chroniclePlayerPanel">
@@ -1480,7 +1548,20 @@
                 <h3 data-i18n="chronicleInputTitle">Pegá la crónica de una partida</h3>
                 <textarea id="chronicleTextInput" data-i18n-placeholder="chronicleTextPlaceholder"
                     placeholder="Pegá acá la crónica completa, desde la jugada 1..."></textarea>
-                <button id="loadChronicleBtn" class="lab-btn" onclick="loadChronicle()" data-i18n="loadChronicleBtn">📖 Cargar Crónica</button>
+                <!-- Un solo botón con dos caras: "Reproducir" (sin crónica
+                     cargada) o "Borrar" (con una cargada). Los DOS textos
+                     están siempre adentro, superpuestos en la misma celda
+                     (uno visible, el otro invisible pero ocupando lugar):
+                     así el botón mide siempre lo del más largo, y nada se
+                     mueve al cambiar de cara -- en cualquier ancho y en los
+                     dos idiomas. El data-i18n va en cada texto, NO en el
+                     botón (si no, al traducir se pisaría todo su contenido). -->
+                <button id="loadChronicleBtn" class="lab-btn" onclick="onChronicleMainButton()">
+                    <span class="btn-face-stack">
+                        <span class="btn-face face-play" data-i18n="playChronicleBtn">▶️ Reproducir Crónica</span>
+                        <span class="btn-face face-clear" data-i18n="clearChronicleBtn">🧹 Borrar Crónica</span>
+                    </span>
+                </button>
                 <div id="chronicleErrorMsg"></div>
             </div>
             <div id="chroniclePlaybackControls">
@@ -1941,7 +2022,13 @@
                 posErrBadTurn: "el turno tiene que ser \"blancas\" o \"negras\" (dice \"{0}\").",
                 chronicleInputTitle: "Pegá la crónica de una partida",
                 chronicleTextPlaceholder: "Pegá acá la crónica completa, desde la jugada 1...",
-                loadChronicleBtn: "📖 Cargar Crónica",
+                playChronicleBtn: "▶️ Reproducir Crónica",
+                clearChronicleBtn: "🧹 Borrar Crónica",
+                saveChronicleFileBtn: "💾 Guardar Crónica",
+                loadChronicleFileBtn: "📁 Cargar Crónica",
+                chronFileNamePrefix: "cronica",
+                chronicleErrTooBig: "El archivo es demasiado grande para ser una crónica (el máximo es de unas 250 jugadas).",
+                chronicleErrRead: "No se pudo leer el archivo.",
                 chronicaTitle: "📜 Crónica",
                 chronicleInitialPositionLabel: "0. Posición inicial",
                 chronicleFastBackTitle: "Retroceder 10 jugadas",
@@ -2030,7 +2117,13 @@
                 posErrBadTurn: "the turn must be \"white\" or \"black\" (it says \"{0}\").",
                 chronicleInputTitle: "Paste a game's chronicle",
                 chronicleTextPlaceholder: "Paste the full chronicle here, starting from move 1...",
-                loadChronicleBtn: "📖 Load Chronicle",
+                playChronicleBtn: "▶️ Play Chronicle",
+                clearChronicleBtn: "🧹 Clear Chronicle",
+                saveChronicleFileBtn: "💾 Save Chronicle",
+                loadChronicleFileBtn: "📁 Load Chronicle",
+                chronFileNamePrefix: "chronicle",
+                chronicleErrTooBig: "The file is too large to be a chronicle (the maximum is about 250 moves).",
+                chronicleErrRead: "The file couldn't be read.",
                 chronicaTitle: "📜 Chronicle",
                 chronicleInitialPositionLabel: "0. Starting position",
                 chronicleFastBackTitle: "Go back 10 moves",
@@ -2845,8 +2938,52 @@
         // Sin crónica cargada no hay nada que navegar.
         function updateChronicleControlsEnabled() {
             const enabled = chronicleBoards !== null;
-            ['chronicleFastBackBtn', 'chronicleBackBtn', 'chronicleForwardBtn', 'chronicleFastForwardBtn', 'chronicleGoToInput']
+            ['chronicleFastBackBtn', 'chronicleBackBtn', 'chronicleForwardBtn', 'chronicleFastForwardBtn', 'chronicleGoToInput',
+             'saveChronicleFileBtn']
                 .forEach(id => { document.getElementById(id).disabled = !enabled; });
+        }
+
+        // El botón principal del Reproductor tiene dos caras: sin crónica
+        // cargada, "Reproducir" (carga lo que haya en el campo de texto);
+        // con una cargada, "Borrar" (la saca de la lista). Opción A, como
+        // la eligió Otto: con una crónica cargada es SIEMPRE "Borrar", así
+        // que para pasar a otra crónica pegada son dos clics (borrar y
+        // reproducir) -- simple y predecible. (Cargar desde archivo sí
+        // reemplaza directo.)
+        function updateChronicleMainButton() {
+            document.getElementById('loadChronicleBtn').classList.toggle('is-clear', chronicleBoards !== null);
+        }
+
+        function onChronicleMainButton() {
+            if (chronicleBoards !== null) clearChronicle();
+            else loadChronicle();
+        }
+
+        // Saca la crónica de la lista (no del campo de texto: ahí queda,
+        // lista para volver a reproducirla con un clic). El tablero queda
+        // tal cual está -- se puede seguir trabajando esa posición como un
+        // laboratorio independiente --, y el marco pasa a verde: sin
+        // crónica cargada, todo es territorio hipotético.
+        function clearChronicle() {
+            chronicleBoards = null;
+            chronicleTurns = null;
+            chronicleMoveList = null;
+            chronicleCurrentIndex = 0;
+            chronicleDeviated = false;
+            const list = document.getElementById('chronicleMoveList');
+            list.innerHTML = '';
+            const hint = document.createElement('div');
+            hint.className = 'chronicle-empty-hint';
+            hint.setAttribute('data-i18n', 'chronicleEmptyHint');
+            hint.textContent = t('chronicleEmptyHint');
+            list.appendChild(hint);
+            list.scrollTop = 0;
+            document.getElementById('chronicleGoToInput').value = '';
+            document.getElementById('chronicleErrorMsg').style.display = 'none';
+            updateChronicleControlsEnabled();
+            updateChronicleMainButton();
+            updateFrameMode();
+            syncLabBoard();
         }
 
         // ============================================================
@@ -2882,6 +3019,7 @@
             chronicleMoveList = parseResult.moves;
             renderChronicleMoveList();
             updateChronicleControlsEnabled();
+            updateChronicleMainButton();
             chronicleGoToMove(0);
         }
 
@@ -3037,11 +3175,76 @@
 
         function savePosition() {
             if (isSpectatorMode) return;
+            downloadTextFile(`${t('posFileNamePrefix')}_${fileTimestamp()}.txt`, buildPositionText());
+        }
+
+        // AAAA-MM-DD_HH-MM, para los nombres de los archivos que se bajan.
+        function fileTimestamp() {
             const d = new Date();
             const pad = n => String(n).padStart(2, '0');
-            const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
-            downloadTextFile(`${t('posFileNamePrefix')}_${stamp}.txt`, buildPositionText());
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
         }
+
+        // ============================================================
+        //  GUARDAR / CARGAR CRÓNICA (archivo .txt)
+        // ============================================================
+        // Se guarda la crónica CARGADA (la ya validada), con el mismo formato
+        // exacto que usa la Arena para Copiar/Guardar Crónica -- así los
+        // archivos de los dos lados son intercambiables. Se arma de nuevo a
+        // partir de las jugadas validadas (y no copiando el campo de texto,
+        // que pudo haberse editado después de reproducir).
+        function buildLoadedChronicleText() {
+            return chronicleMoveList.map((mv, i) => {
+                let suffix = '';
+                if (mv.declaredCapture) suffix += ' ✕';
+                if (mv.declaredCrown) suffix += ' ♛';
+                return `${i + 1}. ${mv.fromLabel} → ${mv.toLabel}${suffix}`;
+            }).join('\n');
+        }
+
+        function saveLoadedChronicle() {
+            if (isSpectatorMode || chronicleBoards === null) return;
+            downloadTextFile(`${t('chronFileNamePrefix')}_${fileTimestamp()}.txt`, buildLoadedChronicleText());
+        }
+
+        // Tope prudente, a pedido de Otto: unas 250 jugadas. La línea más
+        // larga posible ("250. a10 → b10 ✕ ♛") ocupa unos 25 bytes; con
+        // margen para espacios de más y saltos de línea de Windows, 32
+        // bytes por jugada.
+        const CHRONICLE_FILE_MAX_BYTES = 250 * 32;
+
+        function showChronicleError(msg) {
+            const box = document.getElementById('chronicleErrorMsg');
+            box.textContent = msg;
+            box.style.display = 'block';
+        }
+
+        function openChronicleFilePicker() {
+            if (isSpectatorMode) return;
+            document.getElementById('chronicleFileInput').click();
+        }
+
+        // El texto del archivo se vuelca en el campo y se valida en el mismo
+        // paso: si es válida, queda cargada (reemplazando la que hubiera);
+        // si no, el texto queda a la vista junto al aviso de qué falló.
+        document.getElementById('chronicleFileInput').addEventListener('change', (e) => {
+            const input = e.target;
+            const file = input.files && input.files[0];
+            if (!file) return;
+            if (file.size > CHRONICLE_FILE_MAX_BYTES) {
+                input.value = '';
+                showChronicleError(t('chronicleErrTooBig'));
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                document.getElementById('chronicleTextInput').value = String(reader.result);
+                loadChronicle();
+            };
+            reader.onerror = () => showChronicleError(t('chronicleErrRead'));
+            reader.readAsText(file, 'UTF-8');
+            input.value = '';
+        });
 
         // Palabras clave aceptadas al cargar, en los dos idiomas (sin
         // importar mayúsculas).
@@ -3501,6 +3704,7 @@
         renderBoard();
         renderTurnTracker();
         updateChronicleControlsEnabled();
+        updateChronicleMainButton();
         updateFrameMode();
     </script>
 
@@ -3508,4 +3712,3 @@
 </body>
 
 </html>
-

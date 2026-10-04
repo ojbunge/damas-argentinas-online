@@ -564,6 +564,9 @@ io.on('connection', (socket) => {
             // crónica tal cual pasó) o "hypothetical" (marco verde) --
             // se le pasa a los espectadores para que vean el mismo color.
             frameMode: "hypothetical",
+            // La huella de la última jugada de la crónica que está mirando el
+            // dueño ({from:{row,col}, to:{row,col}}), o null.
+            lastMove: null,
             spectators: []
         };
 
@@ -579,6 +582,15 @@ io.on('connection', (socket) => {
     // vez que coloca, saca o mueve una ficha -- la guardamos y se la
     // retransmitimos a quien esté espectando (nunca al dueño mismo, que
     // ya tiene el tablero al día del lado suyo).
+    // Valida la huella de la última jugada: dos casillas con fila y columna
+    // enteras entre 0 y 9. Cualquier otra cosa se descarta (null).
+    function sanitizeLastMove(lm) {
+        const okSquare = (s) => s && Number.isInteger(s.row) && Number.isInteger(s.col)
+            && s.row >= 0 && s.row <= 9 && s.col >= 0 && s.col <= 9;
+        if (!lm || !okSquare(lm.from) || !okSquare(lm.to)) return null;
+        return { from: { row: lm.from.row, col: lm.from.col }, to: { row: lm.to.row, col: lm.to.col } };
+    }
+
     socket.on('sync-lab-board', (data) => {
         const user = connectedUsers[socket.id];
         if (!user || user.status !== "inlab" || !user.room) return;
@@ -589,7 +601,11 @@ io.on('connection', (socket) => {
         // Lista blanca: solo se acepta uno de los dos valores conocidos,
         // nunca se guarda a ciegas lo que mande el cliente.
         lab.frameMode = (data.frameMode === "chronicle") ? "chronicle" : "hypothetical";
-        socket.to(user.room).emit('lab-board-update', { board: lab.board, frameMode: lab.frameMode });
+        // La huella solo tiene sentido en territorio violeta, y solo se
+        // acepta si son casillas reales del tablero (nunca se guarda a
+        // ciegas lo que mande el cliente).
+        lab.lastMove = (lab.frameMode === "chronicle") ? sanitizeLastMove(data.lastMove) : null;
+        socket.to(user.room).emit('lab-board-update', { board: lab.board, frameMode: lab.frameMode, lastMove: lab.lastMove });
     });
 
     // Alguien se suma a mirar un laboratorio ajeno -- mismo mecanismo que
@@ -619,6 +635,7 @@ io.on('connection', (socket) => {
         socket.emit('lab-init', {
             board: lab.board,
             frameMode: lab.frameMode || "hypothetical",
+            lastMove: lab.lastMove || null,
             ownerName: connectedUsers[lab.ownerId]?.username
         });
 

@@ -185,7 +185,11 @@
             justify-content: center;
             color: #d9c19a;
             font-family: 'Segoe UI', Tahoma, sans-serif;
-            font-size: clamp(9px, 1.6vw, 11px);
+            /* 25% más grandes que al principio (a pedido de Otto: con el
+               navegador al 80-90% de zoom se veían chicas), sin tocar el
+               ancho del marco -- el "10", el más ancho, sigue entrando con
+               aire en todos los anchos de pantalla. */
+            font-size: clamp(11.25px, 2vw, 13.75px);
             line-height: 1;
             pointer-events: none;
             user-select: none;
@@ -265,6 +269,16 @@
 
         .highlight {
             box-shadow: inset 0 0 0 4px lime;
+        }
+
+        /* La huella de la última jugada de la crónica (origen y destino),
+           con el mismo tono que en la Arena. En la Arena es un naranja
+           semitransparente sobre el fondo marrón del tablero; acá se usa
+           el color ya mezclado, opaco, porque debajo de las casillas está
+           el marco (verde o violeta) y el mismo naranja transparente daría
+           otro tono. */
+        .square.last-move-highlight {
+            background-color: rgb(128, 82, 10);
         }
 
         @keyframes pulse-blue {
@@ -465,7 +479,7 @@
         }
 
         .file-btn-divider {
-            height: 1px;
+            height: 3px;
             margin: 0 6px;
             background: rgba(241, 196, 15, 0.35);
             flex-shrink: 0;
@@ -782,7 +796,7 @@
             }
 
             .file-btn-divider {
-                margin: 6px 4px;
+                margin: 5px 4px;
             }
 
             #chronicleMoveListPanel {
@@ -1531,8 +1545,8 @@
                  Crónica (pegado al Reproductor; llega en la Tanda 4). -->
             <div id="fileButtonsBlock">
                 <div class="file-btn-group" id="positionFileButtons">
-                    <button id="savePositionBtn" class="lab-btn file-btn" onclick="savePosition()" data-i18n="savePositionBtn">💾 Guardar Posición</button>
-                    <button id="loadPositionBtn" class="lab-btn file-btn" onclick="openPositionFilePicker()" data-i18n="loadPositionBtn">📁 Cargar Posición</button>
+                    <button id="savePositionBtn" class="lab-btn file-btn" onclick="savePosition()" data-i18n="savePositionBtn">📸 Guardar Posición</button>
+                    <button id="loadPositionBtn" class="lab-btn file-btn" onclick="openPositionFilePicker()" data-i18n="loadPositionBtn">🗺️ Cargar Posición</button>
                 </div>
                 <div class="file-btn-divider"></div>
                 <div class="file-btn-group" id="chronicleFileButtons">
@@ -1996,8 +2010,8 @@
                 turnWhite: "Blancas",
                 turnBlack: "Negras",
                 chronicleEmptyHint: "Todavía no hay ninguna crónica cargada.",
-                savePositionBtn: "💾 Guardar Posición",
-                loadPositionBtn: "📁 Cargar Posición",
+                savePositionBtn: "📸 Guardar Posición",
+                loadPositionBtn: "🗺️ Cargar Posición",
                 // Palabras clave del archivo de posición: se ESCRIBEN en el
                 // idioma actual, pero al cargar se aceptan las de los dos
                 // idiomas (ver parsePositionText).
@@ -2094,8 +2108,8 @@
                 turnWhite: "White",
                 turnBlack: "Black",
                 chronicleEmptyHint: "No chronicle loaded yet.",
-                savePositionBtn: "💾 Save Position",
-                loadPositionBtn: "📁 Load Position",
+                savePositionBtn: "📸 Save Position",
+                loadPositionBtn: "🗺️ Load Position",
                 posKwWhite: "white",
                 posKwBlack: "black",
                 posKwTurn: "turn",
@@ -2562,9 +2576,25 @@
             return getGlobalBestMoves(color).map(bg => ({ row: bg.row, col: bg.col }));
         }
 
+        // La jugada cuya huella corresponde mostrar ahora mismo (del lado del
+        // dueño del Laboratorio), o null si no corresponde ninguna.
+        function currentChronicleLastMove() {
+            return (isChronicleTerritory() && chronicleCurrentIndex > 0)
+                ? chronicleMoveList[chronicleCurrentIndex - 1] : null;
+        }
+
         function renderBoard() {
             boardElement.innerHTML = '';
             const mustMoveSquares = computeMustMoveSquares();
+            // La huella de la última jugada: solo mientras el tablero
+            // muestra la crónica tal cual pasó (marco violeta), y desde la
+            // jugada 1. Apenas se entra en territorio hipotético (verde),
+            // desaparece; si se deshace hasta volver exacto a la crónica,
+            // reaparece sola. En una captura en cadena, cada salto es su
+            // propia línea de la crónica: se marca el de esa línea.
+            // El espectador no tiene la crónica: dibuja la huella que le
+            // manda el dueño (ver syncLabBoard y lab-board-update).
+            const lastMove = isSpectatorMode ? spectatorLastMove : currentChronicleLastMove();
 
             for (let row = 0; row < 10; row++) {
                 for (let col = 0; col < 10; col++) {
@@ -2575,6 +2605,10 @@
 
                     const isHighlighted = currentAllowedMoves.some(m => m.row === row && m.col === col);
                     if (isHighlighted) square.classList.add('highlight');
+                    if (lastMove && ((row === lastMove.from.row && col === lastMove.from.col) ||
+                                     (row === lastMove.to.row && col === lastMove.to.col))) {
+                        square.classList.add('last-move-highlight');
+                    }
 
                     // Clic izquierdo en la casilla vacía resaltada: mueve
                     // la ficha seleccionada ahí.
@@ -2982,6 +3016,7 @@
             document.getElementById('chronicleErrorMsg').style.display = 'none';
             updateChronicleControlsEnabled();
             updateChronicleMainButton();
+            renderBoard(); // se va la huella de la última jugada
             updateFrameMode();
             syncLabBoard();
         }
@@ -3386,6 +3421,9 @@
         }
 
         let isSpectatorMode = false;
+        // La huella de la última jugada que manda el dueño (solo se usa en
+        // modo espectador): { from: {row, col}, to: {row, col} } o null.
+        let spectatorLastMove = null;
         let knownUsernames = [];
 
         const socket = io();
@@ -3412,7 +3450,14 @@
                 // El espectador ve el mismo color de marco que el dueño
                 // (violeta = está mostrando la crónica tal cual pasó;
                 // verde = territorio hipotético).
-                frameMode: isChronicleTerritory() ? 'chronicle' : 'hypothetical'
+                frameMode: isChronicleTerritory() ? 'chronicle' : 'hypothetical',
+                // Y también la huella de la última jugada (solo existe en
+                // territorio violeta; si no, va null y el espectador la
+                // borra).
+                lastMove: (() => {
+                    const mv = currentChronicleLastMove();
+                    return mv ? { from: { row: mv.from.row, col: mv.from.col }, to: { row: mv.to.row, col: mv.to.col } } : null;
+                })()
             });
         }
 
@@ -3473,12 +3518,14 @@
             const subtitle = document.querySelector('.lab-subtitle');
             if (subtitle) subtitle.textContent = t('spectatingLabOf', data.ownerName || t('spectatingLabOfSomeone'));
             applySpectatorFrameMode(data.frameMode);
+            spectatorLastMove = data.lastMove || null;
             renderBoard();
         });
 
         socket.on('lab-board-update', (data) => {
             board = data.board;
             applySpectatorFrameMode(data.frameMode);
+            spectatorLastMove = data.lastMove || null;
             renderBoard();
         });
 

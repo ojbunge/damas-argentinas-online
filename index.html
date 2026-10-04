@@ -130,7 +130,9 @@
             color: #d9c19a;
             /* Crema/dorado claro: contraste sobre el marrón oscuro del marco */
             font-family: 'Segoe UI', Tahoma, sans-serif;
-            font-size: clamp(9px, 1.6vw, 11px);
+            /* 25% más grandes que al principio (a pedido de Otto, igual
+               que en el Laboratorio): sin tocar el ancho del marco. */
+            font-size: clamp(11.25px, 2vw, 13.75px);
             line-height: 1;
             pointer-events: none;
             /* Que nunca compitan por el click con la casilla */
@@ -238,19 +240,27 @@
            la lista para hacerle lugar, en vez de estirar la Arena hacia
            abajo (autorizado explícitamente por Otto: prefiere una línea
            menos en la lista a que la Arena crezca). */
+        /* La lista tiene alto FIJO desde que arranca la partida (a pedido de
+           Otto): el panel ya aparece con su tamaño final y las jugadas lo
+           van llenando, en vez de que el panel entero vaya creciendo hacia
+           abajo con cada jugada. 429.5px (~20 líneas) es lo justo para que,
+           con los tres botones de abajo, el borde inferior del panel calce
+           con la base del circulito del nombre del jugador -- medido en las
+           dos Arenas (humanos y bots): da lo mismo en las dos. Abajo de la
+           crónica no hay nada (el nombre no llega hasta esa columna), así
+           que ese lugar se puede usar sin estirar la página.
+           flex:none (y no flex:1, como antes): con flex:1, en una columna
+           sin alto definido, el tamaño base de la lista es CERO y el height
+           se ignora. */
         #moveHistoryList {
-            flex: 1;
-            min-height: 0;
-            /* imprescindible: sin esto, un hijo flex no puede encogerse
-               por debajo de la altura de su propio contenido, y el
-               overflow/scroll de acá abajo no llegaría a activarse
-               nunca. */
+            flex: none;
             overflow-y: auto;
-            max-height: 441px;
+            height: 429.5px;
         }
 
         #copyChronicleBtn,
-        #saveChronicleBtn {
+        #saveChronicleBtn,
+        #savePositionBtn {
             flex-shrink: 0;
             margin-top: 8px;
             padding: 6px 10px;
@@ -265,7 +275,8 @@
         }
 
         #copyChronicleBtn:hover,
-        #saveChronicleBtn:hover {
+        #saveChronicleBtn:hover,
+        #savePositionBtn:hover {
             filter: brightness(1.1);
         }
 
@@ -386,6 +397,43 @@
 
         #surrenderBtn:hover {
             background: #95a5a6;
+        }
+
+        /* El Modo lento (🐢): gemelo del botón de diálogos (mismo tamaño y
+           color, solo en partidas contra un bot), pero con estado visible a
+           la manera de un botón físico: ELEVADO cuando está apagado, HUNDIDO
+           cuando está prendido. Sin texto adentro, a propósito: no cambia
+           de ancho nunca, así que no puede mover nada de la barra. */
+        #slowModeBtn {
+            padding: 8px 10px;
+            background: #7f8c8d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 14px;
+            display: none;
+            box-shadow: 0 2px 0 #4d5656, 0 3px 5px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            transition: box-shadow 0.12s, transform 0.12s, background 0.12s;
+        }
+
+        #slowModeBtn:hover {
+            background: #95a5a6;
+        }
+
+        /* Contenedor de los dos botones de preferencias del bot (🗣️ y 🐢):
+           una sola unidad que nunca se parte entre renglones. Se muestra
+           solo en partidas contra un bot (ver start-game). */
+        #botPrefButtons {
+            display: none;
+            white-space: nowrap;
+        }
+
+        #slowModeBtn.on {
+            background: #5d6d6e;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+            transform: translateY(2px);
         }
 
         .square {
@@ -1729,6 +1777,21 @@
             width: 40px;
         }
 
+        /* El número de nivel, al doble de tamaño (a pedido de Otto: que se
+           note de un vistazo contra qué nivel se juega). Sin relleno
+           vertical y con interlineado justo, a propósito: así el número
+           grande NO agranda la fila -- la altura de cada fila tiene que
+           seguir saliendo del texto del nombre y la descripción, porque
+           de ella depende el tamaño de las imágenes (ver
+           resizeBotThumbnailsToFitRow). La columna tiene ancho fijo (60px),
+           así que tampoco mueve las demás columnas. */
+        .bots-table td.bot-level-cell {
+            font-size: 2em;
+            line-height: 1;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
         .bots-table td.bot-image-cell {
             width: 150px;
             text-align: center;
@@ -2060,7 +2123,12 @@
         </div>
         <!-- Solo queda el botón de Rendición -->
         <button id="surrenderBtn" onclick="surrender()" data-i18n="surrenderBtn">Rendirse</button>
-        <button id="muteDialogueBtn" onclick="toggleDialogueMute()" data-i18n-title="muteDialogueTitle" title="Silenciar diálogos de los personajes">🗣️</button>
+        <!-- Los dos botones de preferencias sobre el bot van juntos en un
+             contenedor: así, si la barra pasa a dos renglones, pasan JUNTOS
+             (sin él, en algunos anchos la tortuga bajaba sola). -->
+        <span id="botPrefButtons">
+            <button id="muteDialogueBtn" onclick="toggleDialogueMute()" data-i18n-title="muteDialogueTitle" title="Silenciar diálogos de los personajes">🗣️</button><button id="slowModeBtn" onclick="toggleSlowMode()" aria-pressed="false" data-i18n-title="slowModeTitle" title="Modo lento. El bot tarda más en mover, pero no afecta su razonamiento">🐢</button>
+        </span>
         <button id="leaveLobbyBtn" onclick="leaveAndReload()" data-i18n="leaveLobbyBtn"
             style="display: none; padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Salir
             al Lobby</button>
@@ -2088,6 +2156,7 @@
             <div id="moveHistoryList"></div>
             <button id="copyChronicleBtn" onclick="copyChronicle()" data-i18n="copyChronicleBtn">📋 Copiar Crónica</button>
             <button id="saveChronicleBtn" onclick="saveChronicle()" data-i18n="saveChronicleBtn">💾 Guardar Crónica</button>
+            <button id="savePositionBtn" onclick="savePosition()" data-i18n="savePositionBtn">📸 Guardar Posición</button>
         </div>
     </div>
 
@@ -2968,6 +3037,7 @@
                 colorBlack: "Negras",
                 surrenderBtn: "Rendirse",
                 muteDialogueTitle: "Silenciar diálogos de los personajes",
+                slowModeTitle: "Modo lento. El bot tarda más en mover, pero no afecta su razonamiento",
                 leaveLobbyBtn: "Salir al Lobby",
 
                 // --- Espectadores / crónica ---
@@ -2977,6 +3047,13 @@
                 cronicaTooltip: "Copiá o guardá la crónica, y cargala en el Laboratorio para volver a ver el partido.",
                 copyChronicleBtn: "📋 Copiar Crónica",
                 saveChronicleBtn: "💾 Guardar Crónica",
+                savePositionBtn: "📸 Guardar Posición",
+                // Palabras clave del archivo de posición: mismas que en el
+                // Laboratorio, para que el archivo se pueda cargar allá.
+                posKwWhite: "blancas",
+                posKwBlack: "negras",
+                posKwTurn: "turno",
+                posFileNamePrefix: "posicion",
                 chronicleCopiedBtn: "✅ ¡Copiado!",
                 chronicleCopyFailedAlert: "No se pudo copiar la crónica. Probá seleccionar el texto a mano.",
 
@@ -3110,6 +3187,7 @@
                 colorBlack: "Black",
                 surrenderBtn: "Resign",
                 muteDialogueTitle: "Mute character dialogue",
+                slowModeTitle: "Slow mode. The bot takes longer to move, but its reasoning isn't affected",
                 leaveLobbyBtn: "Leave to Lobby",
 
                 // --- Spectators / chronicle ---
@@ -3119,6 +3197,11 @@
                 cronicaTooltip: "Copy or save the chronicle, and load it in the Laboratory to watch the game again.",
                 copyChronicleBtn: "📋 Copy Chronicle",
                 saveChronicleBtn: "💾 Save Chronicle",
+                savePositionBtn: "📸 Save Position",
+                posKwWhite: "white",
+                posKwBlack: "black",
+                posKwTurn: "turn",
+                posFileNamePrefix: "position",
                 chronicleCopiedBtn: "✅ Copied!",
                 chronicleCopyFailedAlert: "Couldn't copy the chronicle. Try selecting the text by hand.",
 
@@ -3357,6 +3440,51 @@
         // de sonido -- no hace falta que recuerde la preferencia entre
         // partidas (a diferencia del de sonido), así que alcanza con una
         // variable en memoria, sin sessionStorage.
+        // ============================================================
+        //  MODO LENTO (🐢)
+        // ============================================================
+        // Con el modo lento prendido, el bot espera un tiempo total al azar
+        // entre estos dos valores antes de mover (en milisegundos). Es el
+        // tiempo TOTAL de respuesta: si el cálculo ya tardó, se le resta
+        // (igual que el "retraso pensativo" normal de bots.js). Si querés
+        // cambiar el rango, son estos dos números:
+        const SLOW_MODE_MIN_MS = 2500;
+        const SLOW_MODE_MAX_MS = 6000;
+
+        // Se recuerda entre partidas (y entre visitas), como el idioma.
+        let slowModeEnabled = false;
+        try { slowModeEnabled = localStorage.getItem('damas_slow_mode') === 'true'; } catch (e) {}
+
+        function updateSlowModeButton() {
+            const btn = document.getElementById('slowModeBtn');
+            if (!btn) return;
+            btn.classList.toggle('on', slowModeEnabled);
+            btn.setAttribute('aria-pressed', slowModeEnabled ? 'true' : 'false');
+        }
+
+        function toggleSlowMode() {
+            slowModeEnabled = !slowModeEnabled;
+            try { localStorage.setItem('damas_slow_mode', slowModeEnabled ? 'true' : 'false'); } catch (e) {}
+            updateSlowModeButton();
+        }
+
+        // ¿Le corresponde el modo lento a esta jugada? A los niveles 1 al 9,
+        // siempre (todos responden en ~1 segundo). Al nivel 10, solo en la
+        // "zona de azar" de la apertura (mientras no cayó ninguna ficha):
+        // ahí todavía no usa su motor profundo y responde tan rápido como
+        // los demás; después ya piensa de verdad varios segundos, y sumarle
+        // más sería demasiado (a pedido de Otto). El criterio de la zona de
+        // azar es el MISMO que usa el motor (bots.js), no una copia.
+        function slowModeAppliesTo(level, boardSnapshot) {
+            if (!slowModeEnabled) return false;
+            if (level < 10) return true;
+            return countTotalPieces(boardSnapshot) === STARTING_PIECE_COUNT;
+        }
+
+        function getSlowModeFloor() {
+            return SLOW_MODE_MIN_MS + Math.random() * (SLOW_MODE_MAX_MS - SLOW_MODE_MIN_MS);
+        }
+
         let dialoguesMuted = false;
 
         function updateMuteDialogueButton() {
@@ -3697,6 +3825,34 @@
         // alguien haya elegido.
         function sanitizeForFilename(str) {
             return (str || '').replace(/[\/\\:*?"<>|]/g, '').trim();
+        }
+
+        // Guarda la posición que hay ahora en el tablero, con el MISMO formato
+        // exacto que "Guardar Posición" del Laboratorio (así el archivo se
+        // carga allá): una línea por color, recorriendo de la fila 1 a la 10
+        // y de la "a" a la "j", con ♛ en las damas, más la línea del turno
+        // (a quién le toca mover en este momento de la partida).
+        function buildPositionText() {
+            const squares = { w: [], b: [] };
+            for (let rowNumber = 1; rowNumber <= 10; rowNumber++) {
+                const row = 10 - rowNumber;
+                for (let col = 0; col < 10; col++) {
+                    const p = board[row][col];
+                    if (!p) continue;
+                    const isKing = (p === p.toUpperCase());
+                    squares[p.toLowerCase()].push(String.fromCharCode(97 + col) + rowNumber + (isKing ? '♛' : ''));
+                }
+            }
+            return `${t('posKwWhite')}: ${squares.w.join('-')}\n` +
+                   `${t('posKwBlack')}: ${squares.b.join('-')}\n` +
+                   `${t('posKwTurn')}: ${t(currentPlayer === 'w' ? 'posKwWhite' : 'posKwBlack')}\n`;
+        }
+
+        function savePosition() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
+            downloadTextFile(`${t('posFileNamePrefix')}_${stamp}.txt`, buildPositionText());
         }
 
         function saveChronicle() {
@@ -4618,6 +4774,13 @@
                 // preferencia arranca de cero en cada partida nueva (no
                 // hace falta que se recuerde entre partidas).
                 dialoguesMuted = false;
+                const botPrefButtons = document.getElementById("botPrefButtons");
+                if (botPrefButtons) botPrefButtons.style.display = currentBotId ? "inline-flex" : "none";
+                const slowModeBtn = document.getElementById("slowModeBtn");
+                if (slowModeBtn) {
+                    slowModeBtn.style.display = currentBotId ? "inline-block" : "none";
+                    updateSlowModeButton();
+                }
                 const muteDialogueBtn = document.getElementById("muteDialogueBtn");
                 if (muteDialogueBtn) {
                     muteDialogueBtn.style.display = currentBotId ? "inline-block" : "none";
@@ -5263,7 +5426,8 @@
             // profundos) no le suma ADEMÁS un piso encima, ya tardó lo
             // suyo pensando de verdad.
             const elapsed = Date.now() - startTime;
-            const remaining = Math.max(0, getBotThinkFloor() - elapsed);
+            const floor = slowModeAppliesTo(level, boardSnapshot) ? getSlowModeFloor() : getBotThinkFloor();
+            const remaining = Math.max(0, floor - elapsed);
             if (remaining > 0) {
                 await new Promise(r => setTimeout(r, remaining));
             }

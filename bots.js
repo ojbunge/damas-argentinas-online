@@ -377,16 +377,25 @@ function hangingMaterialValue(boardForSearch, color) {
     const opponentMoves = enumerateFullMoves(boardForSearch, opponent);
     if (opponentMoves.length === 0 || opponentMoves[0].type !== "capture-sequence") return 0;
 
-    // Todas las secuencias en opponentMoves empatan en cantidad de
-    // capturas (por la regla de máxima captura) — cualquiera sirve de
-    // muestra representativa de cuánto material está en juego.
-    let value = 0;
-    opponentMoves[0].hops.forEach(hop => {
-        const capturedPiece = boardForSearch[hop.capturedRow][hop.capturedCol];
-        const isKing = (capturedPiece === capturedPiece.toUpperCase());
-        value += isKing ? KING_VALUE : PAWN_VALUE;
-    });
-    return value;
+    // Todas las secuencias en opponentMoves empatan en CANTIDAD de capturas
+    // (por la regla de máxima captura), pero no necesariamente en VALOR: el
+    // rival puede poder elegir entre comer un peón o comer una dama. Se toma
+    // la más valiosa, que es la que elegiría. (Antes se tomaba la primera que
+    // aparecía recorriendo el tablero, y cuál era "la primera" dependía de
+    // desde qué lado se recorría: una asimetría mínima entre colores que
+    // encontró la auditoría para jugar con negras contra los bots -- aparecía
+    // en ~1 de cada mil evaluaciones y nunca llegó a cambiar una jugada.)
+    let best = 0;
+    for (const seq of opponentMoves) {
+        let value = 0;
+        seq.hops.forEach(hop => {
+            const capturedPiece = boardForSearch[hop.capturedRow][hop.capturedCol];
+            const isKing = (capturedPiece === capturedPiece.toUpperCase());
+            value += isKing ? KING_VALUE : PAWN_VALUE;
+        });
+        if (value > best) best = value;
+    }
+    return best;
 }
 
 // Cuántos peones de "color" tienen un compañero diagonal "atrás" (del
@@ -974,10 +983,12 @@ const BOT_LEVEL_CONFIG = {
 // ese nivel (o null si no hay ninguna jugada legal — no debería pasar
 // nunca en una partida real, porque el juego ya termina la partida por
 // bloqueo/aniquilación antes de que esto se llegue a llamar). El
-// parámetro player es opcional y por defecto es 'b', porque en una
-// partida real el bot siempre juega con Negras — pero el simulador de
-// auto-partidas (para calibrar) lo va a llamar también con 'w', para
-// poder enfrentar dos niveles entre sí desde cualquier lado del tablero.
+// parámetro player es opcional y por defecto es 'b' (el color del bot
+// cuando el humano juega con blancas); desde que el humano puede elegir
+// jugar con negras, la Arena lo pasa siempre explícito. El simulador de
+// auto-partidas (para calibrar) también lo llamaba con los dos colores, y
+// la auditoría (prueba de espejo) confirmó que el motor juega idéntico
+// con blancas que con negras.
 function getBotMove(boardForSearch, level, player = "b") {
     const config = BOT_LEVEL_CONFIG[level];
     if (!config) return null;

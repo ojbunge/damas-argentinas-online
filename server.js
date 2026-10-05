@@ -441,10 +441,12 @@ io.on('connection', (socket) => {
             }
 
             const gameInfo = {
-                white: connectedUsers[game.w]?.username,
-                // Contra un bot no hay un segundo socket real (game.b es null):
-                // el nombre viene directo del propio registro de la partida.
-                black: game.vsBot ? game.botName : connectedUsers[game.b]?.username,
+                // Contra un bot no hay un segundo socket real (el lugar del bot
+                // es null): su nombre viene directo del registro de la partida,
+                // en el color que le haya tocado.
+                white: (game.vsBot && game.humanColor === "b") ? game.botName : connectedUsers[game.w]?.username,
+                black: (game.vsBot && game.humanColor !== "b") ? game.botName : connectedUsers[game.b]?.username,
+                humanColor: game.vsBot ? (game.humanColor || "w") : null,
                 board: game.board,
                 turn: game.turn,
                 moveHistory: game.moveHistory || [], // <--- EL MENSAJERO LE CUENTA LO YA JUGADO
@@ -488,6 +490,9 @@ io.on('connection', (socket) => {
         const botName = data?.botName;
         const botLevel = data?.botLevel;
         if (!botId || !botName) return;
+        // Con qué color juega el humano (lo elige en la Sala de Armas). Lista
+        // blanca: cualquier cosa que no sea 'b' es blancas, como siempre.
+        const humanColor = (data?.humanColor === "b") ? "b" : "w";
 
         // Si venía espectando otra partida, lo sacamos prolijamente de ahí primero.
         leaveSpectatingIfAny(socket.id, connectedUsers, activeGames, io);
@@ -504,8 +509,11 @@ io.on('connection', (socket) => {
         const roomName = `botroom_${socket.id}_${++botRoomCounter}`;
 
         activeGames[roomName] = {
-            w: socket.id,
-            b: null,
+            // El humano ocupa el lugar de su color; el del bot queda en null
+            // (no hay un segundo socket real).
+            w: humanColor === "w" ? socket.id : null,
+            b: humanColor === "b" ? socket.id : null,
+            humanColor: humanColor,
             vsBot: true,
             botId: botId,
             botName: botName,
@@ -519,20 +527,21 @@ io.on('connection', (socket) => {
 
         connectedUsers[socket.id].status = "vsbot";
         connectedUsers[socket.id].room = roomName;
-        connectedUsers[socket.id].role = "w";
+        connectedUsers[socket.id].role = humanColor;
         connectedUsers[socket.id].botName = botName;
 
         socket.join(roomName);
 
-        socket.emit('assign-role', 'w');
+        socket.emit('assign-role', humanColor);
         socket.emit('start-game', {
             roomName: roomName,
-            white: user.username,
-            black: botName,
+            white: humanColor === "w" ? user.username : botName,
+            black: humanColor === "b" ? user.username : botName,
             board: activeGames[roomName].board,
             turn: "w",
             vsBot: true,
-            botId: botId
+            botId: botId,
+            humanColor: humanColor
         });
 
         broadcastStatus();

@@ -970,7 +970,7 @@ const BOT_LEVEL_CONFIG = {
     4: { depth: 2, noise: 0.11, evalMode: "material" },   // CALIBRADO (V12): 3 vs 4 = 75% para el 4 (47 partidas); 4 vs 5 = 62% para el 5 (45 partidas)
     5: { depth: 3, noise: 0.17, evalMode: "full" },       // CALIBRADO: 1 vs 5 = 95% para el 5 (20 partidas); 5 vs 6 = 70% para el 6 (43 partidas, tras recalibrar el 6)
     6: { depth: 3, noise: 0.095, evalMode: "full" },      // CALIBRADO (V8, nivel intermedio nuevo): 5 vs 6 = 70% para el 6; 6 vs 7 = 77% para el 7 (43 partidas cada enfrentamiento)
-    7: { depth: 3, noise: 0.00, evalMode: "full" },       // CALIBRADO: era el "6" de V6/V7 — Otto lo probó extensamente y lo sintió más como un 7 que un 6 (le ganaba 70-75% de sus partidas humanas), así que se corrió acá. 6 vs 7 = 77% para el 7; 7 vs 10 = dominante en la muestra, sin colapso
+    7: { depth: 3, noise: 0.00, evalMode: "full", softErrorRate: 0.06, softErrorMinLoss: 8, softErrorMaxLoss: 45 },       // CALIBRADO: era el "6" de V6/V7 — Otto lo probó extensamente y lo sintió más como un 7 que un 6 (le ganaba 70-75% de sus partidas humanas), así que se corrió acá. 6 vs 7 = 77% para el 7; 7 vs 10 = dominante en la muestra, sin colapso
     8: { depth: 4, noise: 0.03, evalMode: "full" },       // CALIBRADO (V10): 7 vs 8 = 79% para el 8 (34 partidas decisivas) -- recalibrado tras arreglar el bug de empates falsos (ver comentario en pickBestFullMoves): sin ruido, el 8 le ganaba al 7 el 86% (demasiado, por encima de la franja), porque el arreglo lo hizo más fuerte de lo que parecía antes
     9: { depth: 5, noise: 0.00, evalMode: "full" },       // CALIBRADO (V9): 8 vs 9 = 78% para el 9; 9 vs 10 = 86% para el 10 (borde superior sano, sin colapso)
     10: { timeLimitMs: 8000, maxDepth: 16, noise: 0.00, evalMode: "full" }
@@ -989,6 +989,58 @@ const BOT_LEVEL_CONFIG = {
 // auto-partidas (para calibrar) también lo llamaba con los dos colores, y
 // la auditoría (prueba de espejo) confirmó que el motor juega idéntico
 // con blancas que con negras.
+// ============================================================
+//  PERFIL DE ERRORES: ERRORES LEVES
+// ============================================================
+// El "ruido" de siempre (config.noise) es un error TOSCO: una jugada legal
+// cualquiera, al azar -- puede ser inofensiva o puede regalar una ficha. Los
+// errores leves son otra cosa: en vez de la mejor jugada, una apenas peor,
+// con la gravedad acotada. Los configura cada nivel con tres números:
+//   softErrorRate     cada cuánto lo intenta (probabilidad por jugada)
+//   softErrorMinLoss  cuánto peor que la mejor tiene que ser, como mínimo
+//                     (en puntos; un peón vale 100). Por debajo de esto la
+//                     jugada es casi equivalente a la mejor: no cuenta como
+//                     error, no le daría nada al rival.
+//   softErrorMaxLoss  cuánto peor puede ser, como máximo. Es lo que mantiene
+//                     el error en "leve": desaprovechar algo, avanzar menos,
+//                     dejar algo de aire -- nunca un regalo.
+// Hoy lo usa solo el nivel 7 (a pedido de Otto, para que quede equidistante
+// entre el 6 y el 8 sin perder su capacidad de planificar).
+//
+// Devuelve la jugada "leve" elegida, o null si en este turno no corresponde
+// (y el bot juega su mejor jugada, como siempre).
+function pickSoftErrorMove(boardForSearch, player, config, legalMoves) {
+    // Nunca con una sola jugada posible, ni con captura obligatoria (elegir
+    // "un poco peor" entre capturas puede ser catastrófico).
+    if (legalMoves.length < 2 || legalMoves[0].type === "capture-sequence") return null;
+
+    // El puntaje real de CADA jugada (búsqueda completa, misma profundidad).
+    const scored = pickScoredFullMoves(boardForSearch, player, config.depth, config.evalMode);
+    if (scored.length < 2) return null;
+    const bestScore = scored[0].score;
+    const inWindow = scored.filter(s => {
+        const loss = bestScore - s.score;
+        return loss >= config.softErrorMinLoss && loss <= config.softErrorMaxLoss;
+    });
+    if (inWindow.length === 0) return null;
+
+    // GUARDA ANTI-REGALOS: el tope de puntos solo no alcanza. Una jugada que
+    // pierde un peón (-100) pero gana 60 de posición queda "40 peor" y
+    // entraría en la franja. Por eso cada candidata se vuelve a analizar
+    // contando SOLO material, y se descarta si termina con menos fichas que
+    // la jugada que el bot iba a hacer.
+    const materialScored = pickScoredFullMoves(boardForSearch, player, config.depth, "material");
+    const materialOf = (mv) => {
+        const hit = materialScored.find(s => movesEqual(s.move, mv));
+        return hit ? hit.score : -Infinity;
+    };
+    const bestMaterial = materialOf(scored[0].move);
+    const safe = inWindow.filter(s => materialOf(s.move) >= bestMaterial);
+    if (safe.length === 0) return null;
+
+    return safe[Math.floor(Math.random() * safe.length)].move;
+}
+
 function getBotMove(boardForSearch, level, player = "b") {
     const config = BOT_LEVEL_CONFIG[level];
     if (!config) return null;
@@ -1024,6 +1076,12 @@ function getBotMove(boardForSearch, level, player = "b") {
     }
 
     // --- A PARTIR DE ACÁ: EXACTAMENTE EL CAMINO DE SIEMPRE, SIN NINGÚN CAMBIO ---
+    // --- ERRORES LEVES (perfil de errores; ver pickSoftErrorMove) ---
+    if (config.softErrorRate && Math.random() < config.softErrorRate) {
+        const softMove = pickSoftErrorMove(boardForSearch, player, config, legalMoves);
+        if (softMove) return softMove;
+    }
+
     let candidates;
     let preferred = null;
     if (config.timeLimitMs) {
@@ -1290,3 +1348,4 @@ function detectCommentaryEvent(board, turnHops, moverColor, botColor, moveNumber
     candidates.sort((a, b) => COMMENTARY_EVENTS[a].priority - COMMENTARY_EVENTS[b].priority);
     return { event: candidates[0], state: newState };
 }
+

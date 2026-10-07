@@ -159,6 +159,22 @@
         .flipped-board .coord-label {
             transform: rotate(180deg);
         }
+
+        /* Con el tablero girado (vista de Negras), las coordenadas siguen
+           ABAJO y a la IZQUIERDA en pantalla, como manda la convención, con
+           el orden invertido: las letras cuelgan de la fila de ARRIBA del
+           tablero (que al girar queda abajo) y los números de la columna de
+           la DERECHA (que queda a la izquierda). Antes giraban junto con el
+           tablero y terminaban arriba y a la derecha. */
+        .coord-label-col.at-top {
+            top: auto;
+            bottom: 100%;
+        }
+
+        .coord-label-row.at-right {
+            right: auto;
+            left: 100%;
+        }
         /* Por defecto (y hasta que haya espacio de sobra, ver media query más
            abajo) el historial vive en flujo normal, apilado debajo del
            tablero: así #boardAndHistoryWrapper se centra en base al ancho
@@ -4118,6 +4134,10 @@
         }
 
         function renderBoard() {
+            // ¿El tablero está girado (vista de Negras)? Lo decide la clase
+            // .flipped-board, que se pone ANTES de dibujar (al recibir el color
+            // propio, o al entrar como espectador desde el lado de Negras).
+            const boardIsFlipped = boardElement.classList.contains("flipped-board");
             boardElement.innerHTML = "";
             highlightedSquares = []; // Limpiamos la lista de elementos visuales
 
@@ -4254,15 +4274,22 @@
                     // la primera columna). Misma fórmula que squareLabel(),
                     // para que la Crónica y el marco del tablero jamás queden
                     // desincronizados entre sí.
-                    if (row === 9) {
+                    // Con el tablero girado (vista de Negras), las etiquetas
+                    // cuelgan de la fila 0 y la columna 9 -- las que quedan
+                    // abajo y a la izquierda después del giro --, así las
+                    // coordenadas quedan SIEMPRE abajo y a la izquierda en
+                    // pantalla, con el orden invertido.
+                    if (row === (boardIsFlipped ? 0 : 9)) {
                         const colLabel = document.createElement("span");
                         colLabel.classList.add("coord-label", "coord-label-col");
+                        if (boardIsFlipped) colLabel.classList.add("at-top");
                         colLabel.textContent = String.fromCharCode(97 + col); // 0→'a' ... 9→'j'
                         square.appendChild(colLabel);
                     }
-                    if (col === 0) {
+                    if (col === (boardIsFlipped ? 9 : 0)) {
                         const rowLabel = document.createElement("span");
                         rowLabel.classList.add("coord-label", "coord-label-row");
+                        if (boardIsFlipped) rowLabel.classList.add("at-right");
                         rowLabel.textContent = 10 - row; // 0→10 ... 9→1
                         square.appendChild(rowLabel);
                     }

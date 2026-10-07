@@ -209,6 +209,31 @@
             width: calc(var(--board-padding) + var(--board-border));
         }
 
+        /* TABLERO ROTADO 180° (botón "Rotar Tablero"): las coordenadas
+           quedan SIEMPRE abajo y a la izquierda en pantalla, como manda la
+           convención, con el orden invertido. Para eso, rotado, las letras
+           cuelgan de la fila de ARRIBA del tablero (que al girar queda
+           abajo) y los números de la columna de la DERECHA (que queda a la
+           izquierda); y cada etiqueta gira al revés, para no quedar cabeza
+           abajo. Mismo mecanismo que en la Arena. */
+        #board.flipped-board {
+            transform: rotate(180deg);
+        }
+
+        #board.flipped-board .coord-label {
+            transform: rotate(180deg);
+        }
+
+        .coord-label-col.at-top {
+            top: auto;
+            bottom: 100%;
+        }
+
+        .coord-label-row.at-right {
+            right: auto;
+            left: 100%;
+        }
+
         .square {
             width: var(--sq-size);
             height: var(--sq-size);
@@ -941,6 +966,7 @@
                 max-width: 48px;
                 padding: 4px 1px;
                 -moz-appearance: textfield;
+                appearance: textfield;
             }
 
             /* Sin las flechitas de subir/bajar del campo numérico: en una
@@ -1425,18 +1451,63 @@
            -- bien cerca del tablero, donde ayuda a llevar la cuenta --, y
            los tres botones de arriba se estiran para ocupar todo el ancho
            que el contador deja libre. */
-        #pieceCounterTools {
+        #toolsMiddle {
             display: none;
         }
 
-        @media (min-width: 900px) {
+        /* Pantallas angostas: los cuatro botones en dos pares -- Posición
+           inicial y Remover todo arriba; Rotar Tablero y Deshacer abajo
+           (Deshacer, el más usado, en el par más cercano al tablero y del
+           mismo lado derecho de siempre) --, y el contador en su fila. */
+        @media (max-width: 899px) {
+            #topControlsRow {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 6px;
+            }
+
+            #topControlsRow .lab-btn {
+                width: 100%;
+            }
+
             #topControlsRow #pieceCounter {
+                grid-column: 1 / -1;
+                justify-self: start;
+            }
+        }
+
+        @media (max-width: 560px) {
+            #topControlsRow .lab-btn {
+                padding: 8px 4px;
+                font-size: 12.5px;
+            }
+        }
+
+        @media (min-width: 900px) {
+            #topControlsRow #pieceCounter,
+            #topControlsRow #deshacerBtnTop {
                 display: none;
+            }
+
+            /* Entre el selector de fichas y el Control de Turnos: el
+               contador ARRIBA (alineado con el borde de arriba de los dos
+               paneles) y Deshacer ABAJO (alineado con el borde de abajo), a
+               pedido de Otto, con una luz chiquita entre los dos. */
+            #toolsMiddle {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: center;
+                flex: 1 1 0;
+                min-width: 0;
+            }
+
+            #toolsMiddle .undo-btn {
+                width: 100%;
             }
 
             #pieceCounterTools {
                 display: inline-block;
-                align-self: flex-end;
             }
 
             #topControlsRow {
@@ -1491,7 +1562,12 @@
             <div id="topControlsRow">
                 <button id="posicionInicialBtn" class="lab-btn" data-i18n="posicionInicialBtn">▶️ Posición inicial</button>
                 <button id="removerTodoBtn" class="lab-btn" data-i18n="removerTodoBtn">🗑️ Remover todo</button>
-                <button id="deshacerBtn" class="lab-btn" disabled data-i18n="deshacerBtn">↩️ Deshacer</button>
+                <button id="rotarTableroBtn" class="lab-btn" data-i18n="rotarTableroBtn">🔄️ Rotar Tablero</button>
+                <!-- Copia de Deshacer para pantallas angostas (en pantalla
+                     ancha va abajo, entre el selector de fichas y el Control
+                     de Turnos, bien cerca del tablero). Las dos copias se
+                     habilitan y deshabilitan juntas (clase .undo-btn). -->
+                <button id="deshacerBtnTop" class="lab-btn undo-btn" disabled data-i18n="deshacerBtn">↩️ Deshacer</button>
                 <span id="pieceCounter" class="piece-counter">⚪ 0 | ⚫ 0</span>
             </div>
 
@@ -1514,11 +1590,14 @@
                     </div>
                 </div>
 
-                <!-- Segunda copia del contador de fichas: en pantalla ancha
-                     se muestra ACÁ, bien cerca del tablero, y se oculta la
-                     de la fila de botones de arriba (en celular, al revés).
-                     Las dos se actualizan juntas (ver updatePieceCounter). -->
-                <span id="pieceCounterTools" class="piece-counter">⚪ 0 | ⚫ 0</span>
+                <!-- La columna del medio (solo en pantalla ancha): arriba el
+                     contador de fichas (segunda copia; las dos se actualizan
+                     juntas, ver updatePieceCounter) y abajo el botón de
+                     Deshacer -- el que más se usa, bien a mano del tablero. -->
+                <div id="toolsMiddle">
+                    <span id="pieceCounterTools" class="piece-counter">⚪ 0 | ⚫ 0</span>
+                    <button id="deshacerBtn" class="lab-btn undo-btn" disabled data-i18n="deshacerBtn">↩️ Deshacer</button>
+                </div>
 
                 <!-- Todo el recuadro es un solo botón (ver toggleTurnTracker). Las
                      partes fijas se traducen solas por data-i18n; el estado
@@ -1972,6 +2051,7 @@
                 posicionInicialBtn: "▶️ Posición inicial",
                 removerTodoBtn: "🗑️ Remover todo",
                 deshacerBtn: "↩️ Deshacer",
+                rotarTableroBtn: "🔄️ Rotar Tablero",
                 pieceTypePanelTitle: "Ficha a colocar",
                 pieceTypePanelHint: "(clic derecho en el tablero)",
                 pieceWhitePawn: "Peón blanco",
@@ -2070,6 +2150,7 @@
                 posicionInicialBtn: "▶️ Starting position",
                 removerTodoBtn: "🗑️ Remove all",
                 deshacerBtn: "↩️ Undo",
+                rotarTableroBtn: "🔄️ Rotate Board",
                 pieceTypePanelTitle: "Piece to place",
                 pieceTypePanelHint: "(right-click on the board)",
                 pieceWhitePawn: "White pawn",
@@ -2250,7 +2331,9 @@
         // de que el jugador ya reacomodó fichas a mano, podría intentar
         // devolver una ficha a una casilla que ahora ocupa otra.
         let undoStack = [];
-        const MAX_UNDO_STEPS = 4;
+        // Cuántos pasos guarda Deshacer. Cada paso ocupa unos pocos cientos de
+        // bytes: 200 alcanzan para deshacer una partida entera, sin costo.
+        const MAX_UNDO_STEPS = 200;
 
         const MAX_PIECES_PER_COLOR = 15;
         const MAX_KINGS_PER_COLOR = 7;
@@ -2532,7 +2615,9 @@
         }
 
         function updateUndoButton() {
-            document.getElementById('deshacerBtn').disabled = (undoStack.length === 0);
+            // Hay dos copias del botón (una por ubicación, según el ancho de
+            // pantalla): se habilitan y deshabilitan juntas.
+            document.querySelectorAll('.undo-btn').forEach(btn => { btn.disabled = (undoStack.length === 0); });
         }
 
         function undoLastMove() {
@@ -2576,6 +2661,19 @@
             return getGlobalBestMoves(color).map(bg => ({ row: bg.row, col: bg.col }));
         }
 
+        // ¿El tablero está rotado 180°? (botón "Rotar Tablero"). Es solo una
+        // forma de mirar: no cambia el tablero, no entra en Deshacer y no
+        // cambia el territorio (el marco). Los espectadores ven lo mismo que
+        // el dueño. Al volver a entrar, arranca sin rotar.
+        let boardRotated = false;
+
+        function toggleRotateBoard() {
+            if (isSpectatorMode) return;
+            boardRotated = !boardRotated;
+            renderBoard();
+            syncLabBoard();
+        }
+
         // La jugada cuya huella corresponde mostrar ahora mismo (del lado del
         // dueño del Laboratorio), o null si no corresponde ninguna.
         function currentChronicleLastMove() {
@@ -2585,6 +2683,13 @@
 
         function renderBoard() {
             boardElement.innerHTML = '';
+            boardElement.classList.toggle('flipped-board', boardRotated);
+            // Coordenadas SIEMPRE abajo y a la izquierda en pantalla: sin
+            // rotar, cuelgan de la fila 9 y la columna 0; rotado, de la fila
+            // 0 y la columna 9 (que son las que quedan abajo y a la izquierda
+            // después del giro), y el orden queda invertido solo.
+            const colLabelRow = boardRotated ? 0 : 9;
+            const rowLabelCol = boardRotated ? 9 : 0;
             const mustMoveSquares = computeMustMoveSquares();
             // La huella de la última jugada: solo mientras el tablero
             // muestra la crónica tal cual pasó (marco violeta), y desde la
@@ -2659,15 +2764,17 @@
                         square.appendChild(piece);
                     }
 
-                    if (row === 9) {
+                    if (row === colLabelRow) {
                         const colLabel = document.createElement('span');
                         colLabel.classList.add('coord-label', 'coord-label-col');
+                        if (boardRotated) colLabel.classList.add('at-top');
                         colLabel.textContent = String.fromCharCode(97 + col);
                         square.appendChild(colLabel);
                     }
-                    if (col === 0) {
+                    if (col === rowLabelCol) {
                         const rowLabel = document.createElement('span');
                         rowLabel.classList.add('coord-label', 'coord-label-row');
+                        if (boardRotated) rowLabel.classList.add('at-right');
                         rowLabel.textContent = 10 - row;
                         square.appendChild(rowLabel);
                     }
@@ -2814,8 +2921,10 @@
                 // Saca lo que haya ahí, sin importar tipo ni color.
                 // (Colocar/sacar fichas a mano es territorio hipotético,
                 // pero NO cambia el turno: solo los movimientos lo hacen.)
+                // Se puede deshacer, igual que un movimiento (antes, colocar o
+                // sacar una ficha borraba todo el historial de Deshacer).
+                pushUndoSnapshot();
                 board[row][col] = null;
-                clearUndoStack();
                 selectedPosition = null;
                 currentAllowedMoves = [];
                 pieceMustContinueCapturing = null;
@@ -2843,8 +2952,10 @@
             if (type === 'w' && row === 0) { finalType = 'W'; willCrown = true; }
             if (type === 'b' && row === 9) { finalType = 'B'; willCrown = true; }
 
+            // Colocación válida (ya pasó los límites): se guarda el tablero
+            // antes, para poder deshacerla. Una rechazada no guarda nada.
+            pushUndoSnapshot();
             board[row][col] = finalType;
-            clearUndoStack();
             selectedPosition = null;
             currentAllowedMoves = [];
             pieceMustContinueCapturing = null;
@@ -2914,7 +3025,8 @@
             resetBoardTo(Array.from({ length: 10 }, () => Array(10).fill(null)));
         });
 
-        document.getElementById('deshacerBtn').addEventListener('click', undoLastMove);
+        document.querySelectorAll('.undo-btn').forEach(btn => btn.addEventListener('click', undoLastMove));
+        document.getElementById('rotarTableroBtn').addEventListener('click', toggleRotateBoard);
 
         // ============================================================
         //  EL CONTROL DE TURNOS
@@ -3454,6 +3566,7 @@
                 // Y también la huella de la última jugada (solo existe en
                 // territorio violeta; si no, va null y el espectador la
                 // borra).
+                rotated: boardRotated,
                 lastMove: (() => {
                     const mv = currentChronicleLastMove();
                     return mv ? { from: { row: mv.from.row, col: mv.from.col }, to: { row: mv.to.row, col: mv.to.col } } : null;
@@ -3519,6 +3632,7 @@
             if (subtitle) subtitle.textContent = t('spectatingLabOf', data.ownerName || t('spectatingLabOfSomeone'));
             applySpectatorFrameMode(data.frameMode);
             spectatorLastMove = data.lastMove || null;
+            boardRotated = data.rotated === true;
             renderBoard();
         });
 
@@ -3526,6 +3640,7 @@
             board = data.board;
             applySpectatorFrameMode(data.frameMode);
             spectatorLastMove = data.lastMove || null;
+            boardRotated = data.rotated === true;
             renderBoard();
         });
 

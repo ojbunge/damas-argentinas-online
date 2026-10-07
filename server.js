@@ -576,6 +576,8 @@ io.on('connection', (socket) => {
             // La huella de la última jugada de la crónica que está mirando el
             // dueño ({from:{row,col}, to:{row,col}}), o null.
             lastMove: null,
+            // ¿El dueño tiene el tablero rotado 180°? (los espectadores lo ven igual)
+            rotated: false,
             spectators: []
         };
 
@@ -614,7 +616,9 @@ io.on('connection', (socket) => {
         // acepta si son casillas reales del tablero (nunca se guarda a
         // ciegas lo que mande el cliente).
         lab.lastMove = (lab.frameMode === "chronicle") ? sanitizeLastMove(data.lastMove) : null;
-        socket.to(user.room).emit('lab-board-update', { board: lab.board, frameMode: lab.frameMode, lastMove: lab.lastMove });
+        // Lista blanca: solo true cuenta como rotado.
+        lab.rotated = (data.rotated === true);
+        socket.to(user.room).emit('lab-board-update', { board: lab.board, frameMode: lab.frameMode, lastMove: lab.lastMove, rotated: lab.rotated });
     });
 
     // Alguien se suma a mirar un laboratorio ajeno -- mismo mecanismo que
@@ -645,6 +649,7 @@ io.on('connection', (socket) => {
             board: lab.board,
             frameMode: lab.frameMode || "hypothetical",
             lastMove: lab.lastMove || null,
+            rotated: lab.rotated === true,
             ownerName: connectedUsers[lab.ownerId]?.username
         });
 

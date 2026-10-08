@@ -4947,6 +4947,24 @@
             // 3. Mostrar el mensaje localmente
             const winnerName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
             announceGameEnd(t('youSurrendered', winnerName), { allowRematch: true });
+
+            // 4. Contra un bot, rendirse también es perder: el bot celebra
+            //    con sus frases de victoria, igual que si hubiera ganado
+            //    jugando (a pedido de Otto).
+            showBotVictoryLine();
+        }
+
+        // El bot dice una de sus frases de VICTORIA -- el mismo evento que
+        // dispara el Pregonero cuando el bot gana jugando (ver changeTurn).
+        // Se usa cuando el humano se rinde ante el bot: en su propia pantalla
+        // y en la de cada espectador. Respeta el botón de silenciar diálogos
+        // (lo controla showBotSpeechBubble, como siempre). En un duelo entre
+        // humanos no hace nada.
+        function showBotVictoryLine() {
+            if (!currentBotId) return;
+            const line = pickBotDialogueLine(currentBotId, "VICTORIA");
+            console.log(`[Pregonero] Evento: VICTORIA (por rendición)${line ? ' -> "' + line + '"' : ' (sin frase cargada todavía)'}`);
+            if (line) showBotSpeechBubble(line);
         }
 
         // Escuchar movimientos que vienen del servidor
@@ -6251,6 +6269,10 @@
                 finalLoserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
             }
             announceGameEnd(t('opponentSurrendered', finalLoserName, winnerName), { allowRematch: true });
+            // Espectador de una partida contra un bot: el único que puede
+            // rendirse es el humano (los bots no se rinden), así que ganó el
+            // bot, y celebra igual que si hubiera ganado jugando.
+            showBotVictoryLine();
         });
 
         // El servidor manda esto cada vez que el turno REALMENTE pasa de

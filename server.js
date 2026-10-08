@@ -265,6 +265,21 @@ function handleTimeExpired(room, color) {
     broadcastStatus();
 }
 
+// Partidas contra bots recién terminadas: socket.id del humano -> { room,
+// until }. Sirve para el margen de gracia del comentario final del bot (ver
+// 'bot-line'). Las entradas vencen solas.
+const recentlyEndedBotGames = {};
+const BOT_LINE_GRACE_MS = 15000;
+function rememberEndedBotGame(game, room) {
+    if (!game || !game.vsBot || !room) return;
+    const humanId = game.w || game.b; // el lugar del bot es null
+    if (!humanId) return;
+    recentlyEndedBotGames[humanId] = { room, until: Date.now() + BOT_LINE_GRACE_MS };
+    for (const id of Object.keys(recentlyEndedBotGames)) {
+        if (recentlyEndedBotGames[id].until < Date.now()) delete recentlyEndedBotGames[id];
+    }
+}
+
 io.on('connection', (socket) => {
 
     socket.on('set-username', (data) => {
@@ -759,6 +774,30 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- COMENTARIOS DEL BOT, IGUALES PARA JUGADOR Y ESPECTADORES ---
+    // La pantalla del humano que juega contra el bot elige la frase y manda
+    // "evento tal, frase número tal"; acá solo se valida y se retransmite a
+    // los espectadores de su sala. Margen de gracia: el comentario FINAL
+    // (victoria, derrota, empate, rendición) sale justo DESPUÉS del aviso de
+    // fin de partida, cuando la sala ya se cerró -- por unos segundos se
+    // sigue aceptando hacia la sala recién terminada.
+    socket.on('bot-line', (data) => {
+        const event = data?.event, index = data?.index;
+        if (typeof event !== 'string' || !/^[A-Z_]{3,40}$/.test(event)) return;
+        if (!Number.isInteger(index) || index < 0 || index > 99) return;
+        const user = connectedUsers[socket.id];
+        const game = user?.room ? activeGames[user.room] : null;
+        let room = null;
+        if (game && game.vsBot && (game.w === socket.id || game.b === socket.id)) {
+            room = user.room;                       // partida en curso: solo su humano
+        } else {
+            const recent = recentlyEndedBotGames[socket.id];
+            if (recent && Date.now() < recent.until) room = recent.room;
+        }
+        if (!room) return;
+        socket.to(room).emit('bot-line', { event, index });
+    });
+
     socket.on('player-surrendered', () => {
         const user = connectedUsers[socket.id];
         if (user && user.room) {
@@ -771,6 +810,7 @@ io.on('connection', (socket) => {
             // sala real, dejándola huérfana para siempre en "Torneos en
             // Curso" aunque el censo ya mostrara a ambos como libres.
             const room = user.room;
+            rememberEndedBotGame(activeGames[room], room);
 
             console.log(`El caballero ${user.username} ha tirado la toalla.`);
             // Avisamos al otro jugador (y a espectadores) en la sala,
@@ -819,6 +859,7 @@ io.on('connection', (socket) => {
         const game = activeGames[room];
         if (game && !game.concluded) {
             game.concluded = true;
+            rememberEndedBotGame(game, room);
             clearClockTimeout(game); // si había reloj corriendo, no hace falta que siga armado
 
             if (data.winner === 'draw') {

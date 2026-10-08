@@ -4442,7 +4442,9 @@
             // detectCommentaryEvent devuelva VICTORIA/DERROTA/EMPATE con
             // prioridad absoluta, sin competir con los eventos de mitad de
             // partido.
-            if (botCommentaryState) {
+            // Solo la pantalla del humano que juega decide (ver botSpeak): los
+            // espectadores no detectan eventos, reciben la frase ya elegida.
+            if (botCommentaryState && isBotNarrator()) {
                 const justMovedColor = (currentPlayer === "w") ? "b" : "w";
                 const turnHops = getLastTurnHops(justMovedColor);
                 const gameEndedWinner = gameOverResult.ended ? gameOverResult.winner : null;
@@ -4450,11 +4452,7 @@
                     board, turnHops, justMovedColor, currentBotColor, moveHistory.length, botCommentaryState, gameEndedWinner
                 );
                 botCommentaryState = state;
-                if (event) {
-                    const line = pickBotDialogueLine(currentBotId, event);
-                    console.log(`[Pregonero] Evento: ${event}${line ? ' -> "' + line + '"' : ' (sin frase cargada todavía)'}`);
-                    if (line) showBotSpeechBubble(line);
-                }
+                if (event) botSpeak(event);
             }
 
             // Si la partida sigue y ahora es el turno del bot, que "piense"
@@ -4936,6 +4934,11 @@
         }
 
         function surrender() {
+            // 0. Con la partida ya terminada no hay de qué rendirse (antes se
+            //    podía, y reemplazaba el cartel del resultado real por "TE HAS
+            //    RENDIDO").
+            if (document.getElementById('victoryBanner')) return;
+
             // 1. Pedir confirmación (Art. de Godofredo)
             if (!confirm(t('confirmSurrender'))) {
                 return; // Si cancela, no pasa nada
@@ -4962,10 +4965,58 @@
         // humanos no hace nada.
         function showBotVictoryLine() {
             if (!currentBotId) return;
-            const line = pickBotDialogueLine(currentBotId, "VICTORIA");
-            console.log(`[Pregonero] Evento: VICTORIA (por rendición)${line ? ' -> "' + line + '"' : ' (sin frase cargada todavía)'}`);
-            if (line) showBotSpeechBubble(line);
+            botSpeak("VICTORIA");
         }
+
+        // ============================================================
+        //  LOS COMENTARIOS DEL BOT, IGUALES PARA JUGADOR Y ESPECTADORES
+        // ============================================================
+        // Antes, cada pantalla (la del jugador y la de cada espectador)
+        // detectaba los eventos y sorteaba la frase por su cuenta: cada uno
+        // leía una frase distinta, y los comentarios espontáneos podían salir
+        // en una pantalla y en otra no. Ahora la pantalla del humano que juega
+        // es la ÚNICA que decide: elige la frase, la muestra, y le manda al
+        // servidor "evento tal, frase número tal". Los espectadores muestran
+        // esa misma frase, en su propio idioma -- las listas de cada bot están
+        // alineadas una a una entre castellano e inglés (mismas cantidades,
+        // audios en la misma posición), así que el número alcanza.
+        function isBotNarrator() {
+            return botColorForThisClient() !== null;
+        }
+
+        function botDialogueLines(eventCode) {
+            const lang = (typeof currentLang !== 'undefined' && BOT_DIALOGUE[currentLang]) ? currentLang : 'es';
+            const bot = BOT_DIALOGUE[lang] && BOT_DIALOGUE[lang][currentBotId];
+            return (bot && bot[eventCode]) || [];
+        }
+
+        function botSpeak(eventCode) {
+            if (!currentBotId || !isBotNarrator()) return; // espectador: espera la frase del jugador
+            const lines = botDialogueLines(eventCode);
+            if (lines.length === 0) {
+                console.log(`[Pregonero] Evento: ${eventCode} (sin frase cargada todavía)`);
+                return;
+            }
+            const index = Math.floor(Math.random() * lines.length);
+            console.log(`[Pregonero] Evento: ${eventCode} -> "${lines[index]}"`);
+            // Se manda SIEMPRE, aunque el jugador tenga los diálogos
+            // silenciados: silenciar es una preferencia de cada pantalla (la
+            // controla showBotSpeechBubble), y los espectadores que no los
+            // silenciaron igual tienen que verla.
+            socket.emit('bot-line', { event: eventCode, index: index });
+            showBotSpeechBubble(lines[index]);
+        }
+
+        // Espectador de una partida contra un bot: muestra la frase que eligió
+        // la pantalla del jugador (validando que exista en sus listas).
+        socket.on('bot-line', (data) => {
+            if (!currentBotId || isBotNarrator()) return;
+            const lines = botDialogueLines(data && data.event);
+            const index = data && data.index;
+            if (!Number.isInteger(index) || index < 0 || index >= lines.length) return;
+            console.log(`[Pregonero] (del jugador) Evento: ${data.event} -> "${lines[index]}"`);
+            showBotSpeechBubble(lines[index]);
+        });
 
         // Escuchar movimientos que vienen del servidor
         socket.on('move-received', (data) => {
@@ -5142,9 +5193,7 @@
                 // -- si nos estamos uniendo a una ya en curso como
                 // espectadores, no correspondería.
                 if (currentBotId && moveHistory.length === 0) {
-                    const line = pickBotDialogueLine(currentBotId, "INICIO_PARTIDA");
-                    console.log(`[Pregonero] Evento: INICIO_PARTIDA${line ? ' -> "' + line + '"' : ' (sin frase cargada todavía)'}`);
-                    if (line) showBotSpeechBubble(line);
+                    botSpeak("INICIO_PARTIDA");
                     // Si el humano eligió negras, el bot (blancas) abre la
                     // partida. Con blancas no pasa nada (le toca al humano), y
                     // un espectador nunca dispara jugadas del bot.
@@ -6269,10 +6318,8 @@
                 finalLoserName = (myColor === 'w') ? blackPlayerName : whitePlayerName;
             }
             announceGameEnd(t('opponentSurrendered', finalLoserName, winnerName), { allowRematch: true });
-            // Espectador de una partida contra un bot: el único que puede
-            // rendirse es el humano (los bots no se rinden), así que ganó el
-            // bot, y celebra igual que si hubiera ganado jugando.
-            showBotVictoryLine();
+            // (Espectador de una partida contra un bot: la frase de victoria
+            // del bot le llega desde la pantalla del jugador -- ver botSpeak.)
         });
 
         // El servidor manda esto cada vez que el turno REALMENTE pasa de

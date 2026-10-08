@@ -2321,7 +2321,7 @@
             <div class="lobby-header-group">
                 <img src="assets/logo.png" alt="Damas Argentinas Online" class="site-logo-salon">
                 <h2 data-i18n="salonTitle">Salón de los Caballeros</h2>
-                <p data-i18n="salonSubtitle">Seleccione un oponente o espere un desafío...</p>
+                <p data-i18n="salonSubtitle">Seleccioná un oponente o esperá un desafío...</p>
             </div>
             <p class="bots-hint-text" data-i18n="botsHintText">¿No hay otros humanos para jugar? Entrá a la Sala de Armas y jugá
                 contra uno de nuestros bots ¡Tenemos para todos los niveles!</p>
@@ -3210,6 +3210,11 @@
                 copyChronicleBtn: "📋 Copiar Crónica",
                 saveChronicleBtn: "💾 Guardar Crónica",
                 savePositionBtn: "📸 Guardar Posición",
+                chronicleFilePrefix: "cronica",
+                chronicleFileWhiteLetter: "B",
+                chronicleFileBlackLetter: "N",
+                chronicleFileWhiteName: "Blancas",
+                chronicleFileBlackName: "Negras",
                 // Palabras clave del archivo de posición: mismas que en el
                 // Laboratorio, para que el archivo se pueda cargar allá.
                 posKwWhite: "blancas",
@@ -3229,7 +3234,7 @@
 
                 // --- Salón de los Caballeros ---
                 salonTitle: "Salón de los Caballeros",
-                salonSubtitle: "Seleccione un oponente o espere un desafío...",
+                salonSubtitle: "Seleccioná un oponente o esperá un desafío...",
                 botsHintText: "¿No hay otros humanos para jugar? Entrá a la Sala de Armas y jugá contra uno de nuestros bots ¡Tenemos para todos los niveles!",
                 playBotBtn: "🗡️ Jugar contra un Bot",
                 caballerosLibres: "Caballeros Libres:",
@@ -3368,6 +3373,11 @@
                 copyChronicleBtn: "📋 Copy Chronicle",
                 saveChronicleBtn: "💾 Save Chronicle",
                 savePositionBtn: "📸 Save Position",
+                chronicleFilePrefix: "chronicle",
+                chronicleFileWhiteLetter: "W",
+                chronicleFileBlackLetter: "B",
+                chronicleFileWhiteName: "White",
+                chronicleFileBlackName: "Black",
                 posKwWhite: "white",
                 posKwBlack: "black",
                 posKwTurn: "turn",
@@ -4019,7 +4029,7 @@
         // limpiados, para que la descarga nunca falle por el apodo que
         // alguien haya elegido.
         function sanitizeForFilename(str) {
-            return (str || '').replace(/[\/\\:*?"<>|]/g, '').trim();
+            return (str || '').replace(/[\/\\:*?"<>|]/g, '').replace(/\s+/g, ' ').trim();
         }
 
         // Guarda la posición que hay ahora en el tablero, con el MISMO formato
@@ -4125,12 +4135,24 @@
             }
         }
 
+        // Nombre del archivo, a pedido de Otto: SIEMPRE blancas primero (la
+        // convención de los registros de partidas), aunque las blancas sean un
+        // bot -- así, quien sea que lo guarde (cualquiera de los dos jugadores
+        // o un espectador), el archivo de la misma partida se llama igual --,
+        // con la letra de cada color detrás de cada nombre (porque casi nadie
+        // conoce esa convención), separado con espacios. Por ejemplo:
+        //     cronica Leonor de Aquitapia B vs Otto N 2026-10-08.txt
+        // (en inglés: "chronicle ... W vs ... B ..."). La fecha es la LOCAL:
+        // antes salía en hora universal, y en Argentina una partida guardada
+        // después de las 21 hs quedaba con la fecha del día siguiente.
         function saveChronicle() {
             const texto = buildChronicleText();
-            const fecha = new Date().toISOString().slice(0, 10); // AAAA-MM-DD
-            const blanco = sanitizeForFilename(whitePlayerName) || 'Blancas';
-            const negro = sanitizeForFilename(blackPlayerName) || 'Negras';
-            downloadTextFile(`cronica_${blanco}_vs_${negro}_${fecha}.txt`, texto);
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const fecha = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+            const blanco = sanitizeForFilename(whitePlayerName) || t('chronicleFileWhiteName');
+            const negro = sanitizeForFilename(blackPlayerName) || t('chronicleFileBlackName');
+            downloadTextFile(`${t('chronicleFilePrefix')} ${blanco} ${t('chronicleFileWhiteLetter')} vs ${negro} ${t('chronicleFileBlackLetter')} ${fecha}.txt`, texto);
         }
 
         function renderBoard() {

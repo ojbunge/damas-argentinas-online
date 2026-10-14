@@ -585,11 +585,12 @@ io.on('connection', (socket) => {
             ownerId: socket.id,
             board: Array.from({ length: 10 }, () => Array(10).fill(null)),
             // "chronicle" (marco violeta: el dueño está mostrando una
-            // crónica tal cual pasó) o "hypothetical" (marco verde) --
+            // crónica tal cual pasó), "recording" (marco rojo: está generando
+            // una crónica con la filmadora) o "hypothetical" (marco verde) --
             // se le pasa a los espectadores para que vean el mismo color.
             frameMode: "hypothetical",
-            // La huella de la última jugada de la crónica que está mirando el
-            // dueño ({from:{row,col}, to:{row,col}}), o null.
+            // La huella de la última jugada de la crónica que está mirando o
+            // grabando el dueño ({from:{row,col}, to:{row,col}}), o null.
             lastMove: null,
             // ¿El dueño tiene el tablero rotado 180°? (los espectadores lo ven igual)
             rotated: false,
@@ -624,13 +625,13 @@ io.on('connection', (socket) => {
         if (!lab) return;
 
         lab.board = data.board;
-        // Lista blanca: solo se acepta uno de los dos valores conocidos,
-        // nunca se guarda a ciegas lo que mande el cliente.
-        lab.frameMode = (data.frameMode === "chronicle") ? "chronicle" : "hypothetical";
-        // La huella solo tiene sentido en territorio violeta, y solo se
+        // Lista blanca: solo se acepta uno de los valores conocidos, nunca
+        // se guarda a ciegas lo que mande el cliente.
+        lab.frameMode = (data.frameMode === "chronicle" || data.frameMode === "recording") ? data.frameMode : "hypothetical";
+        // La huella solo tiene sentido en violeta y en rojo, y solo se
         // acepta si son casillas reales del tablero (nunca se guarda a
         // ciegas lo que mande el cliente).
-        lab.lastMove = (lab.frameMode === "chronicle") ? sanitizeLastMove(data.lastMove) : null;
+        lab.lastMove = (lab.frameMode !== "hypothetical") ? sanitizeLastMove(data.lastMove) : null;
         // Lista blanca: solo true cuenta como rotado.
         lab.rotated = (data.rotated === true);
         socket.to(user.room).emit('lab-board-update', { board: lab.board, frameMode: lab.frameMode, lastMove: lab.lastMove, rotated: lab.rotated });

@@ -178,6 +178,15 @@
             background-color: #3F114D;
         }
 
+        /* Mientras se genera una crónica (la filmadora 🎥 prendida): ROJO
+           oscuro, el color universal de "grabando". Verde = estás
+           inventando; violeta = estás viendo lo que pasó; rojo = estás
+           registrando lo que pasa. Mismo brillo que los otros dos. */
+        #board.recording-territory {
+            border-color: #5a1212;
+            background-color: #5a1212;
+        }
+
         .coord-label {
             position: absolute;
             display: flex;
@@ -393,7 +402,9 @@
            SIEMPRE -- apagado, con la letra más apagada, como simple
            referencia; prendido, en amarillo. Así el recuadro nunca
            cambia de alto según el estado (nada sube ni baja). */
-        #turnTrackerBtn {
+        #turnTrackerPanel {
+            position: relative;
+            box-sizing: border-box;
             flex: 0 1 auto;
             min-width: 190px;
             display: flex;
@@ -415,31 +426,99 @@
             transition: box-shadow 0.12s, transform 0.12s;
         }
 
-        #turnTrackerBtn:hover {
+        #turnTrackerPanel:hover {
             filter: brightness(1.1);
         }
 
-        #turnTrackerBtn.on {
+        /* El botón grande (prender/apagar): invisible, cubre todo el
+           recuadro. Los textos van por encima, sin capturar clics. */
+        #turnTrackerBtn {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            border: none;
+            border-radius: inherit;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        #turnTrackerBtn:focus-visible {
+            outline: 2px solid #f1c40f;
+            outline-offset: 2px;
+        }
+
+        #turnTrackerPanel .tt-label-line,
+        #turnTrackerPanel .tt-turn-line {
+            position: relative;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* El botoncito ⇄ (cambiar turno), al final de la línea del turno.
+           Toma el color de la línea: apagado con el control en NO, amarillo
+           con el control en SÍ (funciona en los dos casos). */
+        #swapTurnBtn {
+            position: relative;
+            pointer-events: auto;
+            width: 24px;
+            height: 20px;
+            margin-left: 2px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            line-height: 1;
+            font-family: 'Segoe UI Symbol', 'Segoe UI', Tahoma, sans-serif;
+            color: inherit;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid currentColor;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Zona de toque un poco más grande que el botón (invisible): en el
+           celular, un toque que le erra por poco al ⇄ no termina prendiendo o
+           apagando el Control de Turnos, que ocupa todo el resto del recuadro. */
+        #swapTurnBtn::before {
+            content: '';
+            position: absolute;
+            inset: -7px -6px;
+        }
+
+        #swapTurnBtn:hover:not(:disabled) {
+            background: rgba(241, 196, 15, 0.22);
+        }
+
+        #swapTurnBtn:disabled {
+            opacity: 0.35;
+            cursor: default;
+        }
+
+        #turnTrackerPanel.on {
             border-color: #f1c40f;
             background: linear-gradient(180deg, rgba(18, 14, 8, 0.95), rgba(42, 33, 20, 0.95));
             box-shadow: inset 0 3px 9px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(241, 196, 15, 0.22);
             transform: translateY(1px);
         }
 
-        #turnTrackerBtn .tt-state {
+        #turnTrackerPanel .tt-state {
             font-weight: 700;
         }
 
         /* La línea del turno: apagada (marrón claro) con el control en
            NO, amarilla con el control en SÍ. */
-        #turnTrackerBtn .tt-turn-line {
+        #turnTrackerPanel .tt-turn-line {
             color: #a8916a;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
 
-        #turnTrackerBtn.on .tt-turn-line {
+        #turnTrackerPanel.on .tt-turn-line {
             color: #f1c40f;
         }
 
@@ -461,7 +540,7 @@
             border: 1px solid #999;
         }
 
-        #turnTrackerBtn:not(.on) .turn-dot {
+        #turnTrackerPanel:not(.on) .turn-dot {
             opacity: 0.6;
         }
 
@@ -637,12 +716,23 @@
                 height: 18px;
             }
 
-            #turnTrackerBtn {
+            #turnTrackerPanel {
                 flex: 1 1 auto;
                 min-width: 0;
                 padding: 4px 8px;
                 font-size: 11.5px;
                 gap: 4px;
+            }
+
+            #turnTrackerPanel .tt-turn-line {
+                gap: 4px;
+            }
+
+            #swapTurnBtn {
+                width: 20px;
+                height: 17px;
+                margin-left: 0;
+                font-size: 13px;
             }
 
             .turn-dot {
@@ -697,9 +787,45 @@
             font-size: 12px;
         }
 
-        #loadChronicleBtn {
-            width: 100%;
+        /* Grabando, el cuadro de texto muestra la crónica en vivo y no se
+           puede editar (sí seleccionar y copiar): con un tinte rojizo, el
+           color de "grabando". */
+        #chronicleTextInput[readonly] {
+            background: rgba(255, 228, 228, 0.95);
+            cursor: default;
+        }
+
+        #chronicleMainRow {
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
             margin-top: 6px;
+        }
+
+        #loadChronicleBtn {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        /* La filmadora: botón cuadrado de ícono, con el tamaño estándar de
+           los botones de ícono del sitio (37 de ancho, emoji de 22px), y
+           del mismo alto que el botón de al lado. Prendida (grabando):
+           hundida y en rojo. */
+        #recordChronicleBtn {
+            flex: 0 0 37px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        #recordChronicleBtn.on {
+            background: linear-gradient(180deg, #b23b3b, #6e1717);
+            border-color: #3a0d0d;
+            box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7);
+            transform: translateY(1px);
         }
 
         /* Las dos caras del botón, superpuestas en la misma celda: la
@@ -929,6 +1055,29 @@
             box-shadow: inset 3px 0 0 #7ed6a2;
         }
 
+        /* Grabando: la jugada actual (la última anotada) en ROJO, como el
+           marco. La lista es solo una pantalla que se va escribiendo: no se
+           recorre (para volver atrás está Deshacer). */
+        #chronicleMoveList.recording .chronicle-move-entry.current {
+            background: rgba(165, 38, 38, 0.88);
+            box-shadow: inset 3px 0 0 #ff9a9a;
+        }
+
+        #chronicleMoveList.recording .chronicle-move-entry {
+            cursor: default;
+        }
+
+        #chronicleMoveList.recording .chronicle-move-entry:not(.current):hover {
+            background: transparent;
+        }
+
+        /* En una crónica a la que se le grabó un final nuevo (enganche):
+           dónde termina la parte original y empieza la nueva. */
+        .chronicle-splice-divider {
+            border-top: 2px dashed rgba(241, 196, 15, 0.6);
+            margin: 4px 6px;
+        }
+
         .chronicle-empty-hint {
             color: #a8916a;
             font-style: italic;
@@ -1007,7 +1156,16 @@
 
             #loadChronicleBtn {
                 font-size: 12px;
-                padding: 6px 4px;
+                padding: 6px 3px;
+            }
+
+            #chronicleMainRow {
+                gap: 4px;
+            }
+
+            #recordChronicleBtn {
+                flex-basis: 32px;
+                font-size: 19px;
             }
 
             #chronicleMoveList {
@@ -1599,17 +1757,25 @@
                     <button id="deshacerBtn" class="lab-btn undo-btn" disabled data-i18n="deshacerBtn">↩️ Deshacer</button>
                 </div>
 
-                <!-- Todo el recuadro es un solo botón (ver toggleTurnTracker). Las
-                     partes fijas se traducen solas por data-i18n; el estado
-                     (SÍ/NO) y el turno los escribe renderTurnTracker(). -->
-                <button id="turnTrackerBtn" type="button" aria-pressed="false" onclick="toggleTurnTracker()"
-                    data-i18n-title="turnTrackerTitle" title="Activar o desactivar el control de turnos">
-                    <span class="tt-label-line"><span data-i18n="turnTrackerLabel">Control de turnos:</span>
+                <!-- El Control de Turnos es un panel con DOS botones (un botón
+                     no puede ir adentro de otro): el grande, invisible, cubre
+                     todo el recuadro y prende/apaga el control (ver
+                     toggleTurnTracker); el chiquito ⇄, al lado del turno, lo
+                     cambia a mano (ver swapTurn). Los textos van por encima
+                     del botón grande pero sin capturar los clics: tocar
+                     cualquier parte del recuadro (salvo ⇄) prende/apaga, como
+                     siempre. Las partes fijas se traducen solas por data-i18n;
+                     el estado (SÍ/NO) y el turno los escribe renderTurnTracker(). -->
+                <div id="turnTrackerPanel">
+                    <button id="turnTrackerBtn" type="button" aria-pressed="false" aria-labelledby="turnTrackerLabelLine" onclick="toggleTurnTracker()"
+                        data-i18n-title="turnTrackerTitle" title="Activar o desactivar el control de turnos"></button>
+                    <span class="tt-label-line" id="turnTrackerLabelLine"><span data-i18n="turnTrackerLabel">Control de turnos:</span>
                         <span class="tt-state" id="turnTrackerState">NO</span></span>
                     <span class="tt-turn-line"><span data-i18n="turnLabel">Turno:</span>
                         <span id="turnTrackerTurnName">Blancas</span>
-                        <span id="turnTrackerDot" class="turn-dot white"></span></span>
-                </button>
+                        <span id="turnTrackerDot" class="turn-dot white"></span>
+                        <button id="swapTurnBtn" type="button" onclick="swapTurn()" data-i18n-title="swapTurnTitle" title="Cambiar turno">⇄</button></span>
+                </div>
             </div>
 
             <div id="board"></div>
@@ -1649,12 +1815,21 @@
                      mueve al cambiar de cara -- en cualquier ancho y en los
                      dos idiomas. El data-i18n va en cada texto, NO en el
                      botón (si no, al traducir se pisaría todo su contenido). -->
+                <!-- A su derecha, la filmadora 🎥: genera una crónica a medida
+                     que se mueven las fichas (ver toggleRecording). Van juntos
+                     porque los dos deciden qué crónica ocupa la columna, y son
+                     incompatibles: mientras se graba, el de la izquierda se
+                     apaga. -->
+                <div id="chronicleMainRow">
                 <button id="loadChronicleBtn" class="lab-btn" onclick="onChronicleMainButton()">
                     <span class="btn-face-stack">
                         <span class="btn-face face-play" data-i18n="playChronicleBtn">▶️ Reproducir Crónica</span>
                         <span class="btn-face face-clear" data-i18n="clearChronicleBtn">🧹 Borrar Crónica</span>
                     </span>
                 </button>
+                <button id="recordChronicleBtn" type="button" class="lab-btn" aria-pressed="false" onclick="toggleRecording()" disabled
+                    title="Generar crónica">🎥</button>
+                </div>
                 <div id="chronicleErrorMsg"></div>
             </div>
             <div id="chroniclePlaybackControls">
@@ -2125,6 +2300,7 @@
                 chronicleErrRead: "No se pudo leer el archivo.",
                 chronicaTitle: "📜 Crónica",
                 chronicleInitialPositionLabel: "0. Posición inicial",
+                chronicleStartPositionLabel: "0. Posición de partida",
                 chronicleFastBackTitle: "Retroceder 10 jugadas",
                 chronicleBackTitle: "Retroceder 1 jugada",
                 chronicleGoToTitle: "Ir a la jugada...",
@@ -2132,7 +2308,11 @@
                 chronicleFastForwardTitle: "Avanzar 10 jugadas",
                 chronicleErrEmpty: "Pegá el texto de una crónica antes de cargarla.",
                 chronicleErrBadFormat: "La línea {0} no tiene el formato de una crónica válida: \"{1}\"",
-                chronicleErrNotFromStart: "El Reproductor de Crónicas necesita la partida completa desde la jugada 1.",
+                chronicleErrNotFromStart: "La crónica tiene que empezar en la jugada 1. Si no arranca en la posición inicial, arriba de las jugadas tiene que ir su posición de partida (las líneas \"blancas:\", \"negras:\" y \"turno:\", igual que en un archivo de posición).",
+                chronicleErrNumberingStart: "La numeración de las jugadas tiene que empezar en 1.",
+                chronicleErrBadStartPosition: "La posición de partida de la crónica no es válida: {0}",
+                chronicleErrOnlyPosition: "Esto es una posición, no una crónica: no tiene jugadas. Para cargarla, usá 🗺️ Cargar Posición.",
+                chronicleErrChainMustContinue: "La jugada {0} no es válida: la ficha de {1} venía capturando en cadena y tenía que seguir capturando.",
                 chronicleErrNoPiece: "La jugada {0} no es válida: no hay ninguna ficha en {1} en ese momento de la partida.",
                 chronicleErrWrongTurn: "La jugada {0} no es válida: no le tocaba mover a esa ficha en ese momento.",
                 chronicleErrMustCaptureElsewhere: "La jugada {0} no es válida: en ese momento había una captura obligatoria con otra ficha.",
@@ -2140,6 +2320,21 @@
                 chronicleErrCaptureMark: "La jugada {0} no es válida: la marca de captura (✕) no coincide con lo que realmente pasa ahí.",
                 chronicleErrCrownMark: "La jugada {0} no es válida: la marca de coronación (♛) no coincide con lo que realmente pasa ahí.",
                 chronicleErrGeneric: "Esta crónica no es válida.",
+                // El generador de crónicas (la filmadora 🎥) y el ⇄.
+                recordChronicleTitle: "Generar crónica",
+                recordChronicleStopTitle: "Dejar de generar la crónica",
+                recordBlockedTurnControlOff: "Generar crónica (primero prendé el Control de Turnos)",
+                recordBlockedMidChain: "Generar crónica (primero terminá la captura en cadena)",
+                recordBlockedOneColor: "Generar crónica (hacen falta fichas de los dos colores)",
+                recordBlockedNoMoves: "Generar crónica (al que le toca mover no le queda ninguna jugada)",
+                recordBlockedChainPosition: "Generar crónica (desde la mitad de una captura en cadena no se puede: avanzá hasta que termine)",
+                recordBlockedTooLong: "Generar crónica (la crónica ya llegó al máximo de 250 jugadas)",
+                recordConfirmReplace: "La crónica cargada se va a reemplazar por la que vas a generar. ¿Continuar?",
+                recordConfirmDiscard: "Se van a descartar las jugadas {0} a {1} de la crónica cargada. ¿Continuar?",
+                recordConfirmDiscardOne: "Se va a descartar la jugada {0} de la crónica cargada. ¿Continuar?",
+                recordConfirmLoadChronicle: "La crónica que estás generando se va a reemplazar por la del archivo. ¿Continuar?",
+                chronicleRecordingPlaceholder: "Acá va apareciendo la crónica a medida que se juega...",
+                swapTurnTitle: "Cambiar turno",
             },
             en: {
                 salirLobbyBtn: "🚪 Leave to Lobby",
@@ -2220,7 +2415,8 @@
                 chronicleErrTooBig: "The file is too large to be a chronicle (the maximum is about 250 moves).",
                 chronicleErrRead: "The file couldn't be read.",
                 chronicaTitle: "📜 Chronicle",
-                chronicleInitialPositionLabel: "0. Starting position",
+                chronicleInitialPositionLabel: "0. Initial position",
+                chronicleStartPositionLabel: "0. Starting position",
                 chronicleFastBackTitle: "Go back 10 moves",
                 chronicleBackTitle: "Go back 1 move",
                 chronicleGoToTitle: "Go to move...",
@@ -2228,7 +2424,11 @@
                 chronicleFastForwardTitle: "Go forward 10 moves",
                 chronicleErrEmpty: "Paste a chronicle's text before loading it.",
                 chronicleErrBadFormat: "Line {0} isn't in a valid chronicle format: \"{1}\"",
-                chronicleErrNotFromStart: "The Chronicle Player needs the full game starting from move 1.",
+                chronicleErrNotFromStart: "The chronicle must start at move 1. If it doesn't start from the initial position, its starting position must go above the moves (the \"white:\", \"black:\" and \"turn:\" lines, just like in a position file).",
+                chronicleErrNumberingStart: "The move numbering must start at 1.",
+                chronicleErrBadStartPosition: "The chronicle's starting position isn't valid: {0}",
+                chronicleErrOnlyPosition: "This is a position, not a chronicle: it has no moves. To load it, use 🗺️ Load Position.",
+                chronicleErrChainMustContinue: "Move {0} isn't valid: the piece on {1} was in the middle of a capture chain and had to keep capturing.",
                 chronicleErrNoPiece: "Move {0} isn't valid: there's no piece on {1} at that point in the game.",
                 chronicleErrWrongTurn: "Move {0} isn't valid: it wasn't that piece's turn to move at that point.",
                 chronicleErrMustCaptureElsewhere: "Move {0} isn't valid: there was a mandatory capture with another piece at that point.",
@@ -2236,6 +2436,20 @@
                 chronicleErrCaptureMark: "Move {0} isn't valid: the capture mark (✕) doesn't match what actually happens there.",
                 chronicleErrCrownMark: "Move {0} isn't valid: the crowning mark (♛) doesn't match what actually happens there.",
                 chronicleErrGeneric: "This chronicle isn't valid.",
+                recordChronicleTitle: "Generate chronicle",
+                recordChronicleStopTitle: "Stop generating the chronicle",
+                recordBlockedTurnControlOff: "Generate chronicle (turn on the turn tracker first)",
+                recordBlockedMidChain: "Generate chronicle (finish the capture chain first)",
+                recordBlockedOneColor: "Generate chronicle (pieces of both colors are needed)",
+                recordBlockedNoMoves: "Generate chronicle (the side to move has no moves left)",
+                recordBlockedChainPosition: "Generate chronicle (not possible from the middle of a capture chain: go forward until it ends)",
+                recordBlockedTooLong: "Generate chronicle (the chronicle has already reached the maximum of 250 moves)",
+                recordConfirmReplace: "The loaded chronicle will be replaced by the one you're about to generate. Continue?",
+                recordConfirmDiscard: "Moves {0} to {1} of the loaded chronicle will be discarded. Continue?",
+                recordConfirmDiscardOne: "Move {0} of the loaded chronicle will be discarded. Continue?",
+                recordConfirmLoadChronicle: "The chronicle you're generating will be replaced by the one in the file. Continue?",
+                chronicleRecordingPlaceholder: "The chronicle shows up here as you play...",
+                swapTurnTitle: "Switch turn",
             }
         };
 
@@ -2295,6 +2509,10 @@
             // se declaren las variables del estado (mismo riesgo de
             // "zona muerta temporal" que el comentario de abajo).
             renderTurnTracker();
+            // Lo mismo con la crónica que se está generando (las palabras de
+            // su posición de partida) y los tooltips de la filmadora.
+            updateLiveChronicleText();
+            updateChronicleControlsEnabled();
         }
 
         // Se aplica ya mismo (no hace falta esperar a ningún evento de
@@ -2323,17 +2541,18 @@
         let pieceMustContinueCapturing = null;
         let selectedPieceType = 'w'; // 'w' | 'W' | 'b' | 'B' -- mismo alfabeto que el propio tablero
 
-        // Hasta 4 fotos del tablero, para el botón de Deshacer. Se
-        // blanquea por completo (undoStack = []) apenas el jugador edita
-        // el tablero a mano (clic derecho, Posición inicial, Remover
-        // todo) -- Otto fue explícito en que estas dos cosas no pueden
-        // convivir: deshacer un movimiento hacia una foto vieja, después
-        // de que el jugador ya reacomodó fichas a mano, podría intentar
-        // devolver una ficha a una casilla que ahora ocupa otra.
+        // Las fotos del tablero para el botón de Deshacer (ver DESHACER más
+        // abajo). Se blanquean por completo (undoStack = []) con Posición
+        // inicial, Remover todo y Cargar Posición, al navegar la crónica, al
+        // prender la filmadora (Deshacer no va más atrás de donde empezó la
+        // grabación) y al apagarla, si se anotó alguna jugada.
         let undoStack = [];
         // Cuántos pasos guarda Deshacer. Cada paso ocupa unos pocos cientos de
-        // bytes: 200 alcanzan para deshacer una partida entera, sin costo.
-        const MAX_UNDO_STEPS = 200;
+        // bytes: 250 alcanzan para deshacer una partida entera, sin costo -- y
+        // son las mismas que el máximo de una crónica generada, así que
+        // grabando, Deshacer siempre puede volver hasta donde se prendió la
+        // filmadora.
+        const MAX_UNDO_STEPS = 250;
 
         const MAX_PIECES_PER_COLOR = 15;
         const MAX_KINGS_PER_COLOR = 7;
@@ -2351,6 +2570,16 @@
         let chronicleTurns = null;
         let chronicleMoveList = null;
         let chronicleCurrentIndex = 0;
+        // ¿La crónica cargada arranca en la posición inicial (las 15 fichas
+        // de cada lado, mueven blancas)? Si no, es una crónica "no inicial":
+        // arranca en su propia posición de partida (la que trae arriba de las
+        // jugadas), su jugada 0 se llama "Posición de partida", y al
+        // guardarla se escribe esa posición arriba de las jugadas.
+        let chronicleStartIsInitial = true;
+        // Por cada posición de la crónica (mismo índice que chronicleBoards):
+        // si está a MITAD de una captura en cadena, la ficha que tiene que
+        // seguir capturando ({row, col}); si no, null.
+        let chronicleChains = null;
         // ¿El tablero se apartó de la jugada resaltada? Pasa a true con
         // CUALQUIER edición manual (mover, colocar/sacar fichas,
         // Posición inicial, Remover todo) y vuelve a false con
@@ -2358,6 +2587,25 @@
         // del marco y del resaltado: violeta si hay crónica cargada y
         // NO hubo desvío, verde en todos los demás casos.
         let chronicleDeviated = false;
+
+        // ¿La filmadora 🎥 está prendida (generando una crónica)? Ver "EL
+        // GENERADOR DE CRÓNICAS" más abajo.
+        let isRecording = false;
+        // ¿La grabación en curso es un enganche (sigue una crónica cargada
+        // desde una de sus jugadas) o arrancó de cero?
+        let recordingIsSplice = false;
+        // Cuántas jugadas tenía la crónica al prender la filmadora (0 si
+        // arrancó de cero): Deshacer no puede ir más atrás.
+        let recordingBaseLength = 0;
+        // Cómo estaba todo antes de prender la filmadora, por si se apaga
+        // sin haber anotado ninguna jugada (ver stopRecording).
+        let recordingRestore = null;
+        // Las jugadas después de las cuales se le grabó a la crónica un final
+        // nuevo (enganche): ahí la lista dibuja una línea divisoria.
+        let chronicleSplices = [];
+        // El máximo de jugadas de una crónica generada (el mismo que el de
+        // los archivos de crónica).
+        const CHRONICLE_MAX_MOVES = 250;
 
         // ============================================================
         //  EL CONTROL DE TURNOS
@@ -2462,13 +2710,50 @@
         // desde distintos editores de texto.
         const CHRONICLE_LINE_RE = /^\s*(\d+)\.\s*([a-j](?:10|[1-9]))\s*→\s*([a-j](?:10|[1-9]))\s*((?:[✕♛]\s*)*)$/;
 
+        // ¿Esta línea es parte de una posición ("blancas: ...", "negras: ...",
+        // "turno: ...", en cualquiera de los dos idiomas)?
+        function isPositionHeaderLine(line) {
+            const m = /^([A-Za-zÁÉÍÓÚáéíóú]+)\s*:/.exec(line);
+            if (!m) return false;
+            const key = m[1].toLowerCase();
+            return Object.keys(POS_KEYWORDS).some(k => POS_KEYWORDS[k].includes(key));
+        }
+
+        // Una crónica puede traer ARRIBA de las jugadas su posición de partida,
+        // con el mismo formato exacto de un archivo de posición (Cargar
+        // Posición): es una crónica "no inicial", que no arranca en la
+        // posición inicial. Sin esas líneas, arranca en la posición inicial,
+        // como todas las de la Arena -- y como todas las crónicas que
+        // existían hasta ahora, que se siguen cargando igual. Ejemplo:
+        //     blancas: a1-c1-e3-d4♛
+        //     negras: b6-f8-h10
+        //     turno: negras
+        //     1. b6 → c5
+        //     2. d4 → b6 ✕
         function parseChronicleText(text) {
-            const rawLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            // Los selectores de variante que a veces se pegan detrás del ♛
+            // (los agregan algunos teclados y chatbots) no cuentan.
+            const rawLines = text.replace(/[\uFE0E\uFE0F]/g, '').split('\n').map(l => l.trim()).filter(l => l.length > 0);
             if (rawLines.length === 0) {
                 return { ok: false, error: 'EMPTY' };
             }
+
+            // Las líneas de posición, si las hay, van todas arriba de todo.
+            let headerCount = 0;
+            while (headerCount < rawLines.length && isPositionHeaderLine(rawLines[headerCount])) headerCount++;
+            let start = null; // null = arranca en la posición inicial
+            if (headerCount > 0) {
+                // Mismas validaciones que Cargar Posición: casillas oscuras,
+                // límites de fichas y damas, sin casillas repetidas,
+                // coronación automática; sin línea de turno, mueven blancas.
+                const pos = parsePositionText(rawLines.slice(0, headerCount).join('\n'));
+                if (!pos.ok) return { ok: false, error: 'BAD_START_POSITION', positionError: pos };
+                if (headerCount === rawLines.length) return { ok: false, error: 'ONLY_POSITION' };
+                start = { board: pos.board, turn: pos.turn };
+            }
+
             const parsed = [];
-            for (let i = 0; i < rawLines.length; i++) {
+            for (let i = headerCount; i < rawLines.length; i++) {
                 const line = rawLines[i];
                 const m = CHRONICLE_LINE_RE.exec(line);
                 if (!m) {
@@ -2485,34 +2770,47 @@
                     fromLabel: m[2], toLabel: m[3]
                 });
             }
-            // A pedido de Otto: el Reproductor de Crónicas exige la
-            // partida completa desde la jugada 1 -- no hay forma de
-            // validar congruencia posicional a mitad de partida sin
-            // conocer todo lo que pasó antes, y permitir fragmentos
-            // abriría una complejidad (¿coincide la posición dada con la
-            // crónica dada?) que decidimos explícitamente no perseguir.
+            // La numeración arranca siempre en 1: desde la posición inicial
+            // o desde la posición de partida que trae arriba. Un pedazo de
+            // partida sin su posición de partida no se puede validar (no
+            // hay forma de saber cómo estaba el tablero), así que el aviso
+            // explica cómo agregársela.
             if (parsed[0].declaredNumber !== 1) {
-                return { ok: false, error: 'DOES_NOT_START_AT_1' };
+                return { ok: false, error: 'DOES_NOT_START_AT_1', hasHeader: headerCount > 0 };
             }
-            return { ok: true, moves: parsed };
+            return { ok: true, moves: parsed, start };
         }
 
-        // Reproduce la crónica ya parseada, jugada por jugada, desde la
-        // posición inicial estándar. Devuelve un tablero por cada jugada
-        // (índice 0 = posición inicial) si todo es congruente, o un
-        // error preciso apuntando a la jugada exacta y el motivo.
-        function replayChronicle(parsedMoves) {
-            let simBoard = createInitialLabBoard();
-            let currentPlayer = 'w'; // blancas siempre arranca
+        // Reproduce la crónica ya parseada, jugada por jugada, desde su
+        // posición de partida (la posición inicial estándar, salvo que la
+        // crónica traiga otra arriba de las jugadas). Devuelve un tablero
+        // por cada jugada (índice 0 = posición de partida) si todo es
+        // congruente, o un error preciso apuntando a la jugada exacta y el
+        // motivo.
+        function replayChronicle(parsedMoves, startBoard = createInitialLabBoard(), startTurn = 'w') {
+            let simBoard = cloneBoard(startBoard);
+            let currentPlayer = startTurn;
             const boards = [cloneBoard(simBoard)];
             // De quién es el turno en cada posición (mismo índice que
             // boards) -- lo usa el Control de Turnos al navegar. En medio
             // de una captura múltiple, sigue siendo del mismo jugador.
-            const turns = ['w'];
+            const turns = [currentPlayer];
+            // Si la jugada anterior dejó una captura en cadena a medias, la
+            // ficha que tiene que seguir capturando (y en qué posiciones
+            // pasa eso, mismo índice que boards).
+            let chainPiece = null;
+            const chains = [null];
 
             for (let i = 0; i < parsedMoves.length; i++) {
                 const mv = parsedMoves[i];
                 const moveNum = i + 1;
+
+                // A mitad de una cadena, solo puede seguir LA MISMA ficha.
+                if (chainPiece && (mv.from.row !== chainPiece.row || mv.from.col !== chainPiece.col)) {
+                    return { ok: false, error: 'CHAIN_MUST_CONTINUE', moveNum, mv,
+                             chainLabel: String.fromCharCode(97 + chainPiece.col) + (10 - chainPiece.row) };
+                }
+
                 const piece = simBoard[mv.from.row][mv.from.col];
 
                 if (!piece) {
@@ -2522,23 +2820,39 @@
                     return { ok: false, error: 'WRONG_TURN', moveNum, mv };
                 }
 
-                const forced = getGlobalBestMoves(currentPlayer, simBoard);
                 let chosenMoveObj = null;
 
-                if (forced.length > 0) {
-                    const entry = forced.find(f => f.row === mv.from.row && f.col === mv.from.col);
-                    if (!entry) {
-                        return { ok: false, error: 'MUST_CAPTURE_ELSEWHERE', moveNum, mv };
-                    }
-                    chosenMoveObj = entry.moves.find(m => m.row === mv.to.row && m.col === mv.to.col);
+                if (chainPiece) {
+                    // Continuación de una cadena: los saltos válidos son los
+                    // de ESA ficha que siguen la secuencia de máxima captura
+                    // -- y no "las mejores capturas de todo el tablero", que
+                    // es lo que se usaba antes: si en ese momento otra ficha
+                    // tenía una captura más larga, una cadena perfectamente
+                    // legal se rechazaba como inválida.
+                    const isKing = (piece === piece.toUpperCase());
+                    const continuations = getBestCaptureSequences(mv.from.row, mv.from.col, simBoard, isKing).sequences;
+                    chosenMoveObj = continuations.find(m => m.row === mv.to.row && m.col === mv.to.col);
                     if (!chosenMoveObj) {
                         return { ok: false, error: 'ILLEGAL_CAPTURE_CHOICE', moveNum, mv };
                     }
                 } else {
-                    const legal = getLegalMoves(mv.from.row, mv.from.col, simBoard);
-                    chosenMoveObj = legal.find(m => m.row === mv.to.row && m.col === mv.to.col);
-                    if (!chosenMoveObj) {
-                        return { ok: false, error: 'ILLEGAL_MOVE', moveNum, mv };
+                    const forced = getGlobalBestMoves(currentPlayer, simBoard);
+
+                    if (forced.length > 0) {
+                        const entry = forced.find(f => f.row === mv.from.row && f.col === mv.from.col);
+                        if (!entry) {
+                            return { ok: false, error: 'MUST_CAPTURE_ELSEWHERE', moveNum, mv };
+                        }
+                        chosenMoveObj = entry.moves.find(m => m.row === mv.to.row && m.col === mv.to.col);
+                        if (!chosenMoveObj) {
+                            return { ok: false, error: 'ILLEGAL_CAPTURE_CHOICE', moveNum, mv };
+                        }
+                    } else {
+                        const legal = getLegalMoves(mv.from.row, mv.from.col, simBoard);
+                        chosenMoveObj = legal.find(m => m.row === mv.to.row && m.col === mv.to.col);
+                        if (!chosenMoveObj) {
+                            return { ok: false, error: 'ILLEGAL_MOVE', moveNum, mv };
+                        }
                     }
                 }
 
@@ -2572,17 +2886,22 @@
                 if (!samePlayerContinues) {
                     currentPlayer = (currentPlayer === 'w') ? 'b' : 'w';
                 }
+                chainPiece = samePlayerContinues ? { row: mv.to.row, col: mv.to.col } : null;
                 turns.push(currentPlayer);
+                chains.push(chainPiece);
             }
 
-            return { ok: true, boards, turns };
+            return { ok: true, boards, turns, chains };
         }
 
         function chronicleErrorMessage(result) {
             switch (result.error) {
                 case 'EMPTY': return t('chronicleErrEmpty');
                 case 'BAD_FORMAT': return t('chronicleErrBadFormat', result.lineNumber, result.lineText);
-                case 'DOES_NOT_START_AT_1': return t('chronicleErrNotFromStart');
+                case 'DOES_NOT_START_AT_1': return t(result.hasHeader ? 'chronicleErrNumberingStart' : 'chronicleErrNotFromStart');
+                case 'BAD_START_POSITION': return t('chronicleErrBadStartPosition', positionErrorMessage(result.positionError));
+                case 'ONLY_POSITION': return t('chronicleErrOnlyPosition');
+                case 'CHAIN_MUST_CONTINUE': return t('chronicleErrChainMustContinue', result.moveNum, result.chainLabel);
                 case 'NO_PIECE': return t('chronicleErrNoPiece', result.moveNum, result.mv.fromLabel);
                 case 'WRONG_TURN': return t('chronicleErrWrongTurn', result.moveNum);
                 case 'MUST_CAPTURE_ELSEWHERE': return t('chronicleErrMustCaptureElsewhere', result.moveNum);
@@ -2604,7 +2923,12 @@
         // vuelve a ser exactamente la jugada 41, y el marco vuelve al
         // violeta, coherente con lo que se ve.
         function pushUndoSnapshot() {
-            undoStack.push({ board: cloneBoard(board), turn: trackedTurn, deviated: chronicleDeviated });
+            undoStack.push({
+                board: cloneBoard(board), turn: trackedTurn, deviated: chronicleDeviated,
+                // Grabando: cuántas jugadas tenía la crónica antes de esta
+                // (al deshacerla, la crónica se recorta hasta ahí).
+                chronLen: isRecording ? chronicleMoveList.length : null
+            });
             if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
             updateUndoButton();
         }
@@ -2626,6 +2950,7 @@
             board = snapshot.board;
             trackedTurn = snapshot.turn;
             chronicleDeviated = snapshot.deviated;
+            if (isRecording && typeof snapshot.chronLen === 'number') truncateRecordedChronicle(snapshot.chronLen);
             updateUndoButton();
             selectedPosition = null;
             currentAllowedMoves = [];
@@ -2677,6 +3002,8 @@
         // La jugada cuya huella corresponde mostrar ahora mismo (del lado del
         // dueño del Laboratorio), o null si no corresponde ninguna.
         function currentChronicleLastMove() {
+            // Grabando: la última jugada anotada (la que muestra el tablero).
+            if (isRecording) return chronicleCurrentIndex > 0 ? chronicleMoveList[chronicleCurrentIndex - 1] : null;
             return (isChronicleTerritory() && chronicleCurrentIndex > 0)
                 ? chronicleMoveList[chronicleCurrentIndex - 1] : null;
         }
@@ -2784,6 +3111,10 @@
             }
 
             updatePieceCounter();
+            // Casi cualquier cambio del tablero puede habilitar o apagar la
+            // filmadora (fichas de los dos colores, jugadas posibles...) o el
+            // botón ⇄: se revisan acá, una vez por dibujado.
+            if (!isSpectatorMode) updateChronicleControlsEnabled();
         }
 
         // ============================================================
@@ -2811,6 +3142,15 @@
             if (selectedPosition && selectedPosition.row === row && selectedPosition.col === col) {
                 selectedPosition = null;
                 currentAllowedMoves = [];
+                renderBoard();
+                return;
+            }
+
+            // Volver a seleccionar la ficha que viene capturando en cadena:
+            // sus saltos son los de SU secuencia (ver executeMove).
+            if (pieceMustContinueCapturing) {
+                currentAllowedMoves = getBestCaptureSequences(row, col, board, pieceValue === pieceValue.toUpperCase()).sequences;
+                selectedPosition = { row, col };
                 renderBoard();
                 return;
             }
@@ -2848,8 +3188,9 @@
 
             // Mover una ficha es entrar (o seguir) en territorio
             // hipotético: si había una crónica a la vista, el tablero ya
-            // no coincide con la jugada resaltada.
-            chronicleDeviated = true;
+            // no coincide con la jugada resaltada. (Salvo grabando: ahí la
+            // jugada se anota en la crónica, que sigue coincidiendo.)
+            if (!isRecording) chronicleDeviated = true;
 
             const fromRow = selectedPosition.row, fromCol = selectedPosition.col;
             const piece = board[fromRow][fromCol];
@@ -2878,9 +3219,13 @@
                         moveComplete = false;
                         pieceMustContinueCapturing = { row: move.row, col: move.col };
                         selectedPosition = { row: move.row, col: move.col };
-                        const bestGlobal = getGlobalBestMoves(landedPiece.toLowerCase());
-                        const thisPieceMoves = bestGlobal.find(bg => bg.row === move.row && bg.col === move.col);
-                        if (thisPieceMoves) currentAllowedMoves = thisPieceMoves.moves;
+                        // Los saltos que siguen la secuencia de máxima captura
+                        // de ESTA ficha. (Antes se buscaban entre "las mejores
+                        // capturas de todo el tablero": si otra ficha tenía en
+                        // ese momento una captura más larga, esta ficha no
+                        // figuraba ahí, la lista de saltos quedaba vieja, y la
+                        // jugada se trababa sin poder terminarse.)
+                        currentAllowedMoves = getBestCaptureSequences(move.row, move.col, board, board[move.row][move.col] === board[move.row][move.col].toUpperCase()).sequences;
                     }
                 }
             }
@@ -2893,6 +3238,9 @@
                 // que corresponde según quién movió último.
                 trackedTurn = (moverColor === 'w') ? 'b' : 'w';
             }
+
+            // Grabando: la jugada (este salto) se anota en la crónica.
+            if (isRecording) recordHop(fromRow, fromCol, move, justCrowned);
 
             if (move.type === "capture") playSound(soundCapture);
             else playSound(soundMove);
@@ -2916,6 +3264,9 @@
         function handleRightClick(row, col) {
             if (isSpectatorMode) return; // los espectadores solo miran, no tocan nada
             if (!isDarkSquare(row, col)) return; // solo casillas jugables
+            // Grabando, el tablero solo cambia con jugadas: colocar o sacar
+            // fichas se rechaza (un clic derecho se hace fácil sin querer).
+            if (isRecording) { playSound(soundError); return; }
 
             if (board[row][col]) {
                 // Saca lo que haya ahí, sin importar tipo ni color.
@@ -3004,6 +3355,9 @@
         // partida, y en el tablero vacío porque no queda ningún
         // antecedente del cual agarrarse.
         function resetBoardTo(newBoard, turn = 'w') {
+            // Grabando, esto corta la grabación (la crónica generada queda en
+            // la columna, como cualquier crónica cargada).
+            stopRecording();
             board = newBoard;
             clearUndoStack();
             selectedPosition = null;
@@ -3034,6 +3388,8 @@
         function toggleTurnTracker() {
             if (isSpectatorMode) return;
             turnTrackerEnabled = !turnTrackerEnabled;
+            // Apagarlo corta la grabación: sin turnos no hay crónica.
+            if (!turnTrackerEnabled) stopRecording();
             // Si se prende con una ficha del color equivocado ya
             // seleccionada, se la suelta (salvo en medio de una captura
             // en cadena, que tiene que poder terminarse).
@@ -3052,9 +3408,10 @@
         }
 
         function renderTurnTracker() {
+            const panel = document.getElementById('turnTrackerPanel');
             const btn = document.getElementById('turnTrackerBtn');
-            if (!btn) return;
-            btn.classList.toggle('on', turnTrackerEnabled);
+            if (!panel || !btn) return;
+            panel.classList.toggle('on', turnTrackerEnabled);
             btn.setAttribute('aria-pressed', turnTrackerEnabled ? 'true' : 'false');
             document.getElementById('turnTrackerState').textContent =
                 t(turnTrackerEnabled ? 'turnTrackerOn' : 'turnTrackerOff');
@@ -3066,10 +3423,11 @@
         }
 
         // ============================================================
-        //  EL TERRITORIO: VIOLETA (crónica fiel) / VERDE (hipotético)
+        //  EL TERRITORIO: VIOLETA (crónica fiel) / VERDE (hipotético) /
+        //  ROJO (grabando)
         // ============================================================
         function isChronicleTerritory() {
-            return chronicleBoards !== null && !chronicleDeviated;
+            return chronicleBoards !== null && !chronicleDeviated && !isRecording;
         }
 
         // Pinta el marco y el resaltado de la lista según el territorio.
@@ -3078,15 +3436,41 @@
         // actualizado junto con el tablero.
         function updateFrameMode() {
             boardElement.classList.toggle('chronicle-territory', isChronicleTerritory());
-            document.getElementById('chronicleMoveList').classList.toggle('deviated', chronicleBoards !== null && chronicleDeviated);
+            boardElement.classList.toggle('recording-territory', isRecording);
+            const list = document.getElementById('chronicleMoveList');
+            list.classList.toggle('deviated', chronicleBoards !== null && chronicleDeviated && !isRecording);
+            list.classList.toggle('recording', isRecording);
+            updateChronicleControlsEnabled();
         }
 
-        // Sin crónica cargada no hay nada que navegar.
+        // Qué controles de la columna (y el ⇄ del Control de Turnos) se
+        // pueden usar ahora mismo. Se llama cada vez que se dibuja el tablero.
         function updateChronicleControlsEnabled() {
-            const enabled = chronicleBoards !== null;
-            ['chronicleFastBackBtn', 'chronicleBackBtn', 'chronicleForwardBtn', 'chronicleFastForwardBtn', 'chronicleGoToInput',
-             'saveChronicleFileBtn']
-                .forEach(id => { document.getElementById(id).disabled = !enabled; });
+            // Navegar: con una crónica cargada, y sin estar grabando (grabando,
+            // para volver atrás está Deshacer).
+            const navEnabled = chronicleBoards !== null && !isRecording;
+            ['chronicleFastBackBtn', 'chronicleBackBtn', 'chronicleForwardBtn', 'chronicleFastForwardBtn', 'chronicleGoToInput']
+                .forEach(id => { document.getElementById(id).disabled = !navEnabled; });
+            // Guardar: con al menos una jugada (una grabación recién empezada
+            // todavía no tiene ninguna).
+            document.getElementById('saveChronicleFileBtn').disabled = !(chronicleBoards !== null && chronicleMoveList.length > 0);
+            // Reproducir/Borrar: apagado mientras se graba.
+            document.getElementById('loadChronicleBtn').disabled = isRecording;
+            // La filmadora: prendida, siempre se puede apagar; apagada, se
+            // puede prender si nada lo impide (el tooltip dice qué lo impide).
+            const rec = document.getElementById('recordChronicleBtn');
+            const blocker = isRecording ? null : recordingStartBlocker();
+            rec.disabled = (blocker !== null);
+            rec.classList.toggle('on', isRecording);
+            rec.setAttribute('aria-pressed', isRecording ? 'true' : 'false');
+            rec.title = t(isRecording ? 'recordChronicleStopTitle' : (blocker || 'recordChronicleTitle'));
+            rec.setAttribute('aria-label', rec.title);
+            document.getElementById('swapTurnBtn').disabled = !canSwapTurn();
+            // Grabando, el cuadro de texto es solo para mirar (y copiar) la
+            // crónica que se va generando.
+            const ta = document.getElementById('chronicleTextInput');
+            ta.readOnly = isRecording;
+            ta.placeholder = t(isRecording ? 'chronicleRecordingPlaceholder' : 'chronicleTextPlaceholder');
         }
 
         // El botón principal del Reproductor tiene dos caras: sin crónica
@@ -3101,6 +3485,7 @@
         }
 
         function onChronicleMainButton() {
+            if (isRecording) return; // grabando, está apagado
             if (chronicleBoards !== null) clearChronicle();
             else loadChronicle();
         }
@@ -3111,19 +3496,16 @@
         // laboratorio independiente --, y el marco pasa a verde: sin
         // crónica cargada, todo es territorio hipotético.
         function clearChronicle() {
+            if (isRecording) return;
             chronicleBoards = null;
             chronicleTurns = null;
+            chronicleChains = null;
             chronicleMoveList = null;
+            chronicleStartIsInitial = true;
             chronicleCurrentIndex = 0;
             chronicleDeviated = false;
-            const list = document.getElementById('chronicleMoveList');
-            list.innerHTML = '';
-            const hint = document.createElement('div');
-            hint.className = 'chronicle-empty-hint';
-            hint.setAttribute('data-i18n', 'chronicleEmptyHint');
-            hint.textContent = t('chronicleEmptyHint');
-            list.appendChild(hint);
-            list.scrollTop = 0;
+            chronicleSplices = [];
+            renderEmptyChronicleList();
             document.getElementById('chronicleGoToInput').value = '';
             document.getElementById('chronicleErrorMsg').style.display = 'none';
             updateChronicleControlsEnabled();
@@ -3141,6 +3523,7 @@
         // nueva NO es válida, no se toca nada: la que estuviera cargada
         // sigue cargada, y solo aparece el aviso de qué falló.
         function loadChronicle() {
+            if (isRecording) return;
             const text = document.getElementById('chronicleTextInput').value;
             const parseResult = parseChronicleText(text);
             const errorBox = document.getElementById('chronicleErrorMsg');
@@ -3151,7 +3534,8 @@
                 return;
             }
 
-            const replayResult = replayChronicle(parseResult.moves);
+            const start = parseResult.start || { board: createInitialLabBoard(), turn: 'w' };
+            const replayResult = replayChronicle(parseResult.moves, start.board, start.turn);
             if (!replayResult.ok) {
                 errorBox.textContent = chronicleErrorMessage(replayResult);
                 errorBox.style.display = 'block';
@@ -3159,11 +3543,17 @@
             }
 
             // Todo válido: guardamos los tableros, los turnos y la lista
-            // de jugadas, y arrancamos en la jugada 0 (posición inicial).
+            // de jugadas, y arrancamos en la jugada 0 (la posición de
+            // partida: la inicial, salvo que la crónica traiga otra).
             errorBox.style.display = 'none';
             chronicleBoards = replayResult.boards;
             chronicleTurns = replayResult.turns;
+            chronicleChains = replayResult.chains;
             chronicleMoveList = parseResult.moves;
+            chronicleSplices = [];
+            // Una crónica que trae arriba EXACTAMENTE la posición inicial con
+            // turno de blancas cuenta como inicial: es la misma partida.
+            chronicleStartIsInitial = isInitialStart(start.board, start.turn);
             renderChronicleMoveList();
             updateChronicleControlsEnabled();
             updateChronicleMainButton();
@@ -3176,7 +3566,9 @@
         //  jugada real y descarta todo lo hipotético (marco violeta).
         // ============================================================
         function chronicleGoToMove(index) {
-            if (!chronicleBoards) return;
+            // Grabando no se navega (la lista es solo una pantalla que se va
+            // escribiendo; para volver atrás está Deshacer).
+            if (!chronicleBoards || isRecording) return;
             const clamped = Math.max(0, Math.min(chronicleBoards.length - 1, index));
             chronicleCurrentIndex = clamped;
             board = cloneBoard(chronicleBoards[clamped]);
@@ -3225,11 +3617,14 @@
             // La línea 0 lleva data-i18n: así applyTranslations la
             // traduce sola al cambiar de idioma, como cualquier otro
             // texto fijo de la página.
+            // "Posición inicial" o, en una crónica no inicial, "Posición de
+            // partida".
+            const startLabelKey = chronicleStartIsInitial ? 'chronicleInitialPositionLabel' : 'chronicleStartPositionLabel';
             const initialEntry = document.createElement('div');
             initialEntry.className = 'chronicle-move-entry';
             initialEntry.dataset.index = '0';
-            initialEntry.setAttribute('data-i18n', 'chronicleInitialPositionLabel');
-            initialEntry.textContent = t('chronicleInitialPositionLabel');
+            initialEntry.setAttribute('data-i18n', startLabelKey);
+            initialEntry.textContent = t(startLabelKey);
             initialEntry.onclick = () => chronicleGoToMove(0);
             container.appendChild(initialEntry);
 
@@ -3243,6 +3638,13 @@
                 entry.textContent = `${mv.declaredNumber}. ${mv.fromLabel} → ${mv.toLabel}${suffix}`;
                 entry.onclick = () => chronicleGoToMove(i + 1);
                 container.appendChild(entry);
+                // Donde termina la parte original de una crónica a la que se
+                // le grabó otro final (ver startRecording).
+                if (chronicleSplices.includes(i + 1)) {
+                    const divider = document.createElement('div');
+                    divider.className = 'chronicle-splice-divider';
+                    container.appendChild(divider);
+                }
             });
         }
 
@@ -3272,6 +3674,284 @@
             const target = current.offsetTop - (container.clientHeight / 2) + (current.offsetHeight / 2);
             const maxScroll = container.scrollHeight - container.clientHeight;
             container.scrollTop = Math.max(0, Math.min(target, maxScroll));
+        }
+
+        // ============================================================
+        //  EL GENERADOR DE CRÓNICAS (la filmadora 🎥)
+        // ============================================================
+        // Con la filmadora prendida, cada jugada que se hace en el tablero se
+        // anota en la crónica de la columna, como en una partida de la Arena
+        // -- pero acá se mueven los dos colores. Arranca de dos formas:
+        // - DE CERO: desde la posición que haya en el tablero (la "posición de
+        //   partida", con el turno del Control de Turnos).
+        // - ENGANCHE: si el tablero está en violeta (mostrando una jugada de
+        //   la crónica cargada tal cual pasó), se conserva la crónica hasta
+        //   esa jugada y lo que se juegue se agrega a continuación -- para
+        //   darle otro final a una partida, o para retomar una que quedó sin
+        //   terminar. Las jugadas que seguían después se descartan (con
+        //   confirmación).
+        // Mientras se graba, el tablero solo cambia con jugadas legales (que
+        // se anotan) y con Deshacer (que borra la última). Todo lo demás que
+        // cambiaría el tablero corta la grabación (la crónica generada queda
+        // en la columna) o, si es un accidente probable (el clic derecho), se
+        // rechaza con el sonido de error.
+
+        // Si la filmadora NO se puede prender ahora, el motivo (la clave de
+        // traducción del tooltip, que lo explica); si se puede, null.
+        function recordingStartBlocker() {
+            if (isSpectatorMode) return 'recordChronicleTitle';
+            if (!turnTrackerEnabled) return 'recordBlockedTurnControlOff';
+            if (pieceMustContinueCapturing) return 'recordBlockedMidChain';
+            const colors = new Set(board.flat().filter(Boolean).map(p => p.toLowerCase()));
+            if (!colors.has('w') || !colors.has('b')) return 'recordBlockedOneColor';
+            if (!sideHasAnyMove(trackedTurn)) return 'recordBlockedNoMoves';
+            if (isChronicleTerritory()) {
+                // Enganche: no desde una posición a mitad de una captura en
+                // cadena (la crónica obliga a que siga esa misma ficha), ni
+                // desde el máximo de jugadas en adelante.
+                if (chronicleChains[chronicleCurrentIndex]) return 'recordBlockedChainPosition';
+                if (chronicleCurrentIndex >= CHRONICLE_MAX_MOVES) return 'recordBlockedTooLong';
+            }
+            return null;
+        }
+
+        // ¿Este color tiene alguna jugada posible en el tablero?
+        function sideHasAnyMove(color) {
+            if (getGlobalBestMoves(color).length > 0) return true;
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const p = board[r][c];
+                    if (p && p.toLowerCase() === color && getLegalMoves(r, c).length > 0) return true;
+                }
+            }
+            return false;
+        }
+
+        function toggleRecording() {
+            if (isSpectatorMode) return;
+            if (isRecording) stopRecording();
+            else startRecording();
+        }
+
+        function startRecording() {
+            if (recordingStartBlocker()) return;
+            const splice = isChronicleTerritory();
+            if (splice) {
+                const total = chronicleMoveList.length, idx = chronicleCurrentIndex;
+                if (idx < total) {
+                    const msg = (idx + 1 === total) ? t('recordConfirmDiscardOne', total) : t('recordConfirmDiscard', idx + 1, total);
+                    if (!confirm(msg)) return;
+                }
+            } else if (chronicleBoards !== null) {
+                if (!confirm(t('recordConfirmReplace'))) return;
+            }
+
+            // Cómo estaba todo, por si se apaga sin anotar ninguna jugada
+            // nueva (ver stopRecording). Las listas de la crónica se
+            // reemplazan más abajo por copias, así que estas quedan intactas.
+            recordingRestore = {
+                boards: chronicleBoards, turns: chronicleTurns, chains: chronicleChains, moveList: chronicleMoveList,
+                startIsInitial: chronicleStartIsInitial, currentIndex: chronicleCurrentIndex, splices: chronicleSplices,
+                deviated: chronicleDeviated, undo: undoStack,
+                text: document.getElementById('chronicleTextInput').value
+            };
+
+            if (splice) {
+                const idx = chronicleCurrentIndex;
+                chronicleBoards = chronicleBoards.slice(0, idx + 1);
+                chronicleTurns = chronicleTurns.slice(0, idx + 1);
+                chronicleChains = chronicleChains.slice(0, idx + 1);
+                chronicleMoveList = chronicleMoveList.slice(0, idx);
+                // La línea divisoria va después de la última jugada que se
+                // conserva (desde la jugada 0 no queda nada que dividir).
+                chronicleSplices = chronicleSplices.filter(s => s < idx).concat(idx > 0 ? [idx] : []);
+                recordingBaseLength = idx;
+            } else {
+                chronicleBoards = [cloneBoard(board)];
+                chronicleTurns = [trackedTurn];
+                chronicleChains = [null];
+                chronicleMoveList = [];
+                chronicleStartIsInitial = isInitialStart(board, trackedTurn);
+                chronicleCurrentIndex = 0;
+                chronicleSplices = [];
+                recordingBaseLength = 0;
+            }
+            recordingIsSplice = splice;
+            chronicleDeviated = false;
+            isRecording = true;
+            // Deshacer llega hasta acá, no más atrás.
+            clearUndoStack();
+            document.getElementById('chronicleErrorMsg').style.display = 'none';
+            refreshChronicleList();
+            updateLiveChronicleText();
+            updateChronicleMainButton();
+            renderBoard();
+            updateFrameMode();
+            syncLabBoard();
+        }
+
+        // Anota un salto recién hecho (cada salto de una captura en cadena es
+        // su propia línea, igual que en la Arena). Lo llama executeMove, con
+        // el tablero y el turno ya actualizados.
+        function recordHop(fromRow, fromCol, move, justCrowned) {
+            const label = (r, c) => String.fromCharCode(97 + c) + (10 - r);
+            chronicleMoveList.push({
+                declaredNumber: chronicleMoveList.length + 1,
+                from: { row: fromRow, col: fromCol },
+                to: { row: move.row, col: move.col },
+                declaredCapture: move.type === 'capture',
+                declaredCrown: justCrowned,
+                fromLabel: label(fromRow, fromCol),
+                toLabel: label(move.row, move.col)
+            });
+            chronicleBoards.push(cloneBoard(board));
+            chronicleTurns.push(trackedTurn);
+            chronicleChains.push(pieceMustContinueCapturing ? { row: pieceMustContinueCapturing.row, col: pieceMustContinueCapturing.col } : null);
+            chronicleCurrentIndex = chronicleMoveList.length;
+            refreshChronicleList();
+            updateLiveChronicleText();
+            // Al llegar al máximo, la filmadora se apaga sola (sin aviso: el
+            // botón que se levanta y el marco que deja de estar en rojo ya lo
+            // dicen).
+            if (chronicleMoveList.length >= CHRONICLE_MAX_MOVES) stopRecording();
+        }
+
+        // Deshacer, grabando: la crónica vuelve a tener las jugadas que tenía
+        // antes de la jugada deshecha (con todos sus saltos, si era una
+        // captura en cadena).
+        function truncateRecordedChronicle(len) {
+            chronicleMoveList = chronicleMoveList.slice(0, len);
+            chronicleBoards = chronicleBoards.slice(0, len + 1);
+            chronicleTurns = chronicleTurns.slice(0, len + 1);
+            chronicleChains = chronicleChains.slice(0, len + 1);
+            chronicleCurrentIndex = len;
+            refreshChronicleList();
+            updateLiveChronicleText();
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+            isRecording = false;
+            const r = recordingRestore;
+            recordingRestore = null;
+            if (r && chronicleMoveList.length === recordingBaseLength) {
+                // No se anotó ninguna jugada nueva: todo vuelve a como estaba
+                // antes de prender la filmadora (prenderla y apagarla sin
+                // jugar no cambia nada, ni siquiera si se aceptó descartar o
+                // reemplazar la crónica que había).
+                chronicleBoards = r.boards;
+                chronicleTurns = r.turns;
+                chronicleChains = r.chains;
+                chronicleMoveList = r.moveList;
+                chronicleStartIsInitial = r.startIsInitial;
+                chronicleCurrentIndex = r.currentIndex;
+                chronicleSplices = r.splices;
+                chronicleDeviated = r.deviated;
+                undoStack = r.undo;
+                document.getElementById('chronicleTextInput').value = r.text;
+            } else {
+                // La crónica generada queda cargada, como cualquier otra,
+                // marcada en su última jugada -- que es justo lo que muestra
+                // el tablero (violeta).
+                chronicleCurrentIndex = chronicleMoveList.length;
+                chronicleDeviated = !(JSON.stringify(board) === JSON.stringify(chronicleBoards[chronicleCurrentIndex])
+                    && trackedTurn === chronicleTurns[chronicleCurrentIndex]);
+                // Las fotos de Deshacer de la grabación ya no sirven: se
+                // empieza de nuevo, igual que al navegar la crónica.
+                undoStack = [];
+            }
+            recordingIsSplice = false;
+            recordingBaseLength = 0;
+            updateUndoButton();
+            refreshChronicleList();
+            updateChronicleMainButton();
+            renderBoard();
+            renderTurnTracker();
+            updateFrameMode();
+            syncLabBoard();
+        }
+
+        // El cuadro de texto, mientras se graba, muestra la crónica en vivo
+        // (de ahí se puede copiar: por ejemplo, para pasársela a alguien a
+        // mitad de una partida).
+        function updateLiveChronicleText() {
+            if (!isRecording) return;
+            const ta = document.getElementById('chronicleTextInput');
+            ta.value = buildLoadedChronicleText();
+            ta.scrollTop = ta.scrollHeight;
+        }
+
+        // Redibuja la lista entera (o el aviso de que no hay crónica), marca
+        // la jugada actual y la centra.
+        function refreshChronicleList() {
+            if (chronicleBoards === null) {
+                renderEmptyChronicleList();
+                document.getElementById('chronicleGoToInput').value = '';
+                return;
+            }
+            renderChronicleMoveList();
+            updateChronicleHighlight();
+            centerCurrentChronicleEntry();
+            document.getElementById('chronicleGoToInput').value = chronicleCurrentIndex;
+        }
+
+        function renderEmptyChronicleList() {
+            const list = document.getElementById('chronicleMoveList');
+            list.innerHTML = '';
+            const hint = document.createElement('div');
+            hint.className = 'chronicle-empty-hint';
+            hint.setAttribute('data-i18n', 'chronicleEmptyHint');
+            hint.textContent = t('chronicleEmptyHint');
+            list.appendChild(hint);
+            list.scrollTop = 0;
+        }
+
+        // ============================================================
+        //  CAMBIAR EL TURNO A MANO (el botoncito ⇄ del Control de Turnos)
+        // ============================================================
+        // Para elegir quién mueve en una posición armada a mano (antes había
+        // que mover una ficha con el control apagado para "gastar" un turno).
+        // Funciona siempre, salvo: a mitad de una captura en cadena (tiene que
+        // terminar); grabando, una vez anotada la primera jugada (el turno de
+        // la posición de partida ya quedó fijo); y grabando un enganche (el
+        // turno lo marca la crónica original).
+        function canSwapTurn() {
+            if (isSpectatorMode || pieceMustContinueCapturing) return false;
+            if (isRecording) return !recordingIsSplice && chronicleMoveList.length === 0;
+            return true;
+        }
+
+        function swapTurn() {
+            if (!canSwapTurn()) return;
+            const newTurn = (trackedTurn === 'w') ? 'b' : 'w';
+            if (isRecording) {
+                // Todavía no se anotó nada: cambia el turno de la posición de
+                // partida (si era la inicial con blancas, deja de serlo).
+                trackedTurn = newTurn;
+                chronicleTurns[0] = newTurn;
+                chronicleStartIsInitial = isInitialStart(chronicleBoards[0], newTurn);
+                refreshChronicleList();
+                updateLiveChronicleText();
+            } else {
+                // Se puede deshacer; y si el tablero mostraba una jugada de la
+                // crónica (violeta), ya no coincide con ella: pasa a verde.
+                pushUndoSnapshot();
+                trackedTurn = newTurn;
+                chronicleDeviated = true;
+            }
+            // Con el control prendido, una ficha seleccionada del color que ya
+            // no mueve se suelta.
+            if (turnTrackerEnabled && selectedPosition) {
+                const sel = board[selectedPosition.row][selectedPosition.col];
+                if (sel && sel.toLowerCase() !== trackedTurn) {
+                    selectedPosition = null;
+                    currentAllowedMoves = [];
+                }
+            }
+            renderBoard();
+            renderTurnTracker();
+            updateFrameMode();
+            syncLabBoard();
         }
 
         // ============================================================
@@ -3305,11 +3985,18 @@
         }
 
         function buildPositionText() {
+            return positionTextFor(board, trackedTurn);
+        }
+
+        // La posición de un tablero cualquiera, con el formato de los archivos
+        // de posición (la usan Guardar Posición y, arriba de las jugadas,
+        // Guardar Crónica cuando la crónica no arranca en la posición inicial).
+        function positionTextFor(someBoard, turn) {
             const squares = { w: [], b: [] };
             for (let rowNumber = 1; rowNumber <= 10; rowNumber++) {
                 const row = 10 - rowNumber;
                 for (let col = 0; col < 10; col++) {
-                    const p = board[row][col];
+                    const p = someBoard[row][col];
                     if (!p) continue;
                     const isKing = (p === p.toUpperCase());
                     squares[p.toLowerCase()].push(String.fromCharCode(97 + col) + rowNumber + (isKing ? '♛' : ''));
@@ -3317,7 +4004,12 @@
             }
             return `${t('posKwWhite')}: ${squares.w.join('-')}\n` +
                    `${t('posKwBlack')}: ${squares.b.join('-')}\n` +
-                   `${t('posKwTurn')}: ${t(trackedTurn === 'w' ? 'posKwWhite' : 'posKwBlack')}\n`;
+                   `${t('posKwTurn')}: ${t(turn === 'w' ? 'posKwWhite' : 'posKwBlack')}\n`;
+        }
+
+        // ¿Este tablero y este turno son exactamente la posición inicial?
+        function isInitialStart(someBoard, turn) {
+            return turn === 'w' && JSON.stringify(someBoard) === JSON.stringify(createInitialLabBoard());
         }
 
         function savePosition() {
@@ -3341,24 +4033,30 @@
         // partir de las jugadas validadas (y no copiando el campo de texto,
         // que pudo haberse editado después de reproducir).
         function buildLoadedChronicleText() {
-            return chronicleMoveList.map((mv, i) => {
+            const moves = chronicleMoveList.map((mv, i) => {
                 let suffix = '';
                 if (mv.declaredCapture) suffix += ' ✕';
                 if (mv.declaredCrown) suffix += ' ♛';
                 return `${i + 1}. ${mv.fromLabel} → ${mv.toLabel}${suffix}`;
             }).join('\n');
+            // Una crónica no inicial lleva arriba su posición de partida (si
+            // no, al volver a cargarla no habría cómo validarla).
+            return chronicleStartIsInitial ? moves : positionTextFor(chronicleBoards[0], chronicleTurns[0]) + moves;
         }
 
         function saveLoadedChronicle() {
-            if (isSpectatorMode || chronicleBoards === null) return;
+            // Con al menos una jugada (una grabación recién empezada todavía
+            // no tiene ninguna).
+            if (isSpectatorMode || chronicleBoards === null || chronicleMoveList.length === 0) return;
             downloadTextFile(`${t('chronFileNamePrefix')}_${fileTimestamp()}.txt`, buildLoadedChronicleText());
         }
 
         // Tope prudente, a pedido de Otto: unas 250 jugadas. La línea más
         // larga posible ("250. a10 → b10 ✕ ♛") ocupa unos 25 bytes; con
         // margen para espacios de más y saltos de línea de Windows, 32
-        // bytes por jugada.
-        const CHRONICLE_FILE_MAX_BYTES = 250 * 32;
+        // bytes por jugada -- más 1 KB para la posición de partida que
+        // traen arriba las crónicas no iniciales (que ocupa unos 300).
+        const CHRONICLE_FILE_MAX_BYTES = 250 * 32 + 1024;
 
         function showChronicleError(msg) {
             const box = document.getElementById('chronicleErrorMsg');
@@ -3368,6 +4066,10 @@
 
         function openChronicleFilePicker() {
             if (isSpectatorMode) return;
+            // Grabando, cargar otra crónica reemplaza la que se está
+            // generando: se pide confirmación (si ya tiene alguna jugada
+            // nueva; si no, no se pierde nada).
+            if (isRecording && chronicleMoveList.length > recordingBaseLength && !confirm(t('recordConfirmLoadChronicle'))) return;
             document.getElementById('chronicleFileInput').click();
         }
 
@@ -3378,6 +4080,10 @@
             const input = e.target;
             const file = input.files && input.files[0];
             if (!file) return;
+            // Elegir un archivo corta la grabación (si la había): lo generado
+            // queda en la columna, y la crónica del archivo lo reemplaza solo
+            // si es válida.
+            stopRecording();
             if (file.size > CHRONICLE_FILE_MAX_BYTES) {
                 input.value = '';
                 showChronicleError(t('chronicleErrTooBig'));
@@ -3561,10 +4267,10 @@
                 board: board,
                 // El espectador ve el mismo color de marco que el dueño
                 // (violeta = está mostrando la crónica tal cual pasó;
-                // verde = territorio hipotético).
-                frameMode: isChronicleTerritory() ? 'chronicle' : 'hypothetical',
+                // verde = territorio hipotético; rojo = grabando).
+                frameMode: isRecording ? 'recording' : (isChronicleTerritory() ? 'chronicle' : 'hypothetical'),
                 // Y también la huella de la última jugada (solo existe en
-                // territorio violeta; si no, va null y el espectador la
+                // violeta y en rojo; si no, va null y el espectador la
                 // borra).
                 rotated: boardRotated,
                 lastMove: (() => {
@@ -3624,6 +4330,7 @@
 
         function applySpectatorFrameMode(frameMode) {
             boardElement.classList.toggle('chronicle-territory', frameMode === 'chronicle');
+            boardElement.classList.toggle('recording-territory', frameMode === 'recording');
         }
 
         socket.on('lab-init', (data) => {
@@ -3874,3 +4581,4 @@
 </body>
 
 </html>
+

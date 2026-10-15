@@ -83,6 +83,16 @@
             text-align: center;
         }
 
+        /* En celular, el subtítulo en dos renglones partidos en la coma
+           ("Estudiá jugadas, probá ataques y defensas," / "libremente y sin
+           restricciones."), a pedido de Otto. En pantallas más anchas entra
+           en uno solo. */
+        @media (max-width: 560px) {
+            .lab-subtitle .subtitle-part2 {
+                display: block;
+            }
+        }
+
         #topBar {
             position: fixed;
             top: 0;
@@ -142,8 +152,19 @@
         }
 
         /* --- EL ESCUDO FLUIDO, calcado de index.html --- */
+        /* La casilla mide el 5,95% del ancho de la pantalla (entre 26 y 51
+           px)... salvo en celular, donde eso dejaba el tablero chico (292 px
+           en cualquier celular, por el mínimo de 26) con márgenes vacíos a
+           los costados. Ahí, a pedido de Otto, el tablero ocupa todo el ancho
+           menos 12 px de cada lado -- con un techo de 36 px por casilla, que
+           es justo donde la fórmula de siempre lo alcanza (a los ~605 px de
+           ancho): de ahí para arriba, todo queda exactamente como antes, y no
+           hay saltos al pasar de celular a tablet. (Solo en el Laboratorio,
+           por ahora: la Arena sigue con la fórmula de siempre.) */
         :root {
-            --sq-size: clamp(26px, 5.95vw, 51px);
+            --sq-size: clamp(26px,
+                max(5.95vw, min((100vw - 24px - 2 * var(--board-border) - 2 * var(--board-padding)) / 10, 36px)),
+                51px);
             --board-border: clamp(13px, 2.55vw, 17px);
             --board-padding: clamp(3px, 0.51vw, 4.25px);
         }
@@ -924,12 +945,17 @@
                 align-items: start;
             }
 
-            #chronicleInputSection {
+            /* Arriba de todo, la fila de navegación (⏮️ ◀️ campito ▶️ ⏭️), lo
+               que más se usa con una crónica cargada: justo debajo del
+               tablero, a pedido de Otto. Debajo, el bloque de pegar la
+               crónica (título, cuadro de texto, Reproducir/Borrar y la
+               filmadora). En pantalla ancha queda el orden de siempre. */
+            #chroniclePlaybackControls {
                 grid-column: 1;
                 grid-row: 1;
             }
 
-            #chroniclePlaybackControls {
+            #chronicleInputSection {
                 grid-column: 1;
                 grid-row: 2;
             }
@@ -948,6 +974,21 @@
 
             .file-btn-divider {
                 margin: 5px 4px;
+            }
+
+            /* Una línea divisoria igual a la de entre Cargar Crónica y
+               Guardar Posición, entre la filmadora y Guardar Crónica. Es el
+               último elemento del bloque, pero como el bloque está dado
+               vuelta (column-reverse) queda arriba de todo; el margen de
+               arriba descuenta el espacio entre filas de la grilla (8 px),
+               para que quede a la misma distancia de los botones de los dos
+               lados (5 px). */
+            #fileButtonsBlock::after {
+                content: '';
+                height: 3px;
+                margin: -3px 4px 5px;
+                background: rgba(241, 196, 15, 0.35);
+                flex-shrink: 0;
             }
 
             #chronicleMoveListPanel {
@@ -1628,9 +1669,10 @@
                 width: 100%;
             }
 
+            /* Solo en su renglón: centrado, a pedido de Otto. */
             #topControlsRow #pieceCounter {
                 grid-column: 1 / -1;
-                justify-self: start;
+                justify-self: center;
             }
         }
 
@@ -1643,7 +1685,7 @@
 
         @media (min-width: 900px) {
             #topControlsRow #pieceCounter,
-            #topControlsRow #deshacerBtnTop {
+            #topControlsRow #undoPairTop {
                 display: none;
             }
 
@@ -1660,7 +1702,7 @@
                 min-width: 0;
             }
 
-            #toolsMiddle .undo-btn {
+            #toolsMiddle .undo-pair {
                 width: 100%;
             }
 
@@ -1679,6 +1721,56 @@
                centrado -- solo. */
             #topControlsRow .lab-btn {
                 flex: 1 1 0;
+            }
+        }
+
+        /* --- DESHACER + REHACER ---
+           Rehacer le roba la punta derecha a Deshacer (como la filmadora al
+           botón de Reproducir/Borrar): Deshacer, el que más se usa, conserva
+           su texto; Rehacer es un cuadradito de ícono con el tamaño estándar
+           del sitio (37 de ancho, emoji de 22px; en celular, 32 y 19), del
+           mismo alto que Deshacer. Hay dos pares, como había dos Deshacer
+           (uno por ubicación según el ancho de pantalla). */
+        .undo-pair {
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+        }
+
+        .undo-pair .undo-btn,
+        #topControlsRow .undo-pair .undo-btn {
+            flex: 1 1 0;
+            min-width: 0;
+            width: auto;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .undo-pair .redo-btn,
+        #topControlsRow .undo-pair .redo-btn {
+            flex: 0 0 37px;
+            width: auto;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        @media (max-width: 560px) {
+            .undo-pair {
+                gap: 4px;
+            }
+
+            #topControlsRow .undo-pair .undo-btn {
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+
+            #topControlsRow .undo-pair .redo-btn {
+                flex-basis: 32px;
+                font-size: 19px;
             }
         }
     </style>
@@ -1709,7 +1801,11 @@
     </div>
 
     <h1 data-i18n="labTitle">🧪 El Laboratorio</h1>
-    <p class="lab-subtitle" data-i18n="labSubtitle">Estudiá jugadas, probá ataques y defensas, libremente y sin restricciones.</p>
+    <!-- En dos partes: en celular, la segunda baja al renglón de abajo (así
+         el corte cae en la coma). El espectador lo reemplaza por "Espectando
+         el laboratorio de..." (ver renderSpectatorSubtitle). -->
+    <p class="lab-subtitle"><span data-i18n="labSubtitleA">Estudiá jugadas, probá ataques y defensas,</span>
+        <span class="subtitle-part2" data-i18n="labSubtitleB">libremente y sin restricciones.</span></p>
 
     <div id="labWrapper">
         <div id="boardColumnLab">
@@ -1725,7 +1821,10 @@
                      ancha va abajo, entre el selector de fichas y el Control
                      de Turnos, bien cerca del tablero). Las dos copias se
                      habilitan y deshabilitan juntas (clase .undo-btn). -->
-                <button id="deshacerBtnTop" class="lab-btn undo-btn" disabled data-i18n="deshacerBtn">↩️ Deshacer</button>
+                <span class="undo-pair" id="undoPairTop">
+                    <button id="deshacerBtnTop" class="lab-btn undo-btn" disabled data-i18n="deshacerBtn" data-i18n-title="undoTitle" title="Deshacer (Ctrl+Z)">↩️ Deshacer</button>
+                    <button id="rehacerBtnTop" class="lab-btn redo-btn" type="button" disabled data-i18n-title="redoTitle" data-i18n-aria-label="redoTitle" title="Rehacer (Ctrl+Y)" aria-label="Rehacer (Ctrl+Y)">↪️</button>
+                </span>
                 <span id="pieceCounter" class="piece-counter">⚪ 0 | ⚫ 0</span>
             </div>
 
@@ -1754,7 +1853,10 @@
                      Deshacer -- el que más se usa, bien a mano del tablero. -->
                 <div id="toolsMiddle">
                     <span id="pieceCounterTools" class="piece-counter">⚪ 0 | ⚫ 0</span>
-                    <button id="deshacerBtn" class="lab-btn undo-btn" disabled data-i18n="deshacerBtn">↩️ Deshacer</button>
+                    <span class="undo-pair">
+                        <button id="deshacerBtn" class="lab-btn undo-btn" disabled data-i18n="deshacerBtn" data-i18n-title="undoTitle" title="Deshacer (Ctrl+Z)">↩️ Deshacer</button>
+                        <button id="rehacerBtn" class="lab-btn redo-btn" type="button" disabled data-i18n-title="redoTitle" data-i18n-aria-label="redoTitle" title="Rehacer (Ctrl+Y)" aria-label="Rehacer (Ctrl+Y)">↪️</button>
+                    </span>
                 </div>
 
                 <!-- El Control de Turnos es un panel con DOS botones (un botón
@@ -2220,12 +2322,15 @@
             es: {
                 salirLobbyBtn: "🚪 Salir al Lobby",
                 labTitle: "🧪 El Laboratorio",
-                labSubtitle: "Estudiá jugadas, probá ataques y defensas, libremente y sin restricciones.",
+                labSubtitleA: "Estudiá jugadas, probá ataques y defensas,",
+                labSubtitleB: "libremente y sin restricciones.",
                 spectatorsNone: "Espectadores: -",
                 spectatorsList: "Espectadores: {0}",
                 posicionInicialBtn: "▶️ Posición inicial",
                 removerTodoBtn: "🗑️ Remover todo",
                 deshacerBtn: "↩️ Deshacer",
+                undoTitle: "Deshacer (Ctrl+Z)",
+                redoTitle: "Rehacer (Ctrl+Y)",
                 rotarTableroBtn: "🔄️ Rotar Tablero",
                 pieceTypePanelTitle: "Ficha a colocar",
                 pieceTypePanelHint: "(clic derecho en el tablero)",
@@ -2339,12 +2444,15 @@
             en: {
                 salirLobbyBtn: "🚪 Leave to Lobby",
                 labTitle: "🧪 The Laboratory",
-                labSubtitle: "Study moves, try out attacks and defenses, freely and without restrictions.",
+                labSubtitleA: "Study moves, try out attacks and defenses,",
+                labSubtitleB: "freely and without restrictions.",
                 spectatorsNone: "Spectators: -",
                 spectatorsList: "Spectators: {0}",
                 posicionInicialBtn: "▶️ Starting position",
                 removerTodoBtn: "🗑️ Remove all",
                 deshacerBtn: "↩️ Undo",
+                undoTitle: "Undo (Ctrl+Z)",
+                redoTitle: "Redo (Ctrl+Y)",
                 rotarTableroBtn: "🔄️ Rotate Board",
                 pieceTypePanelTitle: "Piece to place",
                 pieceTypePanelHint: "(right-click on the board)",
@@ -2475,6 +2583,11 @@
             document.querySelectorAll('[data-i18n-title]').forEach(el => {
                 el.title = t(el.getAttribute('data-i18n-title'));
             });
+            // El nombre que leen los lectores de pantalla en los botones que
+            // son solo un ícono.
+            document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+                el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+            });
             document.documentElement.lang = currentLang;
             document.title = t('pageTitle');
             // Los Términos de Uso siguen el idioma general del sitio.
@@ -2509,6 +2622,10 @@
             // se declaren las variables del estado (mismo riesgo de
             // "zona muerta temporal" que el comentario de abajo).
             renderTurnTracker();
+            // El espectador: su subtítulo ("Espectando el laboratorio de...")
+            // no lo cubre applyTranslations (antes, al cambiar de idioma, se
+            // reemplazaba por el subtítulo común).
+            if (isSpectatorMode) renderSpectatorSubtitle();
             // Lo mismo con la crónica que se está generando (las palabras de
             // su posición de partida) y los tooltips de la filmadora.
             updateLiveChronicleText();
@@ -2545,8 +2662,13 @@
         // abajo). Se blanquean por completo (undoStack = []) con Posición
         // inicial, Remover todo y Cargar Posición, al navegar la crónica, al
         // prender la filmadora (Deshacer no va más atrás de donde empezó la
-        // grabación) y al apagarla, si se anotó alguna jugada.
+        // grabación) y al apagarla, si se anotó alguna jugada. Lo mismo
+        // Rehacer.
         let undoStack = [];
+        // Lo deshecho, para Rehacer (lo último deshecho, arriba). Se pierde
+        // apenas se hace algo nuevo (mover, poner o sacar una ficha, ⇄), y se
+        // vacía junto con Deshacer.
+        let redoStack = [];
         // Cuántos pasos guarda Deshacer. Cada paso ocupa unos pocos cientos de
         // bytes: 250 alcanzan para deshacer una partida entera, sin costo -- y
         // son las mismas que el máximo de una crónica generada, así que
@@ -2933,20 +3055,48 @@
             updateUndoButton();
         }
 
+        // Vacía Deshacer y Rehacer juntos.
         function clearUndoStack() {
             undoStack = [];
+            redoStack = [];
+            updateUndoButton();
+        }
+
+        // Algo nuevo (una jugada, poner o sacar una ficha, ⇄): lo deshecho
+        // ya no se puede rehacer.
+        function clearRedoStack() {
+            if (redoStack.length === 0) return;
+            redoStack = [];
             updateUndoButton();
         }
 
         function updateUndoButton() {
-            // Hay dos copias del botón (una por ubicación, según el ancho de
-            // pantalla): se habilitan y deshabilitan juntas.
+            // Hay dos copias de cada botón (una por ubicación, según el ancho
+            // de pantalla): se habilitan y deshabilitan juntas.
             document.querySelectorAll('.undo-btn').forEach(btn => { btn.disabled = (undoStack.length === 0); });
+            document.querySelectorAll('.redo-btn').forEach(btn => { btn.disabled = (redoStack.length === 0); });
         }
 
         function undoLastMove() {
-            if (undoStack.length === 0) return;
+            if (isSpectatorMode || undoStack.length === 0) return;
             const snapshot = undoStack.pop();
+            // Cómo está todo AHORA, para que Rehacer vuelva exactamente acá:
+            // tablero, turno, color del marco, la ficha que venía capturando
+            // en cadena (si la había) y, grabando, las jugadas que se van a
+            // sacar de la crónica (para volver a anotarlas).
+            const redo = {
+                board: cloneBoard(board), turn: trackedTurn, deviated: chronicleDeviated,
+                chain: pieceMustContinueCapturing ? { row: pieceMustContinueCapturing.row, col: pieceMustContinueCapturing.col } : null,
+                tail: null
+            };
+            if (isRecording && typeof snapshot.chronLen === 'number') {
+                const len = snapshot.chronLen;
+                redo.tail = {
+                    moves: chronicleMoveList.slice(len), boards: chronicleBoards.slice(len + 1),
+                    turns: chronicleTurns.slice(len + 1), chains: chronicleChains.slice(len + 1)
+                };
+            }
+            redoStack.push(redo);
             board = snapshot.board;
             trackedTurn = snapshot.turn;
             chronicleDeviated = snapshot.deviated;
@@ -2960,6 +3110,69 @@
             updateFrameMode();
             syncLabBoard();
         }
+
+        // ============================================================
+        //  REHACER
+        // ============================================================
+        // Vuelve a donde se estaba antes del último Deshacer. Si se había
+        // deshecho a mitad de una captura en cadena, vuelve a ese mismo punto,
+        // con la ficha obligada a seguir. Grabando, la jugada se vuelve a
+        // anotar en la crónica, con todos sus saltos.
+        function redoLastMove() {
+            if (isSpectatorMode || redoStack.length === 0) return;
+            const state = redoStack.pop();
+            // La foto para poder volver a deshacerlo (la misma que saca
+            // executeMove al empezar una jugada).
+            undoStack.push({
+                board: cloneBoard(board), turn: trackedTurn, deviated: chronicleDeviated,
+                chronLen: isRecording ? chronicleMoveList.length : null
+            });
+            if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
+            board = state.board;
+            trackedTurn = state.turn;
+            chronicleDeviated = state.deviated;
+            if (isRecording && state.tail) {
+                chronicleMoveList = chronicleMoveList.concat(state.tail.moves);
+                chronicleBoards = chronicleBoards.concat(state.tail.boards);
+                chronicleTurns = chronicleTurns.concat(state.tail.turns);
+                chronicleChains = chronicleChains.concat(state.tail.chains);
+                chronicleCurrentIndex = chronicleMoveList.length;
+                refreshChronicleList();
+                updateLiveChronicleText();
+            }
+            pieceMustContinueCapturing = state.chain;
+            if (state.chain) {
+                const p = board[state.chain.row][state.chain.col];
+                selectedPosition = { row: state.chain.row, col: state.chain.col };
+                currentAllowedMoves = getBestCaptureSequences(state.chain.row, state.chain.col, board, p === p.toUpperCase()).sequences;
+            } else {
+                selectedPosition = null;
+                currentAllowedMoves = [];
+            }
+            updateUndoButton();
+            renderBoard();
+            renderTurnTracker();
+            updateFrameMode();
+            syncLabBoard();
+        }
+
+        // Los atajos de siempre: Ctrl+Z deshace; Ctrl+Y (o Ctrl+Shift+Z)
+        // rehace -- con Cmd en vez de Ctrl en una Mac. Mientras se escribe
+        // (chat, cuadro de la crónica, campito de la jugada) no hacen nada
+        // acá: ahí son los del texto.
+        document.addEventListener('keydown', (e) => {
+            if (isSpectatorMode || !(e.ctrlKey || e.metaKey) || e.altKey) return;
+            const el = e.target;
+            if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+            const k = (e.key || '').toLowerCase();
+            if (k === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undoLastMove();
+            } else if (k === 'y' || (k === 'z' && e.shiftKey)) {
+                e.preventDefault();
+                redoLastMove();
+            }
+        });
 
         // ============================================================
         //  RENDERIZADO
@@ -3185,6 +3398,9 @@
             if (!pieceMustContinueCapturing) {
                 pushUndoSnapshot();
             }
+            // Una jugada nueva (o un salto más de una cadena): lo deshecho ya
+            // no se puede rehacer.
+            clearRedoStack();
 
             // Mover una ficha es entrar (o seguir) en territorio
             // hipotético: si había una crónica a la vista, el tablero ya
@@ -3275,6 +3491,7 @@
                 // Se puede deshacer, igual que un movimiento (antes, colocar o
                 // sacar una ficha borraba todo el historial de Deshacer).
                 pushUndoSnapshot();
+                clearRedoStack();
                 board[row][col] = null;
                 selectedPosition = null;
                 currentAllowedMoves = [];
@@ -3306,6 +3523,7 @@
             // Colocación válida (ya pasó los límites): se guarda el tablero
             // antes, para poder deshacerla. Una rechazada no guarda nada.
             pushUndoSnapshot();
+            clearRedoStack();
             board[row][col] = finalType;
             selectedPosition = null;
             currentAllowedMoves = [];
@@ -3380,6 +3598,7 @@
         });
 
         document.querySelectorAll('.undo-btn').forEach(btn => btn.addEventListener('click', undoLastMove));
+        document.querySelectorAll('.redo-btn').forEach(btn => btn.addEventListener('click', redoLastMove));
         document.getElementById('rotarTableroBtn').addEventListener('click', toggleRotateBoard);
 
         // ============================================================
@@ -3848,6 +4067,7 @@
                 chronicleSplices = r.splices;
                 chronicleDeviated = r.deviated;
                 undoStack = r.undo;
+                redoStack = [];
                 document.getElementById('chronicleTextInput').value = r.text;
             } else {
                 // La crónica generada queda cargada, como cualquier otra,
@@ -3859,6 +4079,7 @@
                 // Las fotos de Deshacer de la grabación ya no sirven: se
                 // empieza de nuevo, igual que al navegar la crónica.
                 undoStack = [];
+                redoStack = [];
             }
             recordingIsSplice = false;
             recordingBaseLength = 0;
@@ -3924,6 +4145,9 @@
         function swapTurn() {
             if (!canSwapTurn()) return;
             const newTurn = (trackedTurn === 'w') ? 'b' : 'w';
+            // Cambiar el turno es algo nuevo: lo deshecho ya no se puede
+            // rehacer (grabando, además, cambia la posición de partida).
+            clearRedoStack();
             if (isRecording) {
                 // Todavía no se anotó nada: cambia el turno de la posición de
                 // partida (si era la inicial con blancas, deja de serlo).
@@ -4328,6 +4552,16 @@
             socket.emit('join-lab-spectator', labRoom);
         }
 
+        // De quién es el laboratorio que se está mirando (null: no se sabe).
+        let spectatedOwnerName = null;
+
+        // El subtítulo del espectador, en el idioma actual (reemplaza al
+        // subtítulo común, con sus dos partes).
+        function renderSpectatorSubtitle() {
+            const subtitle = document.querySelector('.lab-subtitle');
+            if (subtitle) subtitle.textContent = t('spectatingLabOf', spectatedOwnerName || t('spectatingLabOfSomeone'));
+        }
+
         function applySpectatorFrameMode(frameMode) {
             boardElement.classList.toggle('chronicle-territory', frameMode === 'chronicle');
             boardElement.classList.toggle('recording-territory', frameMode === 'recording');
@@ -4335,8 +4569,8 @@
 
         socket.on('lab-init', (data) => {
             board = data.board;
-            const subtitle = document.querySelector('.lab-subtitle');
-            if (subtitle) subtitle.textContent = t('spectatingLabOf', data.ownerName || t('spectatingLabOfSomeone'));
+            spectatedOwnerName = data.ownerName || null;
+            renderSpectatorSubtitle();
             applySpectatorFrameMode(data.frameMode);
             spectatorLastMove = data.lastMove || null;
             boardRotated = data.rotated === true;
@@ -4581,4 +4815,3 @@
 </body>
 
 </html>
-

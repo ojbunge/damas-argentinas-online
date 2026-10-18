@@ -93,8 +93,17 @@
                conjunto con su máximo, para que el punto donde la curva
                deja de crecer y se aplana en el máximo quede en el mismo
                ancho de ventana que antes (~857px) -- una curva más chica,
-               pero con la misma forma. */
-            --sq-size: clamp(26px, 5.95vw, 51px);
+               pero con la misma forma.
+               En celular, en cambio, el mínimo de 26 px dejaba el tablero
+               chico (292 px en cualquier celular) con márgenes vacíos a los
+               costados: ahí, a pedido de Otto (igual que en el Laboratorio),
+               el tablero ocupa todo el ancho menos 12 px de cada lado, con un
+               techo de 36 px por casilla -- justo donde la fórmula de siempre
+               lo alcanza (a los ~605 px de ancho): de ahí para arriba todo
+               queda exactamente como antes, sin saltos entre celular y tablet. */
+            --sq-size: clamp(26px,
+                max(5.95vw, min((100vw - 24px - 2 * var(--board-border) - 2 * var(--board-padding)) / 10, 36px)),
+                51px);
             --board-border: clamp(13px, 2.55vw, 17px);
             --board-padding: clamp(3px, 0.51vw, 4.25px);
         }
@@ -675,7 +684,15 @@
            sigue siendo perfectamente legible y deja ver el diálogo de
            arriba. */
         @media (max-width: 700px) {
+            /* Con left:50%, el navegador le daba al cartel como mucho la
+               mitad de la pantalla de ancho (en un celular de 360, 180 px:
+               una columna angosta y alta). Con un ancho propio (el de su
+               contenido, con un tope), queda bastante más ancho y más bajo --
+               y nunca más angosto que antes (de ahí el 50vw). */
             #victoryBanner {
+                box-sizing: border-box;
+                width: max-content;
+                max-width: max(50vw, min(88vw, 340px));
                 padding: 18px 22px;
                 font-size: 15px;
             }
@@ -947,6 +964,18 @@
             padding: 5px 15px;
             border-radius: 5px;
             border-left: 3px solid #f1c40f;
+        }
+
+        /* En celular (el mismo corte que usa la Arena para todo lo de
+           celular), la barra de turno, la de espectadores y la crónica miden
+           exactamente lo mismo que el tablero (como en el Laboratorio): todo
+           forma una sola columna, con los bordes alineados. */
+        @media (max-width: 700px) {
+            .status-container,
+            #spectatorsBox,
+            #moveHistoryPanel {
+                width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
+            }
         }
 
         .player-name-label {

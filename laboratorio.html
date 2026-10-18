@@ -105,7 +105,8 @@
             z-index: 50;
         }
 
-        #salirLobbyBtn {
+        #salirLobbyBtn,
+        #manualBtn {
             padding: 8px 16px;
             background: linear-gradient(180deg, #f1c40f, #c9980a);
             color: #2c1a10;
@@ -116,8 +117,16 @@
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
         }
 
-        #salirLobbyBtn:hover {
+        #salirLobbyBtn:hover,
+        #manualBtn:hover {
             filter: brightness(1.1);
+        }
+
+        /* En PC, el Manual en la esquina de arriba a la izquierda (el mismo
+           lugar donde la Arena tiene "📖 Acerca de"); idiomas y Salir al
+           Lobby, a la derecha, como siempre. */
+        #manualBtn {
+            margin-right: auto;
         }
 
         /* --- EL TRUJAMÁN: selector ES/EN (calcado de index.html) --- */
@@ -149,6 +158,68 @@
         .lang-btn.active {
             background: linear-gradient(180deg, #f1c40f, #c9980a);
             color: #2c1c0a;
+        }
+
+        /* --- LA BARRA DE ARRIBA, EN PANTALLAS ANGOSTAS ---
+           Flotando en las esquinas, la barra le tapaba el borde de arriba al
+           título (en celulares y tablets). Acá deja de flotar: es la primera
+           fila de la página, arriba del título, y se va con el resto al
+           scrollear -- como la de la Arena en celular. Tres columnas: las
+           dos de los costados miden siempre lo mismo (y los botones las
+           llenan, así el Manual y Salir al Lobby quedan del mismo tamaño), y
+           los idiomas, en la del medio, quedan en el centro exacto de la
+           pantalla. Mide lo mismo que el tablero, así los botones calzan con
+           sus bordes. Letra y relleno un poco más chicos que en PC, para que
+           entre en un solo renglón desde los 360 px de ancho (en los
+           celulares más chicos, "Salir al Lobby" pasa a dos renglones). */
+        @media (max-width: 899px) {
+            body {
+                padding-top: 10px;
+            }
+
+            #topBar {
+                position: static;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+                align-items: stretch;
+                column-gap: 6px;
+                width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
+                padding: 0;
+                margin: 0 0 2px 0;
+            }
+
+            #manualBtn,
+            #salirLobbyBtn {
+                width: 100%;
+                max-width: 150px;
+                margin: 0;
+                padding: 8px 5px;
+                font-size: 12px;
+                line-height: 1.2;
+            }
+
+            #manualBtn {
+                justify-self: start;
+            }
+
+            #salirLobbyBtn {
+                justify-self: end;
+            }
+
+            #langSwitcher {
+                align-self: center;
+                padding: 2px;
+                gap: 3px;
+            }
+
+            .lang-btn {
+                padding: 4px 5px;
+                font-size: 12px;
+            }
+
+            h1 {
+                margin-top: 6px;
+            }
         }
 
         /* --- EL ESCUDO FLUIDO, calcado de index.html --- */
@@ -1773,6 +1844,1138 @@
                 font-size: 19px;
             }
         }
+
+        /* ============================================================
+           EL MANUAL DEL LABORATORIO (botón "📖 Manual" de la barra de arriba)
+           ============================================================
+           Un pergamino aparte (assets/pergamino-manual-lab.jpg), estirado a
+           la forma del modal, con un marco dibujado por código: doble filete,
+           cuatro esquinas (la de arriba y la de abajo son dibujos distintos,
+           para que el líquido de los frascos no quede "pegado al techo"; cada
+           una se espeja a izquierda y derecha), el emblema (el Erlenmeyer con
+           la ficha adentro) montado en la línea de arriba, y la mesa del
+           alquimista como marca de agua tenue, fija abajo a la derecha. Los
+           dibujos están adentro de esta misma página (ver #lmSprite). Todo
+           lleva el prefijo lm- para no chocar con el CSS del Laboratorio.
+           Va por debajo del aviso de desafío (z-index 3100): si te desafían
+           con el manual abierto, el aviso se ve igual. */
+        #labManual {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 3050;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            /* Medidas del marco: --fw/--fh, el tamaño del pergamino; --ix/--iy,
+               a qué distancia del borde van las líneas (por eje: el papel está
+               estirado, así que su borde gastado también); --c, el lado de las
+               esquinas; --ew, el ancho del emblema. */
+            --fw: min(820px, 94vw);
+            --fh: min(800px, 88vh);
+            --ix: calc(var(--fw) * 0.045);
+            /* (en pantallas bajas, la línea de arriba baja lo justo para que el
+               emblema, que la cruza, no toque el borde del papel) */
+            --iy: max(calc(var(--fh) * 0.052), calc(var(--ew) * 35 / 220 + 10px));
+            --c: 150px;
+            --ew: 168px;
+            --lm-ink: #5e4426;
+            --lm-lw: 1.3px;
+        }
+
+        @supports (height: 1dvh) {
+            #labManual {
+                --fh: min(800px, 88dvh);
+            }
+        }
+
+        #labManual.open {
+            display: flex;
+        }
+
+        @media (max-width: 560px) {
+            #labManual {
+                --c: 80px;
+                --ew: 120px;
+            }
+        }
+
+        /* Celular acostado (pantalla muy baja): más alto y adornos más chicos,
+           para que quede lugar para leer. */
+        @media (max-height: 520px) {
+            #labManual {
+                --fh: 96vh;
+                --c: 64px;
+                --ew: 100px;
+                --iy: max(calc(var(--fh) * 0.04), calc(var(--ew) * 35 / 220 + 8px));
+            }
+        }
+
+        /* Notebooks de pantalla baja: adornos un poco más chicos. */
+        @media (min-width: 561px) and (max-height: 700px) and (min-height: 521px) {
+            #labManual {
+                --c: 128px;
+                --ew: 150px;
+            }
+        }
+
+        #lmFrame {
+            position: relative;
+            width: var(--fw);
+            height: var(--fh);
+            /* El color de fondo, por si el pergamino tarda en llegar. */
+            background: #f4e9d2 url('assets/pergamino-manual-lab.jpg') 0 0 / 100% 100% no-repeat;
+            border-radius: 6px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Los adornos (fijos: no se mueven al leer) --- */
+        #lmDeco {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.82;
+            z-index: 2;
+        }
+
+        #lmDeco .lm-ln {
+            position: absolute;
+            background: var(--lm-ink);
+        }
+
+        #lmDeco .lm-h { height: var(--lm-lw); }
+        #lmDeco .lm-v { width: var(--lm-lw); }
+        #lmDeco .lm-hair.lm-h { height: 0.8px; }
+        #lmDeco .lm-hair.lm-v { width: 0.8px; }
+
+        /* La línea principal pasa por el nudo de las esquinas; la de arriba se
+           corta donde está el emblema (que la continúa con sus volutas). */
+        .lm-t1 { top: var(--iy); left: var(--ix); width: calc(50% - var(--ix) - var(--ew) / 2); }
+        .lm-t2 { top: var(--iy); right: var(--ix); width: calc(50% - var(--ix) - var(--ew) / 2); }
+        .lm-b1 { bottom: var(--iy); left: var(--ix); right: var(--ix); }
+        .lm-l1 { left: var(--ix); top: var(--iy); bottom: var(--iy); }
+        .lm-r1 { right: var(--ix); top: var(--iy); bottom: var(--iy); }
+        /* El filete fino, 5 px más afuera. */
+        .lm-t3 { top: calc(var(--iy) - 5px); left: calc(var(--ix) - 5px); width: calc(50% - var(--ix) + 5px - var(--ew) / 2); }
+        .lm-t4 { top: calc(var(--iy) - 5px); right: calc(var(--ix) - 5px); width: calc(50% - var(--ix) + 5px - var(--ew) / 2); }
+        .lm-b3 { bottom: calc(var(--iy) - 5px); left: calc(var(--ix) - 5px); right: calc(var(--ix) - 5px); }
+        .lm-l3 { left: calc(var(--ix) - 5px); top: calc(var(--iy) - 5px); bottom: calc(var(--iy) - 5px); }
+        .lm-r3 { right: calc(var(--ix) - 5px); top: calc(var(--iy) - 5px); bottom: calc(var(--iy) - 5px); }
+
+        /* Las esquinas: el nudo del dibujo (a 14/240 de su borde) cae justo en
+           el cruce de las líneas. */
+        .lm-cn {
+            position: absolute;
+            width: var(--c);
+            height: var(--c);
+        }
+
+        .lm-cn.lm-tl { top: calc(var(--iy) - var(--c) * 14 / 240); left: calc(var(--ix) - var(--c) * 14 / 240); }
+        .lm-cn.lm-tr { top: calc(var(--iy) - var(--c) * 14 / 240); right: calc(var(--ix) - var(--c) * 14 / 240); transform: scaleX(-1); }
+        .lm-cn.lm-bl { bottom: calc(var(--iy) - var(--c) * 14 / 240); left: calc(var(--ix) - var(--c) * 14 / 240); }
+        .lm-cn.lm-br { bottom: calc(var(--iy) - var(--c) * 14 / 240); right: calc(var(--ix) - var(--c) * 14 / 240); transform: scaleX(-1); }
+
+        /* El emblema: su línea (y = 45 de 84) empalma con la de arriba. */
+        #lmEmb {
+            position: absolute;
+            width: var(--ew);
+            height: calc(var(--ew) * 84 / 220);
+            left: calc(50% - var(--ew) / 2);
+            top: calc(var(--iy) - var(--ew) * 45 / 220);
+        }
+
+        /* La mesa del alquimista: marca de agua muy tenue, fija, abajo a la
+           derecha, detrás del texto. */
+        #lmScene {
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.11;
+            width: min(48%, 360px);
+            aspect-ratio: 440 / 280;
+            right: calc(var(--ix) + var(--c) * 0.42);
+            bottom: calc(var(--iy) + 8px);
+        }
+
+        /* --- El encabezado: debajo del emblema y de los frasquitos de las
+           esquinas. Tres columnas (las de los costados, iguales): el idioma
+           queda en el centro exacto, debajo del emblema. --- */
+        #lmHeader {
+            position: relative;
+            z-index: 3;
+            flex-shrink: 0;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            padding: calc(var(--iy) + var(--c) * 82 / 240 + 4px) calc(var(--ix) + var(--c) * 46 / 240) 0;
+        }
+
+        .lm-hbtn {
+            background: rgba(58, 42, 21, 0.85);
+            color: #f1c40f;
+            border: 1px solid rgba(241, 196, 15, 0.5);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .lm-hbtn:hover {
+            background: rgba(58, 42, 21, 1);
+        }
+
+        .lm-hbtn.active {
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1c0a;
+            font-weight: 700;
+        }
+
+        #lmIdxBtn {
+            justify-self: start;
+        }
+
+        #lmLang {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        #lmCloseBtn {
+            justify-self: end;
+            background: rgba(58, 42, 21, 0.85);
+            color: #f1c40f;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        #lmCloseBtn:hover {
+            background: rgba(58, 42, 21, 1);
+        }
+
+        @media (max-width: 420px) {
+            #lmLang {
+                gap: 4px;
+            }
+
+            #lmHeader .lm-hbtn {
+                padding: 5px 6px;
+            }
+        }
+
+        /* Los celulares más angostos (320 px): un poco más chicos, para que
+           "↑ Contents" (en inglés) no llegue a los idiomas. */
+        @media (max-width: 340px) {
+            #lmLang {
+                gap: 3px;
+            }
+
+            #lmHeader .lm-hbtn {
+                padding: 4px 5px;
+                font-size: 11px;
+            }
+        }
+
+        /* --- Lo que se lee: nunca se apoya sobre los dibujos. Margen a los
+           costados para no pisar las enredaderas, y al desplazarse se
+           desvanece arriba (debajo de los botones) y abajo (sobre las esquinas
+           de abajo); al llegar al final, la última línea queda entera. --- */
+        #lmScroll {
+            position: relative;
+            z-index: 3;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            margin-bottom: calc(var(--iy) + 3px);
+            padding: 10px calc(var(--ix) + var(--c) * 41 / 240 + 10px) calc(var(--c) * 0.55 + 12px);
+            font-family: 'EB Garamond', 'Garamond', Georgia, serif;
+            color: #2c1c0a;
+            font-size: 18.5px;
+            line-height: 1.42;
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - var(--c) * 0.55), transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - var(--c) * 0.55), transparent 100%);
+        }
+
+        @media (max-width: 560px) {
+            #lmScroll {
+                font-size: 16.5px;
+                padding: 8px calc(var(--ix) + var(--c) * 41 / 240 + 4px) calc(var(--c) * 0.55 + 12px);
+            }
+        }
+
+        #lmScroll:focus {
+            outline: none;
+        }
+
+        .lm-block p {
+            margin: 6px 0;
+        }
+
+        /* (Es un h1: se le sacan los estilos del título del Laboratorio.) */
+        .lm-h1 {
+            font-family: inherit;
+            text-shadow: none;
+            letter-spacing: normal;
+            font-weight: 700;
+            font-size: 34px;
+            line-height: 1.15;
+            text-align: center;
+            margin: 4px 0 6px;
+            color: #2c1c0a;
+        }
+
+        .lm-epi {
+            text-align: center;
+            font-style: italic;
+            color: #4a3418;
+            margin: 0 auto 6px !important;
+            max-width: 560px;
+        }
+
+        .lm-div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 14px 0 2px;
+            color: rgba(94, 68, 38, 0.85);
+            font-size: 13px;
+        }
+
+        .lm-div::before,
+        .lm-div::after {
+            content: '';
+            flex: 1;
+            border-top: 1px solid rgba(94, 68, 38, 0.5);
+        }
+
+        .lm-h2 {
+            font-weight: 700;
+            font-size: 25px;
+            line-height: 1.2;
+            margin: 16px 0 6px;
+            color: #3b2509;
+        }
+
+        .lm-h3 {
+            font-weight: 600;
+            font-variant: small-caps;
+            font-size: 1.12em;
+            letter-spacing: 0.4px;
+            margin: 14px 0 4px;
+            color: #4a2f10;
+        }
+
+        @media (max-width: 560px) {
+            .lm-h1 { font-size: 25px; }
+            .lm-h2 { font-size: 21px; }
+        }
+
+        .lm-block a {
+            color: #2c1c0a;
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 1px dotted rgba(44, 28, 10, 0.55);
+        }
+
+        .lm-block a:hover {
+            border-bottom-style: solid;
+        }
+
+        /* La lista de "¿Para qué sirve?": ícono en su columna. */
+        .lm-uses {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .lm-uses li {
+            display: grid;
+            grid-template-columns: 30px 1fr;
+            gap: 4px;
+            margin: 7px 0;
+        }
+
+        .lm-uses .lm-ic {
+            font-size: 19px;
+            line-height: 1.35;
+        }
+
+        .lm-also {
+            margin: 10px 0 0 !important;
+            font-size: 0.95em;
+        }
+
+        .lm-steps {
+            padding-left: 1.4em;
+            margin: 6px 0;
+        }
+
+        .lm-steps li,
+        .lm-list li {
+            margin: 5px 0;
+        }
+
+        .lm-list {
+            padding-left: 1.2em;
+            margin: 6px 0;
+        }
+
+        .lm-tip {
+            background: rgba(241, 196, 15, 0.17);
+            border-left: 4px solid #c9980a;
+            padding: 7px 12px;
+            border-radius: 4px;
+            font-size: 0.93em;
+            margin: 10px 0 !important;
+        }
+
+        .lm-word {
+            margin: 8px 0 !important;
+        }
+
+        /* --- Los botones, dibujados con el mismo CSS que en el Laboratorio
+           (más chicos, para ir dentro del texto). --- */
+        .lm-chip {
+            display: inline-block;
+            background: linear-gradient(180deg, #9aa7b3, #5c6773);
+            color: #1a1f24;
+            border: 2px solid #3d454d;
+            border-radius: 7px;
+            font: 700 12.5px/1.35 'Segoe UI', Tahoma, sans-serif;
+            padding: 1px 7px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            vertical-align: 1px;
+        }
+
+        .lm-chip.lm-sq {
+            padding: 1px 4px;
+        }
+
+        .lm-chip.lm-navc {
+            border-radius: 5px;
+            padding: 1px 5px;
+            font-weight: 400;
+        }
+
+        .lm-chip.lm-rec-on {
+            background: linear-gradient(180deg, #b23b3b, #6e1717);
+            border-color: #3a0d0d;
+        }
+
+        .lm-chip.lm-gold {
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1a10;
+            border-color: #8a6a08;
+        }
+
+        .lm-chip.lm-dark {
+            background: linear-gradient(180deg, rgba(70, 56, 34, 0.95), rgba(32, 25, 15, 0.95));
+            color: #f1c40f;
+            border: 1px solid rgba(241, 196, 15, 0.6);
+            font-weight: 400;
+        }
+
+        .lm-chip.lm-dark b {
+            font-weight: 700;
+        }
+
+        .lm-chip.lm-counter {
+            background: rgba(0, 0, 0, 0.62);
+            color: #fff;
+            border-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .lm-chip.lm-swapc {
+            background: rgba(20, 15, 8, 0.9);
+            color: #f1c40f;
+            border: 1px solid #f1c40f;
+            border-radius: 5px;
+            font-weight: 400;
+            padding: 0 5px;
+        }
+
+        .lm-chip.lm-langc {
+            background: rgba(0, 0, 0, 0.55);
+            border: 2px solid #7a5a24;
+            color: #d9c9a3;
+            padding: 1px 3px;
+        }
+
+        .lm-langc i {
+            font-style: normal;
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        .lm-langc i.on {
+            background: linear-gradient(180deg, #f1c40f, #c9980a);
+            color: #2c1c0a;
+        }
+
+        /* Ficha a colocar: los cuatro botoncitos de fichas. */
+        .lm-chip.lm-pcs {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(241, 196, 15, 0.5);
+            padding: 2px 4px;
+            vertical-align: -3px;
+        }
+
+        .lm-pcs i {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 17px;
+            height: 17px;
+            margin: 0 1px;
+            background: #1c2833;
+            border: 1px solid #566573;
+            border-radius: 4px;
+            vertical-align: middle;
+        }
+
+        .lm-pcs i.on {
+            border-color: #f1c40f;
+            background: #3a3020;
+        }
+
+        .lm-pcs i::after {
+            content: '';
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            box-sizing: border-box;
+        }
+
+        .lm-pcs i.w::after { background: #fff; border: 1px solid #000; }
+        .lm-pcs i.b::after { background: #000; border: 1px solid #888; }
+        .lm-pcs i.k::after { box-shadow: inset 0 0 0 2px #ffb300; }
+
+        /* Cómo aparecés en el Salón de los Caballeros. */
+        .lm-salon {
+            display: inline-block;
+            background: #1c2733;
+            padding: 3px;
+            border-radius: 6px;
+            vertical-align: 1px;
+        }
+
+        .lm-salon > span {
+            display: inline-block;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            background: rgba(241, 196, 15, 0.2);
+            border: 1px solid #f1c40f;
+            border-radius: 4px;
+            color: #fff;
+            font: 13px/1.3 'Segoe UI', Tahoma, sans-serif;
+            padding: 2px 8px;
+        }
+
+        .lm-kbd {
+            display: inline-block;
+            font: 600 12.5px/1.3 'Segoe UI', Tahoma, sans-serif;
+            padding: 0 5px;
+            border: 1px solid rgba(44, 28, 10, 0.5);
+            border-bottom-width: 2px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.35);
+            vertical-align: 1px;
+        }
+
+        /* --- Las señales del tablero: tres tableritos y cuatro casillas --- */
+        .lm-signals {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin: 10px 0 6px;
+        }
+
+        .lm-sig {
+            text-align: center;
+            font-size: 0.86em;
+            line-height: 1.28;
+        }
+
+        .lm-sig b {
+            display: block;
+            font-size: 1.1em;
+            margin-top: 2px;
+        }
+
+        .lm-mini {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            width: 100%;
+            max-width: 150px;
+            margin: 0 auto 4px;
+            border: 7px solid #1a3324;
+            border-radius: 7px;
+            background: #1a3324;
+            padding: 1px;
+            box-sizing: border-box;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+        }
+
+        .lm-mini.lm-v { border-color: #3F114D; background: #3F114D; }
+        .lm-mini.lm-r { border-color: #5a1212; background: #5a1212; }
+
+        .lm-mini span {
+            aspect-ratio: 1;
+            position: relative;
+        }
+
+        .lm-mini .l { background: #f0d9b5; }
+        .lm-mini .d { background: #b58863; }
+        .lm-mini .h { background: rgb(128, 82, 10); }
+
+        .lm-mini .pw::after,
+        .lm-mini .pb::after {
+            content: '';
+            position: absolute;
+            inset: 12%;
+            border-radius: 50%;
+        }
+
+        .lm-mini .pw::after { background: #fff; box-shadow: 0 0 0 0.5px #333; }
+        .lm-mini .pb::after { background: #111; box-shadow: 0 0 0 0.5px #777; }
+        .lm-mini .k::after { outline: 1.5px solid #ffb300; outline-offset: -3px; }
+
+        .lm-cues {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin: 12px 0 4px;
+        }
+
+        @media (max-width: 560px) {
+            .lm-signals { gap: 8px; }
+            .lm-cues { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        .lm-cue {
+            text-align: center;
+            font-size: 0.84em;
+            line-height: 1.25;
+        }
+
+        .lm-sqr {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 5px;
+            background: #b58863;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .lm-sqr.h { background: rgb(128, 82, 10); }
+        .lm-sqr.g { box-shadow: inset 0 0 0 4px lime, 0 2px 5px rgba(0, 0, 0, 0.3); }
+
+        .lm-pc {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            box-sizing: border-box;
+        }
+
+        .lm-pc.w { background: #fff; border: 2px solid #000; }
+        .lm-pc.b { background: #000; border: 2px solid grey; }
+        .lm-pc.sel { outline: 3px solid red; }
+
+        .lm-pc.must {
+            border: 3px solid #00d4ff;
+            animation: lm-pulse 1.5s infinite;
+        }
+
+        @keyframes lm-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7); }
+            70% { box-shadow: 0 0 0 9px rgba(0, 212, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
+        }
+
+        /* --- Las animaciones: un Laboratorio en miniatura (tablero, botones y
+           lista), que se agranda o achica con el ancho del texto (1em = un
+           treintaiseisavo del ancho). --- */
+        .lm-anim {
+            container-type: inline-size;
+            width: 100%;
+            max-width: 520px;
+            margin: 12px auto 2px;
+            overflow: hidden;
+            border-radius: 1em;
+        }
+
+        .lma-stage {
+            position: relative;
+            /* Ancho: 36em = todo el ancho del recuadro. (El primer valor, para
+               los navegadores viejos que no conocen la unidad cqw.) */
+            font-size: 12px;
+            font-size: calc(100cqw / 36);
+            width: 36em;
+            box-sizing: border-box;
+            padding: 0.8em;
+            display: grid;
+            grid-template-columns: 17.6em minmax(0, 1fr);
+            grid-template-areas: "strip strip" "board side";
+            column-gap: 1em;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: rgba(20, 16, 10, 0.88);
+            border-radius: 1em;
+            box-shadow: 0 0.4em 1.2em rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+        }
+
+        .lma-strip {
+            grid-area: strip;
+            height: 2.2em;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .lma-board {
+            grid-area: board;
+            position: relative;
+            /* 16em de casillas + el marco (el Laboratorio usa border-box). */
+            box-sizing: border-box;
+            width: 17.6em;
+            height: 17.6em;
+            border: 0.7em solid #1a3324;
+            background: #1a3324;
+            border-radius: 0.8em;
+            padding: 0.1em;
+            transition: border-color 0.45s, background-color 0.45s;
+        }
+
+        .lma-board.v { border-color: #3F114D; background: #3F114D; }
+        .lma-board.r { border-color: #5a1212; background: #5a1212; }
+
+        /* La columna de la derecha mide lo que el tablero (contain: size: su
+           contenido no estira la fila). */
+        .lma-side {
+            grid-area: side;
+            contain: size;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+            min-width: 0;
+        }
+
+        /* Angosto (celular): como el Laboratorio en celular -- el tablero
+           arriba, con la lista al lado; abajo, el cuadro de texto, los botones
+           y las flechas, a todo el ancho. */
+        @container (max-width: 400px) {
+            .lma-stage {
+                font-size: calc(100cqw / 28);
+                width: 28em;
+                grid-template-areas: "strip strip" "board list" "ta ta" "main main" "nav nav";
+                column-gap: 0.8em;
+            }
+
+            .lma-side {
+                display: contents;
+            }
+
+            .lma-ta { grid-area: ta; margin-top: 0.5em; }
+            .lma-main { grid-area: main; margin-top: 0.5em; }
+            .lma-nav { grid-area: nav; margin-top: 0.5em; }
+            .lma-list { grid-area: list; contain: size; overflow: hidden; }
+            .lma-lines { font-size: 0.85em !important; }
+            /* "📜 CHRONICLE" (en inglés) tiene que entrar en un renglón */
+            .lma-lh { font-size: 0.78em; letter-spacing: 0.02em; white-space: nowrap; }
+        }
+
+        .lma-sqs {
+            position: absolute;
+            inset: 0.1em;
+            display: grid;
+            grid-template-columns: repeat(10, 1.6em);
+            grid-template-rows: repeat(10, 1.6em);
+        }
+
+        .lma-sqs i {
+            display: block;
+        }
+
+        .lma-sqs .l { background: #f0d9b5; }
+        .lma-sqs .d { background: #b58863; transition: background-color 0.25s; }
+        .lma-sqs .d.h { background: rgb(128, 82, 10); }
+        .lma-sqs .d.t { box-shadow: inset 0 0 0 0.25em lime; }
+
+        .lma-pcs {
+            position: absolute;
+            inset: 0.1em;
+            pointer-events: none;
+        }
+
+        .lma-p {
+            position: absolute;
+            width: 1.28em;
+            height: 1.28em;
+            margin: 0.16em;
+            border-radius: 50%;
+            box-sizing: border-box;
+            transition: left 0.5s ease-in-out, top 0.5s ease-in-out, opacity 0.35s, transform 0.35s;
+        }
+
+        .lma-p.w { background: #fff; border: 0.12em solid #000; }
+        .lma-p.b { background: #000; border: 0.12em solid grey; }
+        .lma-p.k::after {
+            content: '';
+            position: absolute;
+            inset: 18%;
+            border: 0.17em solid #ffb300;
+            border-radius: 50%;
+        }
+
+        .lma-p.sel { outline: 0.22em solid red; }
+        .lma-p.gone { opacity: 0; transform: scale(0.5); }
+
+        .lma-noanim .lma-p,
+        .lma-noanim .lma-board,
+        .lma-noanim .lma-sqs .d {
+            transition: none !important;
+        }
+
+        .lma-ta {
+            height: 2.95em;
+            background: rgba(255, 255, 255, 0.92);
+            color: #1a1a1a;
+            border: 0.1em solid #7a5a24;
+            border-radius: 0.5em;
+            padding: 0.25em 0.45em;
+            font-size: 0.85em;
+            line-height: 1.22;
+            white-space: pre;
+            overflow: hidden;
+            transition: background-color 0.3s;
+        }
+
+        .lma-ta.rec { background: rgba(255, 228, 228, 0.95); }
+        .lma-ta .ph { color: #888; font-style: italic; white-space: normal; }
+
+        .lma-row {
+            display: flex;
+            gap: 0.4em;
+            align-items: stretch;
+        }
+
+        .lma-c {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #9aa7b3, #5c6773);
+            color: #1a1f24;
+            border: 0.15em solid #3d454d;
+            border-radius: 0.6em;
+            font-weight: 700;
+            font-size: 0.95em;
+            padding: 0.3em 0.5em;
+            white-space: nowrap;
+            box-shadow: 0 0.2em 0.5em rgba(0, 0, 0, 0.45);
+            transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
+            position: relative;
+        }
+
+        .lma-c.wide { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+        .lma-c.ico { flex: 0 0 2.6em; padding: 0; font-size: 1.25em; font-weight: 400; }
+        .lma-c.nav { flex: 1 1 0; padding: 0.2em 0; font-weight: 400; border-radius: 0.45em; }
+        .lma-c.num { flex: 1.3 1 0; background: #fff; color: #222; border: 0.1em solid #7a5a24; border-radius: 0.45em; font-weight: 400; box-shadow: none; }
+        .lma-c.recon { background: linear-gradient(180deg, #b23b3b, #6e1717); border-color: #3a0d0d; }
+        .lma-c.gold { background: linear-gradient(180deg, #f1c40f, #c9980a); color: #2c1a10; border-color: #8a6a08; }
+        .lma-c.tt { background: linear-gradient(180deg, rgba(70, 56, 34, 0.95), rgba(32, 25, 15, 0.95)); color: #f1c40f; border: 0.1em solid rgba(241, 196, 15, 0.55); font-weight: 400; }
+        .lma-c.tt.on { background: linear-gradient(180deg, rgba(18, 14, 8, 0.95), rgba(42, 33, 20, 0.95)); border-color: #f1c40f; }
+        .lma-c.tt b { margin-left: 0.3em; }
+        .lma-c.cnt { background: rgba(0, 0, 0, 0.5); color: #fff; border-color: transparent; box-shadow: none; }
+
+        .lma-c.press {
+            transform: translateY(0.12em) scale(0.96);
+            filter: brightness(1.25);
+            box-shadow: 0 0 0 0.3em rgba(241, 196, 15, 0.9);
+        }
+
+        .lma-faces {
+            display: grid;
+        }
+
+        .lma-faces span {
+            grid-area: 1 / 1;
+            transition: opacity 0.2s;
+        }
+
+        .lma-faces .f2 { opacity: 0; }
+        .lma-faces.flip .f1 { opacity: 0; }
+        .lma-faces.flip .f2 { opacity: 1; }
+
+        .lma-list {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.35);
+            border: 0.1em solid rgba(241, 196, 15, 0.4);
+            border-radius: 0.6em;
+            padding: 0.3em 0.4em;
+        }
+
+        .lma-lh {
+            color: #f1c40f;
+            font-weight: 700;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-align: center;
+            border-bottom: 0.1em solid rgba(241, 196, 15, 0.3);
+            padding-bottom: 0.2em;
+            margin-bottom: 0.2em;
+        }
+
+        .lma-lines {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            color: #fff;
+            font-size: 0.95em;
+        }
+
+        .lma-lines div {
+            padding: 0.05em 0.4em;
+            border-radius: 0.3em;
+            white-space: nowrap;
+            line-height: 1.38;
+            transition: background-color 0.3s;
+        }
+
+        .lma-lines .cur { background: rgba(118, 50, 150, 0.85); box-shadow: inset 0.25em 0 0 #c58fe0; font-weight: 700; }
+        .lma-lines.g .cur { background: rgba(38, 104, 66, 0.9); box-shadow: inset 0.25em 0 0 #7ed6a2; }
+        .lma-lines.r .cur { background: rgba(165, 38, 38, 0.88); box-shadow: inset 0.25em 0 0 #ff9a9a; }
+        .lma-lines .clk { box-shadow: 0 0 0 0.2em rgba(241, 196, 15, 0.9); }
+        .lma-lines .hint { color: #a8916a; font-style: italic; white-space: normal; text-align: center; padding-top: 1.2em; }
+        .lma-lines .split { border-top: 0.15em dashed rgba(241, 196, 15, 0.7); height: 0; padding: 0; margin: 0.25em 0.4em; }
+
+        /* El "¿Continuar?" del navegador, en chiquito. */
+        .lma-dlg {
+            position: absolute;
+            left: 50%;
+            top: 46%;
+            transform: translate(-50%, -50%) scale(0.92);
+            width: 22em;
+            background: #fff;
+            color: #222;
+            border-radius: 0.7em;
+            box-shadow: 0 0.6em 2em rgba(0, 0, 0, 0.6);
+            padding: 0.9em 1em 0.8em;
+            font-size: 1em;
+            line-height: 1.3;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+            z-index: 5;
+        }
+
+        .lma-dlg.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .lma-dlg .btns {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5em;
+            margin-top: 0.7em;
+        }
+
+        .lma-dlg .btns span {
+            border-radius: 1em;
+            padding: 0.25em 0.9em;
+            border: 0.1em solid #9aa;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .lma-dlg .btns .ok { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+        .lma-dlg .btns .press { transform: scale(0.95); box-shadow: 0 0 0 0.25em rgba(241, 196, 15, 0.9); }
+
+        .lma-cap {
+            min-height: 2.9em;
+            margin: 6px 4px 0 !important;
+            text-align: center;
+            font-style: italic;
+            color: #3b2509;
+            font-size: 0.95em;
+            line-height: 1.38;
+        }
+
+        .lma-replay {
+            display: none;
+            margin: 2px auto 0;
+            font: 12px 'Segoe UI', Tahoma, sans-serif;
+            background: rgba(58, 42, 21, 0.85);
+            color: #f1c40f;
+            border: 1px solid rgba(241, 196, 15, 0.5);
+            border-radius: 6px;
+            padding: 4px 10px;
+            cursor: pointer;
+        }
+
+        .lm-anim.lma-still .lma-replay {
+            display: block;
+        }
+
+        /* --- El mapa: captura real del Laboratorio con sus zonas numeradas --- */
+        .lm-maptoggle {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .lm-map {
+            position: relative;
+            margin: 6px auto 10px;
+            line-height: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .lm-map.lm-mpc { max-width: 100%; }
+        .lm-map.lm-mcel { max-width: 320px; }
+
+        .lm-map img {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #2a2418;
+        }
+
+        .lm-mapwrap .lm-map.lm-mcel,
+        .lm-mapwrap.lm-show-cel .lm-map.lm-mpc {
+            display: none;
+        }
+
+        .lm-mapwrap.lm-show-cel .lm-map.lm-mcel {
+            display: block;
+        }
+
+        .lm-zone {
+            position: absolute;
+            border: 2px dashed rgba(241, 196, 15, 0.95);
+            border-radius: 6px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+        }
+
+        .lm-zn {
+            position: absolute;
+            transform: translate(-45%, -45%);
+            width: 22px;
+            height: 22px;
+            line-height: 20px;
+            border-radius: 50%;
+            background: #f1c40f;
+            color: #2c1c0a;
+            border: 1px solid #fff;
+            font: 700 13px/20px 'Segoe UI', Tahoma, sans-serif;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+            pointer-events: none;
+        }
+
+        .lm-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0 12px;
+            font-size: 0.9em;
+            line-height: 1.3;
+        }
+
+        .lm-table th,
+        .lm-table td {
+            border: 1px solid rgba(107, 76, 26, 0.4);
+            padding: 5px 7px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .lm-table th {
+            background: rgba(107, 76, 26, 0.18);
+            font-weight: 700;
+        }
+
+        .lm-table td:first-child,
+        .lm-table th:first-child {
+            text-align: center;
+            width: 1%;
+        }
+
+        .lm-table .lm-zn {
+            position: static;
+            display: inline-block;
+            transform: none;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            line-height: 18px;
+        }
+
+        .lm-mapwrap .lm-z-cel,
+        .lm-mapwrap.lm-show-cel .lm-z-pc {
+            display: none;
+        }
+
+        .lm-mapwrap.lm-show-cel .lm-z-cel {
+            display: inline-block;
+        }
+
+        @media (max-width: 560px) {
+            .lm-table { font-size: 0.86em; }
+            .lm-table th, .lm-table td { padding: 4px 5px; }
+        }
+
+        /* En los celulares angostos, los botones de la tabla pueden pasar a
+           dos renglones (si no, la tabla no entra). */
+        @media (max-width: 420px) {
+            .lm-table .lm-chip { white-space: normal; }
+            .lm-table th, .lm-table td { padding: 4px 4px; }
+        }
+
+        .lm-faq dt {
+            font-weight: 700;
+            margin: 12px 0 2px;
+        }
+
+        .lm-faq dd {
+            margin: 0 0 4px;
+        }
+
+        .lm-end {
+            text-align: center;
+            color: rgba(94, 68, 38, 0.85);
+            margin: 18px 0 0 !important;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .lm-pc.must { animation: none; box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.35); }
+        }
     </style>
 </head>
 
@@ -1792,7 +2995,13 @@
         <a href="#" onclick="openTerms(); return false;" data-i18n="footerTermsLink">Ver Términos de Uso</a>.
     </footer>
 
+    <!-- La barra de arriba: el Manual a la izquierda; los idiomas y Salir al
+         Lobby a la derecha (en PC, flotando en las esquinas, como siempre).
+         En pantallas angostas pasa a ser una fila arriba del título, con los
+         idiomas en el centro exacto (ver "LA BARRA DE ARRIBA, EN PANTALLAS
+         ANGOSTAS" en el CSS). -->
     <div id="topBar">
+        <button id="manualBtn" type="button" onclick="openManual()" data-i18n="manualBtn">📖 Manual</button>
         <div id="langSwitcher">
             <button class="lang-btn" data-lang="es" onclick="setLanguage('es')">🇦🇷 ES</button>
             <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">🇬🇧 EN</button>
@@ -1906,7 +3115,7 @@
 
         <div id="chroniclePlayerPanel">
             <div id="chronicleInputSection">
-                <h3 data-i18n="chronicleInputTitle">Pegá la crónica de una partida</h3>
+                <h3 data-i18n="chronicleInputTitle">Pegá la crónica de una partida:</h3>
                 <textarea id="chronicleTextInput" data-i18n-placeholder="chronicleTextPlaceholder"
                     placeholder="Pegá acá la crónica completa, desde la jugada 1..."></textarea>
                 <!-- Un solo botón con dos caras: "Reproducir" (sin crónica
@@ -2304,6 +3513,385 @@
         </div>
     </div>
 
+    <!-- EL MANUAL DEL LABORATORIO (botón "📖 Manual"): un pergamino aparte, con
+         su marco dibujado (ver "EL MANUAL DEL LABORATORIO" en el CSS y en el
+         JS). Los dibujos de los adornos van en el sprite de acá abajo (un
+         <symbol> por adorno); el texto, en los dos idiomas, cada uno en su
+         bloque (se muestra uno solo). -->
+    <div id="labManual" role="dialog" aria-modal="true" aria-labelledby="lmTitleEs" lang="es">
+        <svg id="lmSprite" xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden"><defs><clipPath id="lmo-bulbT"><circle cx="66" cy="66" r="23.4"/></clipPath><mask id="lmo-crescT"><circle cx="66" cy="66" r="23.4" fill="white"/><circle cx="59" cy="59" r="24" fill="black"/></mask><clipPath id="lmo-hr1"><rect x="42" y="42" width="48" height="48"/></clipPath><clipPath id="lmo-erlB"><path d="M72.5,124 L72.5,146 L58,179 Q55,182 59,182 L101,182 Q105,182 102,179 L87.5,146 L87.5,124 Z"/></clipPath><clipPath id="lmo-hr2"><rect x="86" y="124" width="19" height="58"/></clipPath><clipPath id="lmo-erlE"><path d="M103,12 L103,30 L86,71 Q83,74 87,74 L133,74 Q137,74 134,71 L117,30 L117,12 Z"/></clipPath><clipPath id="lmo-hr3"><rect x="119" y="30" width="18" height="44"/></clipPath><clipPath id="lmo-shelfClip"><rect x="70" y="74" width="230" height="6"/></clipPath><clipPath id="lmo-underTop"><rect x="18" y="210" width="410" height="6"/></clipPath><clipPath id="lmo-leg46"><rect x="40" y="210" width="16" height="64"/></clipPath><clipPath id="lmo-leg400"><rect x="394" y="210" width="16" height="64"/></clipPath><clipPath id="lmo-mortarClip"><path d="M34,180 Q36,200 58,200 Q80,200 82,180 Z"/></clipPath><clipPath id="lmo-retortClip"><circle cx="140" cy="150" r="25.4"/></clipPath><clipPath id="lmo-recvClip"><circle cx="296" cy="182" r="16.4"/></clipPath><clipPath id="lmo-hr4"><rect x="70" y="74" width="230" height="6"/></clipPath><clipPath id="lmo-hr5"><rect x="18" y="210" width="410" height="6"/></clipPath><clipPath id="lmo-hr6"><rect x="46" y="210" width="7" height="64"/></clipPath><clipPath id="lmo-hr7"><rect x="400" y="210" width="7" height="64"/></clipPath><clipPath id="lmo-hr8"><rect x="64" y="180" width="20" height="20"/></clipPath><clipPath id="lmo-hr9"><rect x="146" y="124" width="20" height="52"/></clipPath><clipPath id="lmo-hr10"><rect x="301" y="165" width="12" height="34"/></clipPath></defs><symbol id="lmo-ctop" viewBox="0 0 240 240"><g fill="none" stroke="#5e4426" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><path d="M14,7 L21,14 L14,21 L7,14 Z" fill="#5e4426" fill-opacity=".12"/><circle cx="14" cy="14" r="1.8" fill="#5e4426"/><path d="M34,21 C52,13 66,30 90,28 C114,26 122,12 148,14 C172,16 191,24 195,36 C199,49 185,55 177,48 C171,43 175,35 182,37" stroke-width="1.75"/><path d="M21,34 C13,52 30,66 28,90 C26,114 12,122 14,148 C16,172 24,191 36,195 C49,199 55,185 48,177 C43,171 35,175 37,182" stroke-width="1.75"/><path d="M90,28 C95,40 107,47 118,43 C126,40 124,32 117,34" stroke-width="1.1"/><path d="M28,90 C40,95 47,107 43,118 C40,126 32,124 34,117" stroke-width="1.1"/><path d="M120,19 C126,8 136,6 140,10" stroke-width="1"/><path d="M19,120 C8,126 6,136 10,140" stroke-width="1"/><path d="M60,24 C66,25.4 70,18.7 70.8,13.6 C65.7,14.8 59.9,18.6 60,24 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M60,24 Q65.7,20.2 69.7,16.7" stroke-width=".55"/><path d="M64.6,21.1 L68.1,21.7 M64.6,21.1 L63.6,17.7" stroke-width=".4"/><path d="M67,18.7 L70.6,19.3 M67,18.7 L66.1,15.2" stroke-width=".4"/><path d="M24,60 C18,58.6 14,65.3 13.2,70.4 C18.3,69.2 24.1,65.4 24,60 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M24,60 Q18.3,63.8 14.3,67.3" stroke-width=".55"/><path d="M19.4,62.9 L15.9,62.3 M19.4,62.9 L20.4,66.3" stroke-width=".4"/><path d="M17,65.3 L13.4,64.7 M17,65.3 L17.9,68.8" stroke-width=".4"/><path d="M72,29 C71.6,34.5 77.9,36.8 82.5,36.7 C80.7,32.4 76.7,28 72,29 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M72,29 Q76.1,33.4 79.7,36.2" stroke-width=".55"/><path d="M75.1,32.5 L75.1,35.7 M75.1,32.5 L78,31.1" stroke-width=".4"/><path d="M77.5,34.2 L77.5,37.4 M77.5,34.2 L80.5,32.8" stroke-width=".4"/><path d="M29,72 C26.7,77.1 31.9,81.4 36.3,82.8 C36.1,78.2 33.7,72.7 29,72 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M29,72 Q31.3,77.5 33.7,81.4" stroke-width=".55"/><path d="M30.7,76.4 L29.6,79.4 M30.7,76.4 L33.9,76" stroke-width=".4"/><path d="M32.4,78.8 L31.3,81.8 M32.4,78.8 L35.7,78.5" stroke-width=".4"/><path d="M104,25 C109,27.6 114.2,22.6 116.2,18.2 C111.4,18.2 105.3,20.2 104,25 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M104,25 Q110.1,22.9 114.4,20.7" stroke-width=".55"/><path d="M108.8,23.5 L111.8,24.8 M108.8,23.5 L108.8,20.2" stroke-width=".4"/><path d="M111.6,21.9 L114.6,23.2 M111.6,21.9 L111.6,18.6" stroke-width=".4"/><path d="M25,104 C19.3,104.3 17.4,111.2 17.8,116 C22,113.6 26.3,108.8 25,104 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M25,104 Q20.8,108.8 18.1,112.9" stroke-width=".55"/><path d="M21.6,107.7 L18.3,108.1 M21.6,107.7 L23.2,110.6" stroke-width=".4"/><path d="M20,110.5 L16.7,110.9 M20,110.5 L21.6,113.4" stroke-width=".4"/><path d="M134,13 C137.9,16.1 143,12.6 145.4,9.1 C141.2,8.2 135.7,9 134,13 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M134,13 Q139.5,12.2 143.5,11" stroke-width=".55"/><path d="M138.3,12.5 L140.7,14.2 M138.3,12.5 L138.8,9.6" stroke-width=".4"/><path d="M140.9,11.5 L143.3,13.2 M140.9,11.5 L141.4,8.6" stroke-width=".4"/><path d="M13,134 C8.1,135 7.5,141.2 8.7,145.2 C12,142.6 14.9,137.9 13,134 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M13,134 Q10.1,138.7 8.4,142.6" stroke-width=".55"/><path d="M10.6,137.6 L7.8,138.4 M10.6,137.6 L12.6,139.8" stroke-width=".4"/><path d="M9.7,140.2 L6.9,141 M9.7,140.2 L11.6,142.4" stroke-width=".4"/><path d="M164,16 C164.1,21.5 170.6,23.3 175.1,22.7 C173,18.6 168.6,14.6 164,16 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M164,16 Q168.4,20 172.3,22.5" stroke-width=".55"/><path d="M167.4,19.2 L167.6,22.4 M167.4,19.2 L170.2,17.5" stroke-width=".4"/><path d="M170,20.7 L170.2,23.9 M170,20.7 L172.8,19" stroke-width=".4"/><path d="M16,164 C13.3,168.9 18.1,173.6 22.3,175.4 C22.5,170.8 20.7,165.1 16,164 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M16,164 Q17.8,169.7 19.9,173.8" stroke-width=".55"/><path d="M17.3,168.5 L15.9,171.4 M17.3,168.5 L20.6,168.4" stroke-width=".4"/><path d="M18.8,171.1 L17.4,174 M18.8,171.1 L22.1,171" stroke-width=".4"/><path d="M110,45 C107,48.3 109.7,53.3 112.7,55.7 C113.7,52 113.4,46.9 110,45 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M110,45 Q110.3,50 111.1,53.8" stroke-width=".55"/><path d="M110.1,48.9 L108.5,51 M110.1,48.9 L112.7,49.6" stroke-width=".4"/><path d="M110.8,51.4 L109.2,53.4 M110.8,51.4 L113.3,52.1" stroke-width=".4"/><path d="M45,110 C46.4,114.3 52,114.4 55.6,113 C52.9,110.3 48.4,108 45,110 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M45,110 Q49.5,112.2 53.2,113.4" stroke-width=".55"/><path d="M48.5,111.8 L49.4,114.3 M48.5,111.8 L50.4,110" stroke-width=".4"/><path d="M50.9,112.5 L51.9,114.9 M50.9,112.5 L52.8,110.6" stroke-width=".4"/><path d="M184,21 C188.3,21.8 190.5,17 190.6,13.5 C187.1,14.5 183.5,17.3 184,21 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M184,21 Q187.7,18.2 190.1,15.6" stroke-width=".55"/><path d="M186.9,18.9 L189.4,19.2 M186.9,18.9 L185.9,16.5" stroke-width=".4"/><path d="M188.4,17.1 L190.9,17.4 M188.4,17.1 L187.4,14.7" stroke-width=".4"/><path d="M21,184 C16.9,182.5 13.9,186.8 13.2,190.3 C16.8,189.9 20.9,187.8 21,184 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M21,184 Q16.9,186.1 14.1,188.2" stroke-width=".55"/><path d="M17.8,185.6 L15.3,184.9 M17.8,185.6 L18.3,188.1" stroke-width=".4"/><path d="M16,187.1 L13.6,186.3 M16,187.1 L16.5,189.6" stroke-width=".4"/><circle cx="140" cy="10" r="1.6" fill="#5e4426"/><circle cx="10" cy="140" r="1.6" fill="#5e4426"/><circle cx="143" cy="7" r="1" fill="#5e4426"/><circle cx="7" cy="143" r="1" fill="#5e4426"/><circle cx="182" cy="37" r="1.4" fill="#5e4426"/><circle cx="37" cy="182" r="1.4" fill="#5e4426"/><circle cx="117" cy="34" r="1.3" fill="#5e4426"/><circle cx="34" cy="117" r="1.3" fill="#5e4426"/><path d="M28.7,21.3 L53.2,45.9 M21.3,28.7 L45.9,53.2"/><path d="M30.3,19.7 L19.7,30.3" stroke-width="2.2"/><rect x="42" y="73" width="48" height="24" fill="#5e4426" fill-opacity=".16" stroke="none" clip-path="url(#lmo-bulbT)"/><path d="M43.2,73 L88.8,73" stroke-width=".8" clip-path="url(#lmo-bulbT)"/><g mask="url(#lmo-crescT)"><g clip-path="url(#lmo-hr1)"><path d="M95.1,-29.2 L163,88.4 M92.9,-27.9 L160.7,89.7 M90.6,-26.6 L158.5,91 M88.4,-25.3 L156.2,92.3 M86.1,-24 L154,93.6 M83.8,-22.7 L151.7,94.9 M81.6,-21.4 L149.5,96.2 M79.3,-20.1 L147.2,97.5 M77.1,-18.8 L145,98.8 M74.8,-17.5 L142.7,100.1 M72.6,-16.2 L140.5,101.4 M70.3,-14.9 L138.2,102.7 M68.1,-13.6 L136,104 M65.8,-12.3 L133.7,105.3 M63.6,-11 L131.5,106.6 M61.3,-9.7 L129.2,107.9 M59.1,-8.4 L127,109.2 M56.8,-7.1 L124.7,110.5 M54.6,-5.8 L122.5,111.8 M52.3,-4.5 L120.2,113.1 M50.1,-3.2 L118,114.4 M47.8,-1.9 L115.7,115.7 M45.6,-0.6 L113.5,117 M43.3,0.7 L111.2,118.3 M41.1,2 L108.9,119.6 M38.8,3.3 L106.7,120.9 M36.6,4.6 L104.4,122.2 M34.3,5.9 L102.2,123.5 M32.1,7.2 L99.9,124.8 M29.8,8.5 L97.7,126.1 M27.6,9.8 L95.4,127.4 M25.3,11.1 L93.2,128.7 M23.1,12.4 L90.9,130 M20.8,13.7 L88.7,131.3 M18.5,15 L86.4,132.6 M16.3,16.3 L84.2,133.9 M14,17.6 L81.9,135.2 M11.8,18.9 L79.7,136.5 M9.5,20.2 L77.4,137.8 M7.3,21.5 L75.2,139.1 M5,22.8 L72.9,140.4 M2.8,24.1 L70.7,141.7 M0.5,25.4 L68.4,143 M-1.7,26.7 L66.2,144.3 M-4,28 L63.9,145.6 M-6.2,29.3 L61.7,146.9 M-8.5,30.6 L59.4,148.2 M-10.7,31.9 L57.2,149.5 M-13,33.2 L54.9,150.8 M-15.2,34.5 L52.7,152.1 M-17.5,35.8 L50.4,153.4 M-19.7,37.1 L48.2,154.7 M-22,38.4 L45.9,156 M-24.2,39.7 L43.6,157.3 M-26.5,41 L41.4,158.6 M-28.7,42.3 L39.1,159.9 M-31,43.6 L36.9,161.2" stroke-width="0.45"/></g></g><circle cx="66" cy="66" r="24"/><path d="M51,60 A 17 17 0 0 1 62,50" stroke-width=".9"/><circle cx="60" cy="80" r="1.8" stroke-width=".7"/><circle cx="69" cy="84" r="1.3" stroke-width=".7"/><circle cx="74" cy="77" r="1.1" stroke-width=".7"/><circle cx="63" cy="74" r="0.9" stroke-width=".7"/><path d="M150,15 L150,23" stroke-width=".7"/><path d="M143,24 L157,24" stroke-width="2"/><path d="M145.5,25 L145.5,58 A4.5 4.5 0 0 0 154.5,58 L154.5,25"/><path d="M145.5,45 L154.5,45 L154.5,58 A4.5 4.5 0 0 1 145.5,58 Z" fill="#5e4426" fill-opacity=".18" stroke-width=".7"/><circle cx="149" cy="52" r="1.1" stroke-width=".6"/><circle cx="151.5" cy="56" r=".8" stroke-width=".6"/></g></symbol><symbol id="lmo-cbot" viewBox="0 0 240 240"><g fill="none" stroke="#5e4426" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><path d="M14,219 L21,226 L14,233 L7,226 Z" fill="#5e4426" fill-opacity=".12"/><circle cx="14" cy="226" r="1.8" fill="#5e4426"/><g transform="translate(0,240) scale(1,-1)"><path d="M34,21 C52,13 66,30 90,28 C114,26 122,12 148,14 C172,16 191,24 195,36 C199,49 185,55 177,48 C171,43 175,35 182,37" stroke-width="1.75"/><path d="M21,34 C13,52 30,66 28,90 C26,114 12,122 14,148 C16,172 24,191 36,195 C49,199 55,185 48,177 C43,171 35,175 37,182" stroke-width="1.75"/><path d="M120,19 C126,8 136,6 140,10" stroke-width="1"/><path d="M19,120 C8,126 6,136 10,140" stroke-width="1"/><path d="M60,24 C66,25.4 70,18.7 70.8,13.6 C65.7,14.8 59.9,18.6 60,24 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M60,24 Q65.7,20.2 69.7,16.7" stroke-width=".55"/><path d="M64.6,21.1 L68.1,21.7 M64.6,21.1 L63.6,17.7" stroke-width=".4"/><path d="M67,18.7 L70.6,19.3 M67,18.7 L66.1,15.2" stroke-width=".4"/><path d="M24,60 C18,58.6 14,65.3 13.2,70.4 C18.3,69.2 24.1,65.4 24,60 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M24,60 Q18.3,63.8 14.3,67.3" stroke-width=".55"/><path d="M19.4,62.9 L15.9,62.3 M19.4,62.9 L20.4,66.3" stroke-width=".4"/><path d="M17,65.3 L13.4,64.7 M17,65.3 L17.9,68.8" stroke-width=".4"/><path d="M29,72 C26.7,77.1 31.9,81.4 36.3,82.8 C36.1,78.2 33.7,72.7 29,72 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M29,72 Q31.3,77.5 33.7,81.4" stroke-width=".55"/><path d="M30.7,76.4 L29.6,79.4 M30.7,76.4 L33.9,76" stroke-width=".4"/><path d="M32.4,78.8 L31.3,81.8 M32.4,78.8 L35.7,78.5" stroke-width=".4"/><path d="M104,25 C109,27.6 114.2,22.6 116.2,18.2 C111.4,18.2 105.3,20.2 104,25 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M104,25 Q110.1,22.9 114.4,20.7" stroke-width=".55"/><path d="M108.8,23.5 L111.8,24.8 M108.8,23.5 L108.8,20.2" stroke-width=".4"/><path d="M111.6,21.9 L114.6,23.2 M111.6,21.9 L111.6,18.6" stroke-width=".4"/><path d="M25,104 C19.3,104.3 17.4,111.2 17.8,116 C22,113.6 26.3,108.8 25,104 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M25,104 Q20.8,108.8 18.1,112.9" stroke-width=".55"/><path d="M21.6,107.7 L18.3,108.1 M21.6,107.7 L23.2,110.6" stroke-width=".4"/><path d="M20,110.5 L16.7,110.9 M20,110.5 L21.6,113.4" stroke-width=".4"/><path d="M134,13 C137.9,16.1 143,12.6 145.4,9.1 C141.2,8.2 135.7,9 134,13 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M134,13 Q139.5,12.2 143.5,11" stroke-width=".55"/><path d="M138.3,12.5 L140.7,14.2 M138.3,12.5 L138.8,9.6" stroke-width=".4"/><path d="M140.9,11.5 L143.3,13.2 M140.9,11.5 L141.4,8.6" stroke-width=".4"/><path d="M13,134 C8.1,135 7.5,141.2 8.7,145.2 C12,142.6 14.9,137.9 13,134 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M13,134 Q10.1,138.7 8.4,142.6" stroke-width=".55"/><path d="M10.6,137.6 L7.8,138.4 M10.6,137.6 L12.6,139.8" stroke-width=".4"/><path d="M9.7,140.2 L6.9,141 M9.7,140.2 L11.6,142.4" stroke-width=".4"/><path d="M164,16 C164.1,21.5 170.6,23.3 175.1,22.7 C173,18.6 168.6,14.6 164,16 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M164,16 Q168.4,20 172.3,22.5" stroke-width=".55"/><path d="M167.4,19.2 L167.6,22.4 M167.4,19.2 L170.2,17.5" stroke-width=".4"/><path d="M170,20.7 L170.2,23.9 M170,20.7 L172.8,19" stroke-width=".4"/><path d="M16,164 C13.3,168.9 18.1,173.6 22.3,175.4 C22.5,170.8 20.7,165.1 16,164 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M16,164 Q17.8,169.7 19.9,173.8" stroke-width=".55"/><path d="M17.3,168.5 L15.9,171.4 M17.3,168.5 L20.6,168.4" stroke-width=".4"/><path d="M18.8,171.1 L17.4,174 M18.8,171.1 L22.1,171" stroke-width=".4"/><path d="M184,21 C188.3,21.8 190.5,17 190.6,13.5 C187.1,14.5 183.5,17.3 184,21 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M184,21 Q187.7,18.2 190.1,15.6" stroke-width=".55"/><path d="M186.9,18.9 L189.4,19.2 M186.9,18.9 L185.9,16.5" stroke-width=".4"/><path d="M188.4,17.1 L190.9,17.4 M188.4,17.1 L187.4,14.7" stroke-width=".4"/><path d="M21,184 C16.9,182.5 13.9,186.8 13.2,190.3 C16.8,189.9 20.9,187.8 21,184 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M21,184 Q16.9,186.1 14.1,188.2" stroke-width=".55"/><path d="M17.8,185.6 L15.3,184.9 M17.8,185.6 L18.3,188.1" stroke-width=".4"/><path d="M16,187.1 L13.6,186.3 M16,187.1 L16.5,189.6" stroke-width=".4"/><circle cx="140" cy="10" r="1.6" fill="#5e4426"/><circle cx="10" cy="140" r="1.6" fill="#5e4426"/><circle cx="143" cy="7" r="1" fill="#5e4426"/><circle cx="7" cy="143" r="1" fill="#5e4426"/><circle cx="182" cy="37" r="1.4" fill="#5e4426"/><circle cx="37" cy="182" r="1.4" fill="#5e4426"/></g><rect x="55" y="164" width="50" height="18" fill="#5e4426" fill-opacity=".16" stroke="none" clip-path="url(#lmo-erlB)"/><path d="M50,164 L110,164" stroke-width=".8" clip-path="url(#lmo-erlB)"/><g clip-path="url(#lmo-hr2)"><path d="M124.2,68.6 L181.5,176.4 M121.9,69.8 L179.2,177.6 M119.6,71 L177,178.8 M117.4,72.3 L174.7,180 M115.1,73.5 L172.4,181.3 M112.8,74.7 L170.1,182.5 M110.5,75.9 L167.8,183.7 M108.2,77.1 L165.5,184.9 M105.9,78.4 L163.2,186.1 M103.6,79.6 L160.9,187.4 M101.3,80.8 L158.6,188.6 M99,82 L156.3,189.8 M96.7,83.2 L154,191 M94.4,84.5 L151.7,192.2 M92.1,85.7 L149.4,193.5 M89.8,86.9 L147.1,194.7 M87.5,88.1 L144.8,195.9 M85.2,89.3 L142.5,197.1 M82.9,90.6 L140.2,198.3 M80.6,91.8 L137.9,199.6 M78.3,93 L135.6,200.8 M76,94.2 L133.3,202 M73.7,95.4 L131,203.2 M71.4,96.7 L128.7,204.4 M69.1,97.9 L126.4,205.7 M66.8,99.1 L124.2,206.9 M64.6,100.3 L121.9,208.1 M62.3,101.6 L119.6,209.3 M60,102.8 L117.3,210.6 M57.7,104 L115,211.8 M55.4,105.2 L112.7,213 M53.1,106.4 L110.4,214.2 M50.8,107.7 L108.1,215.4 M48.5,108.9 L105.8,216.7 M46.2,110.1 L103.5,217.9 M43.9,111.3 L101.2,219.1 M41.6,112.5 L98.9,220.3 M39.3,113.8 L96.6,221.5 M37,115 L94.3,222.8 M34.7,116.2 L92,224 M32.4,117.4 L89.7,225.2 M30.1,118.6 L87.4,226.4 M27.8,119.9 L85.1,227.6 M25.5,121.1 L82.8,228.9 M23.2,122.3 L80.5,230.1 M20.9,123.5 L78.2,231.3 M18.6,124.7 L75.9,232.5 M16.3,126 L73.6,233.7 M14,127.2 L71.4,235 M11.8,128.4 L69.1,236.2 M9.5,129.6 L66.8,237.4" stroke-width="0.45" clip-path="url(#lmo-erlB)"/></g><path d="M72.5,124 L72.5,146 L58,179 Q55,182 59,182 L101,182 Q105,182 102,179 L87.5,146 L87.5,124"/><path d="M69.5,124 L90.5,124" stroke-width="2.2"/><circle cx="74" cy="175" r="1.8" stroke-width=".7"/><circle cx="83" cy="171" r="1.3" stroke-width=".7"/><circle cx="88" cy="176" r="1.1" stroke-width=".7"/><circle cx="79" cy="168" r="0.9" stroke-width=".7"/><path d="M77,120 C71,112 83,106 77,97" stroke-width=".8"/><path d="M84,118 C79,110 89,104 84,94" stroke-width=".8"/><ellipse cx="80" cy="184" rx="27" ry="3.2" stroke-width="1.3"/><path d="M57,186 L51,206 M103,186 L109,206" stroke-width="1.1"/><path d="M71,206 L71,202.5 Q71,198.5 80,198.5 Q89,198.5 89,202.5 L89,206 Z" fill="#5e4426" fill-opacity=".1" stroke-width=".9"/><path d="M77.4,198.5 L77.4,196 L82.6,196 L82.6,198.5" stroke-width=".8"/><path d="M80,195 C75.7,192.3 76.6,189.2 80,186.6 C83.4,189.2 84.3,192.3 80,195 Z" fill="#5e4426" fill-opacity=".22" stroke-width=".7"/><path d="M80,193.6 C78.6,192.2 79,190.6 80,189.4" stroke-width=".45"/></g></symbol><symbol id="lmo-emb" viewBox="0 0 220 84"><g fill="none" stroke="#5e4426" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><path d="M0,45 L22.6,45 M197.4,45 L220,45" vector-effect="non-scaling-stroke" stroke-width="1.3" stroke-linecap="butt"/><path d="M22,45 C30,45 36,39 46,40 C58,41 62,52 74,50 C82,49 85,43 82,39 C79,35 73,37 74,41 M46,40 C44,32 50,27 56,30 C60,32 58,37 54,36"/><path d="M198,45 C190,45 184,39 174,40 C162,41 158,52 146,50 C138,49 135,43 138,39 C141,35 147,37 146,41 M174,40 C176,32 170,27 164,30 C160,32 162,37 166,36"/><path d="M62,47 C58.1,43.9 53,47.4 50.6,50.9 C54.8,51.8 60.3,51 62,47 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M62,47 Q56.5,47.8 52.5,49" stroke-width=".55"/><path d="M57.7,47.5 L55.3,45.8 M57.7,47.5 L57.2,50.4" stroke-width=".4"/><path d="M55.1,48.5 L52.7,46.8 M55.1,48.5 L54.6,51.4" stroke-width=".4"/><path d="M158,47 C159,51.9 165.2,52.5 169.2,51.3 C166.6,48 161.9,45.1 158,47 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M158,47 Q162.7,49.9 166.6,51.6" stroke-width=".55"/><path d="M161.6,49.4 L162.4,52.2 M161.6,49.4 L163.8,47.4" stroke-width=".4"/><path d="M164.2,50.3 L165,53.1 M164.2,50.3 L166.4,48.4" stroke-width=".4"/><path d="M32,43 C32,38.6 27,37.3 23.4,37.8 C25,41.1 28.4,44.2 32,43 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M32,43 Q28.6,39.9 25.7,38" stroke-width=".55"/><path d="M29.4,40.5 L29.3,38 M29.4,40.5 L27.2,41.9" stroke-width=".4"/><path d="M27.4,39.3 L27.3,36.8 M27.4,39.3 L25.2,40.7" stroke-width=".4"/><path d="M188,43 C191.8,45.2 195.4,41.5 196.8,38.2 C193.2,37.9 188.8,39.3 188,43 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".85"/><path d="M188,43 Q192.4,41.6 195.5,40" stroke-width=".55"/><path d="M191.5,42 L193.7,43.1 M191.5,42 L191.4,39.4" stroke-width=".4"/><path d="M193.5,40.9 L195.7,42 M193.5,40.9 L193.4,38.3" stroke-width=".4"/><circle cx="54" cy="36" r="1.3" fill="#5e4426"/><circle cx="166" cy="36" r="1.3" fill="#5e4426"/><rect x="83" y="44" width="54" height="30" fill="#5e4426" fill-opacity=".14" stroke="none" clip-path="url(#lmo-erlE)"/><path d="M80,44 L140,44" stroke-width=".8" clip-path="url(#lmo-erlE)"/><g clip-path="url(#lmo-hr3)"><path d="M151.6,-14.4 L196.2,69.6 M149.3,-13.2 L193.9,70.8 M147,-11.9 L191.6,72 M144.7,-10.7 L189.3,73.2 M142.4,-9.5 L187,74.4 M140.1,-8.3 L184.8,75.7 M137.8,-7.1 L182.5,76.9 M135.5,-5.8 L180.2,78.1 M133.2,-4.6 L177.9,79.3 M130.9,-3.4 L175.6,80.5 M128.6,-2.2 L173.3,81.8 M126.3,-1 L171,83 M124,0.3 L168.7,84.2 M121.8,1.5 L166.4,85.4 M119.5,2.7 L164.1,86.7 M117.2,3.9 L161.8,87.9 M114.9,5.1 L159.5,89.1 M112.6,6.4 L157.2,90.3 M110.3,7.6 L154.9,91.5 M108,8.8 L152.6,92.8 M105.7,10 L150.3,94 M103.4,11.2 L148,95.2 M101.1,12.5 L145.7,96.4 M98.8,13.7 L143.4,97.6 M96.5,14.9 L141.1,98.9 M94.2,16.1 L138.8,100.1 M91.9,17.3 L136.5,101.3 M89.6,18.6 L134.2,102.5 M87.3,19.8 L132,103.7 M85,21 L129.7,105 M82.7,22.2 L127.4,106.2 M80.4,23.5 L125.1,107.4 M78.1,24.7 L122.8,108.6 M75.8,25.9 L120.5,109.8 M73.5,27.1 L118.2,111.1 M71.2,28.3 L115.9,112.3 M69,29.6 L113.6,113.5 M66.7,30.8 L111.3,114.7 M64.4,32 L109,115.9 M62.1,33.2 L106.7,117.2 M59.8,34.4 L104.4,118.4" stroke-width="0.45" clip-path="url(#lmo-erlE)"/></g><path d="M103,12 L103,30 L86,71 Q83,74 87,74 L133,74 Q137,74 134,71 L117,30 L117,12"/><path d="M100,11 L120,11" stroke-width="2.2"/><path d="M96,64 L96,68.5 A14 4.8 0 0 0 124,68.5 L124,64" fill="#f4e9d2" fill-opacity=".9"/><ellipse cx="110" cy="64" rx="14" ry="4.8" fill="#f4e9d2" fill-opacity=".95"/><ellipse cx="110" cy="64" rx="8.5" ry="2.8" stroke-width=".8"/><path d="M98,70.2 L98,71.4 M102,71.6 L102,72.6 M106,72.3 L106,73.2 M114,72.3 L114,73.2 M118,71.6 L118,72.6 M122,70.2 L122,71.4" stroke-width=".5"/><circle cx="106" cy="56" r="1.7" stroke-width=".7"/><circle cx="113" cy="51" r="1.3" stroke-width=".7"/><circle cx="108" cy="47.5" r="1" stroke-width=".7"/></g></symbol><symbol id="lmo-scene" viewBox="0 0 440 280"><g fill="none" stroke="#5e4426" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><path d="M70,74 L300,74 M70,80 L300,80" /><path d="M84,80 L84,100 Q84,84 104,80 M286,80 L286,100 Q286,84 266,80" stroke-width=".9"/><g clip-path="url(#lmo-hr4)"><path d="M-45.1,-157 L415.1,-157 M-45.1,-154 L415.1,-154 M-45.1,-151 L415.1,-151 M-45.1,-148 L415.1,-148 M-45.1,-145 L415.1,-145 M-45.1,-142 L415.1,-142 M-45.1,-139 L415.1,-139 M-45.1,-136 L415.1,-136 M-45.1,-133 L415.1,-133 M-45.1,-130 L415.1,-130 M-45.1,-127 L415.1,-127 M-45.1,-124 L415.1,-124 M-45.1,-121 L415.1,-121 M-45.1,-118 L415.1,-118 M-45.1,-115 L415.1,-115 M-45.1,-112 L415.1,-112 M-45.1,-109 L415.1,-109 M-45.1,-106 L415.1,-106 M-45.1,-103 L415.1,-103 M-45.1,-100 L415.1,-100 M-45.1,-97 L415.1,-97 M-45.1,-94 L415.1,-94 M-45.1,-91 L415.1,-91 M-45.1,-88 L415.1,-88 M-45.1,-85 L415.1,-85 M-45.1,-82 L415.1,-82 M-45.1,-79 L415.1,-79 M-45.1,-76 L415.1,-76 M-45.1,-73 L415.1,-73 M-45.1,-70 L415.1,-70 M-45.1,-67 L415.1,-67 M-45.1,-64 L415.1,-64 M-45.1,-61 L415.1,-61 M-45.1,-58 L415.1,-58 M-45.1,-55 L415.1,-55 M-45.1,-52 L415.1,-52 M-45.1,-49 L415.1,-49 M-45.1,-46 L415.1,-46 M-45.1,-43 L415.1,-43 M-45.1,-40 L415.1,-40 M-45.1,-37 L415.1,-37 M-45.1,-34 L415.1,-34 M-45.1,-31 L415.1,-31 M-45.1,-28 L415.1,-28 M-45.1,-25 L415.1,-25 M-45.1,-22 L415.1,-22 M-45.1,-19 L415.1,-19 M-45.1,-16 L415.1,-16 M-45.1,-13 L415.1,-13 M-45.1,-10 L415.1,-10 M-45.1,-7 L415.1,-7 M-45.1,-4 L415.1,-4 M-45.1,-1 L415.1,-1 M-45.1,2 L415.1,2 M-45.1,5 L415.1,5 M-45.1,8 L415.1,8 M-45.1,11 L415.1,11 M-45.1,14 L415.1,14 M-45.1,17 L415.1,17 M-45.1,20 L415.1,20 M-45.1,23 L415.1,23 M-45.1,26 L415.1,26 M-45.1,29 L415.1,29 M-45.1,32 L415.1,32 M-45.1,35 L415.1,35 M-45.1,38 L415.1,38 M-45.1,41 L415.1,41 M-45.1,44 L415.1,44 M-45.1,47 L415.1,47 M-45.1,50 L415.1,50 M-45.1,53 L415.1,53 M-45.1,56 L415.1,56 M-45.1,59 L415.1,59 M-45.1,62 L415.1,62 M-45.1,65 L415.1,65 M-45.1,68 L415.1,68 M-45.1,71 L415.1,71 M-45.1,74 L415.1,74 M-45.1,77 L415.1,77 M-45.1,80 L415.1,80 M-45.1,83 L415.1,83 M-45.1,86 L415.1,86 M-45.1,89 L415.1,89 M-45.1,92 L415.1,92 M-45.1,95 L415.1,95 M-45.1,98 L415.1,98 M-45.1,101 L415.1,101 M-45.1,104 L415.1,104 M-45.1,107 L415.1,107 M-45.1,110 L415.1,110 M-45.1,113 L415.1,113 M-45.1,116 L415.1,116 M-45.1,119 L415.1,119 M-45.1,122 L415.1,122 M-45.1,125 L415.1,125 M-45.1,128 L415.1,128 M-45.1,131 L415.1,131 M-45.1,134 L415.1,134 M-45.1,137 L415.1,137 M-45.1,140 L415.1,140 M-45.1,143 L415.1,143 M-45.1,146 L415.1,146 M-45.1,149 L415.1,149 M-45.1,152 L415.1,152 M-45.1,155 L415.1,155 M-45.1,158 L415.1,158 M-45.1,161 L415.1,161 M-45.1,164 L415.1,164 M-45.1,167 L415.1,167 M-45.1,170 L415.1,170 M-45.1,173 L415.1,173 M-45.1,176 L415.1,176 M-45.1,179 L415.1,179 M-45.1,182 L415.1,182 M-45.1,185 L415.1,185 M-45.1,188 L415.1,188 M-45.1,191 L415.1,191 M-45.1,194 L415.1,194 M-45.1,197 L415.1,197 M-45.1,200 L415.1,200 M-45.1,203 L415.1,203 M-45.1,206 L415.1,206 M-45.1,209 L415.1,209 M-45.1,212 L415.1,212 M-45.1,215 L415.1,215 M-45.1,218 L415.1,218 M-45.1,221 L415.1,221 M-45.1,224 L415.1,224 M-45.1,227 L415.1,227 M-45.1,230 L415.1,230 M-45.1,233 L415.1,233 M-45.1,236 L415.1,236 M-45.1,239 L415.1,239 M-45.1,242 L415.1,242 M-45.1,245 L415.1,245 M-45.1,248 L415.1,248 M-45.1,251 L415.1,251 M-45.1,254 L415.1,254 M-45.1,257 L415.1,257 M-45.1,260 L415.1,260 M-45.1,263 L415.1,263 M-45.1,266 L415.1,266 M-45.1,269 L415.1,269 M-45.1,272 L415.1,272 M-45.1,275 L415.1,275 M-45.1,278 L415.1,278 M-45.1,281 L415.1,281 M-45.1,284 L415.1,284 M-45.1,287 L415.1,287 M-45.1,290 L415.1,290 M-45.1,293 L415.1,293 M-45.1,296 L415.1,296 M-45.1,299 L415.1,299 M-45.1,302 L415.1,302 M-45.1,305 L415.1,305 M-45.1,308 L415.1,308 M-45.1,311 L415.1,311" stroke-width="0.35"/></g><path d="M86,74 L86,40 Q86,34 92,32 L92,26 L100,26 L100,32 Q106,34 106,40 L106,74"/><path d="M90,26 L102,26 L101,20 L91,20 Z" fill="#5e4426" fill-opacity=".15"/><path d="M88,52 L104,52 M88,62 L104,62" stroke-width=".6"/><path d="M124,74 L124,50 Q124,46 128,46 L150,46 Q154,46 154,50 L154,74"/><path d="M122,46 L156,46 L156,42 L122,42 Z" fill="#5e4426" fill-opacity=".12"/><path d="M129,56 L149,56 L149,66 L129,66 Z" stroke-width=".6"/><path d="M133,60 L145,60 M133,63 L141,63" stroke-width=".45"/><circle cx="186" cy="60" r="14"/><path d="M182,47 L182,36 L190,36 L190,47" /><path d="M180,36 L192,36" stroke-width="1.8"/><path d="M174,64 Q186,70 198,64" stroke-width=".6"/><path d="M222,74 L222,62 L276,62 L276,74 M226,62 L226,52 L270,52 L270,62 M230,52 L230,44 L262,44 L262,52" stroke-width=".9"/><path d="M240,62 L240,74 M252,52 L252,62" stroke-width=".5"/><path d="M18,200 L428,200 L428,210 L18,210 Z"/><g clip-path="url(#lmo-hr5)"><path d="M635.8,-197 L635.8,623 M633.4,-197 L633.4,623 M631,-197 L631,623 M628.6,-197 L628.6,623 M626.2,-197 L626.2,623 M623.8,-197 L623.8,623 M621.4,-197 L621.4,623 M619,-197 L619,623 M616.6,-197 L616.6,623 M614.2,-197 L614.2,623 M611.8,-197 L611.8,623 M609.4,-197 L609.4,623 M607,-197 L607,623 M604.6,-197 L604.6,623 M602.2,-197 L602.2,623 M599.8,-197 L599.8,623 M597.4,-197 L597.4,623 M595,-197 L595,623 M592.6,-197 L592.6,623 M590.2,-197 L590.2,623 M587.8,-197 L587.8,623 M585.4,-197 L585.4,623 M583,-197 L583,623 M580.6,-197 L580.6,623 M578.2,-197 L578.2,623 M575.8,-197 L575.8,623 M573.4,-197 L573.4,623 M571,-197 L571,623 M568.6,-197 L568.6,623 M566.2,-197 L566.2,623 M563.8,-197 L563.8,623 M561.4,-197 L561.4,623 M559,-197 L559,623 M556.6,-197 L556.6,623 M554.2,-197 L554.2,623 M551.8,-197 L551.8,623 M549.4,-197 L549.4,623 M547,-197 L547,623 M544.6,-197 L544.6,623 M542.2,-197 L542.2,623 M539.8,-197 L539.8,623 M537.4,-197 L537.4,623 M535,-197 L535,623 M532.6,-197 L532.6,623 M530.2,-197 L530.2,623 M527.8,-197 L527.8,623 M525.4,-197 L525.4,623 M523,-197 L523,623 M520.6,-197 L520.6,623 M518.2,-197 L518.2,623 M515.8,-197 L515.8,623 M513.4,-197 L513.4,623 M511,-197 L511,623 M508.6,-197 L508.6,623 M506.2,-197 L506.2,623 M503.8,-197 L503.8,623 M501.4,-197 L501.4,623 M499,-197 L499,623 M496.6,-197 L496.6,623 M494.2,-197 L494.2,623 M491.8,-197 L491.8,623 M489.4,-197 L489.4,623 M487,-197 L487,623 M484.6,-197 L484.6,623 M482.2,-197 L482.2,623 M479.8,-197 L479.8,623 M477.4,-197 L477.4,623 M475,-197 L475,623 M472.6,-197 L472.6,623 M470.2,-197 L470.2,623 M467.8,-197 L467.8,623 M465.4,-197 L465.4,623 M463,-197 L463,623 M460.6,-197 L460.6,623 M458.2,-197 L458.2,623 M455.8,-197 L455.8,623 M453.4,-197 L453.4,623 M451,-197 L451,623 M448.6,-197 L448.6,623 M446.2,-197 L446.2,623 M443.8,-197 L443.8,623 M441.4,-197 L441.4,623 M439,-197 L439,623 M436.6,-197 L436.6,623 M434.2,-197 L434.2,623 M431.8,-197 L431.8,623 M429.4,-197 L429.4,623 M427,-197 L427,623 M424.6,-197 L424.6,623 M422.2,-197 L422.2,623 M419.8,-197 L419.8,623 M417.4,-197 L417.4,623 M415,-197 L415,623 M412.6,-197 L412.6,623 M410.2,-197 L410.2,623 M407.8,-197 L407.8,623 M405.4,-197 L405.4,623 M403,-197 L403,623 M400.6,-197 L400.6,623 M398.2,-197 L398.2,623 M395.8,-197 L395.8,623 M393.4,-197 L393.4,623 M391,-197 L391,623 M388.6,-197 L388.6,623 M386.2,-197 L386.2,623 M383.8,-197 L383.8,623 M381.4,-197 L381.4,623 M379,-197 L379,623 M376.6,-197 L376.6,623 M374.2,-197 L374.2,623 M371.8,-197 L371.8,623 M369.4,-197 L369.4,623 M367,-197 L367,623 M364.6,-197 L364.6,623 M362.2,-197 L362.2,623 M359.8,-197 L359.8,623 M357.4,-197 L357.4,623 M355,-197 L355,623 M352.6,-197 L352.6,623 M350.2,-197 L350.2,623 M347.8,-197 L347.8,623 M345.4,-197 L345.4,623 M343,-197 L343,623 M340.6,-197 L340.6,623 M338.2,-197 L338.2,623 M335.8,-197 L335.8,623 M333.4,-197 L333.4,623 M331,-197 L331,623 M328.6,-197 L328.6,623 M326.2,-197 L326.2,623 M323.8,-197 L323.8,623 M321.4,-197 L321.4,623 M319,-197 L319,623 M316.6,-197 L316.6,623 M314.2,-197 L314.2,623 M311.8,-197 L311.8,623 M309.4,-197 L309.4,623 M307,-197 L307,623 M304.6,-197 L304.6,623 M302.2,-197 L302.2,623 M299.8,-197 L299.8,623 M297.4,-197 L297.4,623 M295,-197 L295,623 M292.6,-197 L292.6,623 M290.2,-197 L290.2,623 M287.8,-197 L287.8,623 M285.4,-197 L285.4,623 M283,-197 L283,623 M280.6,-197 L280.6,623 M278.2,-197 L278.2,623 M275.8,-197 L275.8,623 M273.4,-197 L273.4,623 M271,-197 L271,623 M268.6,-197 L268.6,623 M266.2,-197 L266.2,623 M263.8,-197 L263.8,623 M261.4,-197 L261.4,623 M259,-197 L259,623 M256.6,-197 L256.6,623 M254.2,-197 L254.2,623 M251.8,-197 L251.8,623 M249.4,-197 L249.4,623 M247,-197 L247,623 M244.6,-197 L244.6,623 M242.2,-197 L242.2,623 M239.8,-197 L239.8,623 M237.4,-197 L237.4,623 M235,-197 L235,623 M232.6,-197 L232.6,623 M230.2,-197 L230.2,623 M227.8,-197 L227.8,623 M225.4,-197 L225.4,623 M223,-197 L223,623 M220.6,-197 L220.6,623 M218.2,-197 L218.2,623 M215.8,-197 L215.8,623 M213.4,-197 L213.4,623 M211,-197 L211,623 M208.6,-197 L208.6,623 M206.2,-197 L206.2,623 M203.8,-197 L203.8,623 M201.4,-197 L201.4,623 M199,-197 L199,623 M196.6,-197 L196.6,623 M194.2,-197 L194.2,623 M191.8,-197 L191.8,623 M189.4,-197 L189.4,623 M187,-197 L187,623 M184.6,-197 L184.6,623 M182.2,-197 L182.2,623 M179.8,-197 L179.8,623 M177.4,-197 L177.4,623 M175,-197 L175,623 M172.6,-197 L172.6,623 M170.2,-197 L170.2,623 M167.8,-197 L167.8,623 M165.4,-197 L165.4,623 M163,-197 L163,623 M160.6,-197 L160.6,623 M158.2,-197 L158.2,623 M155.8,-197 L155.8,623 M153.4,-197 L153.4,623 M151,-197 L151,623 M148.6,-197 L148.6,623 M146.2,-197 L146.2,623 M143.8,-197 L143.8,623 M141.4,-197 L141.4,623 M139,-197 L139,623 M136.6,-197 L136.6,623 M134.2,-197 L134.2,623 M131.8,-197 L131.8,623 M129.4,-197 L129.4,623 M127,-197 L127,623 M124.6,-197 L124.6,623 M122.2,-197 L122.2,623 M119.8,-197 L119.8,623 M117.4,-197 L117.4,623 M115,-197 L115,623 M112.6,-197 L112.6,623 M110.2,-197 L110.2,623 M107.8,-197 L107.8,623 M105.4,-197 L105.4,623 M103,-197 L103,623 M100.6,-197 L100.6,623 M98.2,-197 L98.2,623 M95.8,-197 L95.8,623 M93.4,-197 L93.4,623 M91,-197 L91,623 M88.6,-197 L88.6,623 M86.2,-197 L86.2,623 M83.8,-197 L83.8,623 M81.4,-197 L81.4,623 M79,-197 L79,623 M76.6,-197 L76.6,623 M74.2,-197 L74.2,623 M71.8,-197 L71.8,623 M69.4,-197 L69.4,623 M67,-197 L67,623 M64.6,-197 L64.6,623 M62.2,-197 L62.2,623 M59.8,-197 L59.8,623 M57.4,-197 L57.4,623 M55,-197 L55,623 M52.6,-197 L52.6,623 M50.2,-197 L50.2,623 M47.8,-197 L47.8,623 M45.4,-197 L45.4,623 M43,-197 L43,623 M40.6,-197 L40.6,623 M38.2,-197 L38.2,623 M35.8,-197 L35.8,623 M33.4,-197 L33.4,623 M31,-197 L31,623 M28.6,-197 L28.6,623 M26.2,-197 L26.2,623 M23.8,-197 L23.8,623 M21.4,-197 L21.4,623 M19,-197 L19,623 M16.6,-197 L16.6,623 M14.2,-197 L14.2,623 M11.8,-197 L11.8,623 M9.4,-197 L9.4,623 M7,-197 L7,623 M4.6,-197 L4.6,623 M2.2,-197 L2.2,623 M-0.2,-197 L-0.2,623 M-2.6,-197 L-2.6,623 M-5,-197 L-5,623 M-7.4,-197 L-7.4,623 M-9.8,-197 L-9.8,623 M-12.2,-197 L-12.2,623 M-14.6,-197 L-14.6,623 M-17,-197 L-17,623 M-19.4,-197 L-19.4,623 M-21.8,-197 L-21.8,623 M-24.2,-197 L-24.2,623 M-26.6,-197 L-26.6,623 M-29,-197 L-29,623 M-31.4,-197 L-31.4,623 M-33.8,-197 L-33.8,623 M-36.2,-197 L-36.2,623 M-38.6,-197 L-38.6,623 M-41,-197 L-41,623 M-43.4,-197 L-43.4,623 M-45.8,-197 L-45.8,623 M-48.2,-197 L-48.2,623 M-50.6,-197 L-50.6,623 M-53,-197 L-53,623 M-55.4,-197 L-55.4,623 M-57.8,-197 L-57.8,623 M-60.2,-197 L-60.2,623 M-62.6,-197 L-62.6,623 M-65,-197 L-65,623 M-67.4,-197 L-67.4,623 M-69.8,-197 L-69.8,623 M-72.2,-197 L-72.2,623 M-74.6,-197 L-74.6,623 M-77,-197 L-77,623 M-79.4,-197 L-79.4,623 M-81.8,-197 L-81.8,623 M-84.2,-197 L-84.2,623 M-86.6,-197 L-86.6,623 M-89,-197 L-89,623 M-91.4,-197 L-91.4,623 M-93.8,-197 L-93.8,623 M-96.2,-197 L-96.2,623 M-98.6,-197 L-98.6,623 M-101,-197 L-101,623 M-103.4,-197 L-103.4,623 M-105.8,-197 L-105.8,623 M-108.2,-197 L-108.2,623 M-110.6,-197 L-110.6,623 M-113,-197 L-113,623 M-115.4,-197 L-115.4,623 M-117.8,-197 L-117.8,623 M-120.2,-197 L-120.2,623 M-122.6,-197 L-122.6,623 M-125,-197 L-125,623 M-127.4,-197 L-127.4,623 M-129.8,-197 L-129.8,623 M-132.2,-197 L-132.2,623 M-134.6,-197 L-134.6,623 M-137,-197 L-137,623 M-139.4,-197 L-139.4,623 M-141.8,-197 L-141.8,623 M-144.2,-197 L-144.2,623 M-146.6,-197 L-146.6,623 M-149,-197 L-149,623 M-151.4,-197 L-151.4,623 M-153.8,-197 L-153.8,623 M-156.2,-197 L-156.2,623 M-158.6,-197 L-158.6,623 M-161,-197 L-161,623 M-163.4,-197 L-163.4,623 M-165.8,-197 L-165.8,623 M-168.2,-197 L-168.2,623 M-170.6,-197 L-170.6,623 M-173,-197 L-173,623 M-175.4,-197 L-175.4,623 M-177.8,-197 L-177.8,623 M-180.2,-197 L-180.2,623 M-182.6,-197 L-182.6,623 M-185,-197 L-185,623 M-187.4,-197 L-187.4,623 M-189.8,-197 L-189.8,623" stroke-width="0.35" clip-path="url(#lmo-underTop)"/></g><path d="M40,210 L40,226 Q35,232 40,238 L42,266 L39,274 L53,274 L50,266 L52,238 Q57,232 52,226 L52,210"/><g clip-path="url(#lmo-hr6)"><path d="M117.7,177.6 L117.7,306.4 M115.5,177.6 L115.5,306.4 M113.3,177.6 L113.3,306.4 M111.1,177.6 L111.1,306.4 M108.9,177.6 L108.9,306.4 M106.7,177.6 L106.7,306.4 M104.5,177.6 L104.5,306.4 M102.3,177.6 L102.3,306.4 M100.1,177.6 L100.1,306.4 M97.9,177.6 L97.9,306.4 M95.7,177.6 L95.7,306.4 M93.5,177.6 L93.5,306.4 M91.3,177.6 L91.3,306.4 M89.1,177.6 L89.1,306.4 M86.9,177.6 L86.9,306.4 M84.7,177.6 L84.7,306.4 M82.5,177.6 L82.5,306.4 M80.3,177.6 L80.3,306.4 M78.1,177.6 L78.1,306.4 M75.9,177.6 L75.9,306.4 M73.7,177.6 L73.7,306.4 M71.5,177.6 L71.5,306.4 M69.3,177.6 L69.3,306.4 M67.1,177.6 L67.1,306.4 M64.9,177.6 L64.9,306.4 M62.7,177.6 L62.7,306.4 M60.5,177.6 L60.5,306.4 M58.3,177.6 L58.3,306.4 M56.1,177.6 L56.1,306.4 M53.9,177.6 L53.9,306.4 M51.7,177.6 L51.7,306.4 M49.5,177.6 L49.5,306.4 M47.3,177.6 L47.3,306.4 M45.1,177.6 L45.1,306.4 M42.9,177.6 L42.9,306.4 M40.7,177.6 L40.7,306.4 M38.5,177.6 L38.5,306.4 M36.3,177.6 L36.3,306.4 M34.1,177.6 L34.1,306.4 M31.9,177.6 L31.9,306.4 M29.7,177.6 L29.7,306.4 M27.5,177.6 L27.5,306.4 M25.3,177.6 L25.3,306.4 M23.1,177.6 L23.1,306.4 M20.9,177.6 L20.9,306.4 M18.7,177.6 L18.7,306.4 M16.5,177.6 L16.5,306.4 M14.3,177.6 L14.3,306.4 M12.1,177.6 L12.1,306.4 M9.9,177.6 L9.9,306.4 M7.7,177.6 L7.7,306.4 M5.5,177.6 L5.5,306.4 M3.3,177.6 L3.3,306.4 M1.1,177.6 L1.1,306.4 M-1.1,177.6 L-1.1,306.4 M-3.3,177.6 L-3.3,306.4 M-5.5,177.6 L-5.5,306.4 M-7.7,177.6 L-7.7,306.4 M-9.9,177.6 L-9.9,306.4 M-12.1,177.6 L-12.1,306.4 M-14.3,177.6 L-14.3,306.4 M-16.5,177.6 L-16.5,306.4 M-18.7,177.6 L-18.7,306.4" stroke-width="0.35" clip-path="url(#lmo-leg46)"/></g><path d="M394,210 L394,226 Q389,232 394,238 L396,266 L393,274 L407,274 L404,266 L406,238 Q411,232 406,226 L406,210"/><g clip-path="url(#lmo-hr7)"><path d="M471.7,177.6 L471.7,306.4 M469.5,177.6 L469.5,306.4 M467.3,177.6 L467.3,306.4 M465.1,177.6 L465.1,306.4 M462.9,177.6 L462.9,306.4 M460.7,177.6 L460.7,306.4 M458.5,177.6 L458.5,306.4 M456.3,177.6 L456.3,306.4 M454.1,177.6 L454.1,306.4 M451.9,177.6 L451.9,306.4 M449.7,177.6 L449.7,306.4 M447.5,177.6 L447.5,306.4 M445.3,177.6 L445.3,306.4 M443.1,177.6 L443.1,306.4 M440.9,177.6 L440.9,306.4 M438.7,177.6 L438.7,306.4 M436.5,177.6 L436.5,306.4 M434.3,177.6 L434.3,306.4 M432.1,177.6 L432.1,306.4 M429.9,177.6 L429.9,306.4 M427.7,177.6 L427.7,306.4 M425.5,177.6 L425.5,306.4 M423.3,177.6 L423.3,306.4 M421.1,177.6 L421.1,306.4 M418.9,177.6 L418.9,306.4 M416.7,177.6 L416.7,306.4 M414.5,177.6 L414.5,306.4 M412.3,177.6 L412.3,306.4 M410.1,177.6 L410.1,306.4 M407.9,177.6 L407.9,306.4 M405.7,177.6 L405.7,306.4 M403.5,177.6 L403.5,306.4 M401.3,177.6 L401.3,306.4 M399.1,177.6 L399.1,306.4 M396.9,177.6 L396.9,306.4 M394.7,177.6 L394.7,306.4 M392.5,177.6 L392.5,306.4 M390.3,177.6 L390.3,306.4 M388.1,177.6 L388.1,306.4 M385.9,177.6 L385.9,306.4 M383.7,177.6 L383.7,306.4 M381.5,177.6 L381.5,306.4 M379.3,177.6 L379.3,306.4 M377.1,177.6 L377.1,306.4 M374.9,177.6 L374.9,306.4 M372.7,177.6 L372.7,306.4 M370.5,177.6 L370.5,306.4 M368.3,177.6 L368.3,306.4 M366.1,177.6 L366.1,306.4 M363.9,177.6 L363.9,306.4 M361.7,177.6 L361.7,306.4 M359.5,177.6 L359.5,306.4 M357.3,177.6 L357.3,306.4 M355.1,177.6 L355.1,306.4 M352.9,177.6 L352.9,306.4 M350.7,177.6 L350.7,306.4 M348.5,177.6 L348.5,306.4 M346.3,177.6 L346.3,306.4 M344.1,177.6 L344.1,306.4 M341.9,177.6 L341.9,306.4 M339.7,177.6 L339.7,306.4 M337.5,177.6 L337.5,306.4 M335.3,177.6 L335.3,306.4" stroke-width="0.35" clip-path="url(#lmo-leg400)"/></g><path d="M52,250 L394,250 M52,255 L394,255" stroke-width=".8"/><path d="M150,210 L150,224 L296,224 L296,210" stroke-width=".8"/><circle cx="223" cy="217" r="2" stroke-width=".7"/><path d="M40,199 L45,199 M47,199 L52,199 M54,199 L59,199 M61,199 L66,199 M68,199 L73,199 M75,199 L80,199" stroke-width=".4"/><path d="M112,199 L117,199 M119,199 L124,199 M126,199 L131,199 M133,199 L138,199 M140,199 L145,199 M147,199 L152,199 M154,199 L159,199 M161,199 L166,199 M168,199 L173,199" stroke-width=".4"/><path d="M276,199 L281,199 M283,199 L288,199 M290,199 L295,199 M297,199 L302,199 M304,199 L309,199" stroke-width=".4"/><path d="M324,199 L329,199 M331,199 L336,199 M338,199 L343,199 M345,199 L350,199 M352,199 L357,199 M359,199 L364,199 M366,199 L371,199 M373,199 L378,199 M380,199 L385,199 M387,199 L392,199 M394,199 L399,199 M401,199 L406,199 M408,199 L413,199" stroke-width=".4"/><path d="M34,180 Q36,200 58,200 Q80,200 82,180 Z" fill="#5e4426" fill-opacity=".08"/><path d="M32,180 L84,180" stroke-width="1.4"/><path d="M52,182 L72,150" stroke-width="3.2" stroke-linecap="round"/><path d="M52,182 L72,150" stroke="#f4e9d2" stroke-width="1.2"/><g clip-path="url(#lmo-hr8)"><path d="M86.9,149.9 L115.2,198.9 M84.6,151.2 L112.9,200.2 M82.4,152.5 L110.7,201.5 M80.1,153.8 L108.4,202.8 M77.9,155.1 L106.2,204.1 M75.6,156.4 L103.9,205.4 M73.4,157.7 L101.7,206.7 M71.1,159 L99.4,208 M68.9,160.3 L97.1,209.3 M66.6,161.6 L94.9,210.6 M64.4,162.9 L92.6,211.9 M62.1,164.2 L90.4,213.2 M59.9,165.5 L88.1,214.5 M57.6,166.8 L85.9,215.8 M55.4,168.1 L83.6,217.1 M53.1,169.4 L81.4,218.4 M50.9,170.7 L79.1,219.7 M48.6,172 L76.9,221 M46.3,173.3 L74.6,222.3 M44.1,174.6 L72.4,223.6 M41.8,175.9 L70.1,224.9 M39.6,177.2 L67.9,226.2 M37.3,178.5 L65.6,227.5 M35.1,179.8 L63.4,228.8 M32.8,181.1 L61.1,230.1" stroke-width="0.4" clip-path="url(#lmo-mortarClip)"/></g><circle cx="140" cy="150" r="26"/><path d="M150,127 C162,110 194,99.5 212,114 L279.9,165.4"/><path d="M160,138 C172,124 194,115.7 208,127 L276.4,169.7"/><path d="M279.9,165.4 L276.4,169.7" stroke-width=".8"/><path d="M118,176 L162,176" stroke-width="1.5"/><path d="M122,176 L114,200 M158,176 L166,200" stroke-width=".9"/><path d="M131,200 L131,195 Q131,190 140,190 Q149,190 149,195 L149,200" fill="#5e4426" fill-opacity=".1" stroke-width=".9"/><path d="M137,190 L137,187 L143,187 L143,190" stroke-width=".8"/><path d="M140,186 C135.5,183 136.5,180 140,177.5 C143.5,180 144.5,183 140,186 Z" fill="#5e4426" fill-opacity=".22" stroke-width=".7"/><path d="M140,184.5 C138.6,183 139,181.3 140,180" stroke-width=".45"/><rect x="117" y="152" width="46" height="26" fill="#5e4426" fill-opacity=".14" stroke="none" clip-path="url(#lmo-retortClip)"/><g clip-path="url(#lmo-hr9)"><path d="M179.9,71.9 L235.6,168.3 M177.7,73.2 L233.4,169.6 M175.4,74.5 L231.1,170.9 M173.2,75.8 L228.9,172.2 M170.9,77.1 L226.6,173.5 M168.7,78.4 L224.4,174.8 M166.4,79.7 L222.1,176.1 M164.2,81 L219.9,177.4 M161.9,82.3 L217.6,178.7 M159.7,83.6 L215.4,180 M157.4,84.9 L213.1,181.3 M155.2,86.2 L210.9,182.6 M152.9,87.5 L208.6,183.9 M150.7,88.8 L206.4,185.2 M148.4,90.1 L204.1,186.5 M146.2,91.4 L201.9,187.8 M143.9,92.7 L199.6,189.1 M141.7,94 L197.4,190.4 M139.4,95.3 L195.1,191.7 M137.1,96.6 L192.9,193 M134.9,97.9 L190.6,194.3 M132.6,99.2 L188.4,195.6 M130.4,100.5 L186.1,196.9 M128.1,101.8 L183.9,198.2 M125.9,103.1 L181.6,199.5 M123.6,104.4 L179.4,200.8 M121.4,105.7 L177.1,202.1 M119.1,107 L174.9,203.4 M116.9,108.3 L172.6,204.7 M114.6,109.6 L170.3,206 M112.4,110.9 L168.1,207.3 M110.1,112.2 L165.8,208.6 M107.9,113.5 L163.6,209.9 M105.6,114.8 L161.3,211.2 M103.4,116.1 L159.1,212.5 M101.1,117.4 L156.8,213.8 M98.9,118.7 L154.6,215.1 M96.6,120 L152.3,216.4 M94.4,121.3 L150.1,217.7 M92.1,122.6 L147.8,219 M89.9,123.9 L145.6,220.3 M87.6,125.2 L143.3,221.6 M85.4,126.5 L141.1,222.9 M83.1,127.8 L138.8,224.2 M80.9,129.1 L136.6,225.5 M78.6,130.4 L134.3,226.8 M76.4,131.7 L132.1,228.1" stroke-width="0.4" clip-path="url(#lmo-retortClip)"/></g><path d="M126,140 A18 18 0 0 1 136,130" stroke-width=".8"/><path d="M286.2,168.1 A17 17 0 1 1 280.4,175.3"/><path d="M286,168 L278.7,162.1 M280.2,175.1 L272.9,169.2"/><path d="M279.8,160.7 L271.8,170.6" stroke-width="1.8"/><rect x="279" y="187" width="34" height="17" fill="#5e4426" fill-opacity=".14" stroke="none" clip-path="url(#lmo-recvClip)"/><path d="M279,187 L313,187" stroke-width=".7" clip-path="url(#lmo-recvClip)"/><g clip-path="url(#lmo-hr10)"><path d="M322.7,131.3 L358.8,193.7 M320.5,132.6 L356.6,195 M318.2,133.9 L354.3,196.3 M316,135.2 L352,197.6 M313.7,136.5 L349.8,198.9 M311.5,137.8 L347.5,200.2 M309.2,139.1 L345.3,201.5 M307,140.4 L343,202.8 M304.7,141.7 L340.8,204.1 M302.5,143 L338.5,205.4 M300.2,144.3 L336.3,206.7 M298,145.6 L334,208 M295.7,146.9 L331.8,209.3 M293.5,148.2 L329.5,210.6 M291.2,149.5 L327.3,211.9 M289,150.8 L325,213.2 M286.7,152.1 L322.8,214.5 M284.5,153.4 L320.5,215.8 M282.2,154.7 L318.3,217.1 M280,156 L316,218.4 M277.7,157.3 L313.8,219.7 M275.5,158.6 L311.5,221 M273.2,159.9 L309.3,222.3 M271,161.2 L307,223.6 M268.7,162.5 L304.8,224.9 M266.5,163.8 L302.5,226.2 M264.2,165.1 L300.3,227.5 M262,166.4 L298,228.8 M259.7,167.7 L295.8,230.1 M257.4,169 L293.5,231.4 M255.2,170.3 L291.3,232.7" stroke-width="0.4" clip-path="url(#lmo-recvClip)"/></g><circle cx="291" cy="192" r="1.1" stroke-width=".6"/><circle cx="298" cy="195" r=".9" stroke-width=".6"/><path d="M326,200 L326,150 M410,200 L410,150 M322,150 L414,150 M322,156 L414,156 M326,186 L410,186" stroke-width=".9"/><path d="M336,140 L336,182 A4 4 0 0 0 344,182 L344,140"/><path d="M334,140 L346,140" stroke-width="1.6"/><path d="M336,168 L344,168 L344,182 A4 4 0 0 1 336,182 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".6"/><path d="M353,140 L353,182 A4 4 0 0 0 361,182 L361,140"/><path d="M351,140 L363,140" stroke-width="1.6"/><path d="M353,160 L361,160 L361,182 A4 4 0 0 1 353,182 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".6"/><path d="M370,140 L370,182 A4 4 0 0 0 378,182 L378,140"/><path d="M368,140 L380,140" stroke-width="1.6"/><path d="M370,176 L378,176 L378,182 A4 4 0 0 1 370,182 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".6"/><path d="M387,140 L387,182 A4 4 0 0 0 395,182 L395,140"/><path d="M385,140 L397,140" stroke-width="1.6"/><path d="M387,164 L395,164 L395,182 A4 4 0 0 1 387,182 Z" fill="#5e4426" fill-opacity=".16" stroke-width=".6"/><path d="M424,200 L424,186 L414,186 L414,200 M412,200 L426,200" stroke-width=".9"/><path d="M419,186 L419,182" stroke-width=".7"/><path d="M419,181 C416,177 417,173 419,170 C421,173 422,177 419,181 Z" fill="#5e4426" fill-opacity=".2" stroke-width=".6"/></g></symbol></svg>
+        <div id="lmFrame">
+            <svg id="lmScene" viewBox="0 0 440 280" aria-hidden="true" focusable="false"><use href="#lmo-scene"/></svg>
+            <div id="lmDeco" aria-hidden="true">
+                <div class="lm-ln lm-h lm-t1"></div><div class="lm-ln lm-h lm-t2"></div><div class="lm-ln lm-h lm-b1"></div>
+                <div class="lm-ln lm-v lm-l1"></div><div class="lm-ln lm-v lm-r1"></div>
+                <div class="lm-ln lm-hair lm-h lm-t3"></div><div class="lm-ln lm-hair lm-h lm-t4"></div><div class="lm-ln lm-hair lm-h lm-b3"></div>
+                <div class="lm-ln lm-hair lm-v lm-l3"></div><div class="lm-ln lm-hair lm-v lm-r3"></div>
+                <svg class="lm-cn lm-tl" viewBox="0 0 240 240" focusable="false"><use href="#lmo-ctop"/></svg>
+                <svg class="lm-cn lm-tr" viewBox="0 0 240 240" focusable="false"><use href="#lmo-ctop"/></svg>
+                <svg class="lm-cn lm-bl" viewBox="0 0 240 240" focusable="false"><use href="#lmo-cbot"/></svg>
+                <svg class="lm-cn lm-br" viewBox="0 0 240 240" focusable="false"><use href="#lmo-cbot"/></svg>
+                <svg id="lmEmb" viewBox="0 0 220 84" focusable="false"><use href="#lmo-emb"/></svg>
+            </div>
+            <div id="lmHeader">
+                <button type="button" id="lmIdxBtn" class="lm-hbtn" title="Volver al índice">↑ Índice</button>
+                <div id="lmLang" role="group" aria-label="Idioma / Language">
+                    <button type="button" class="lm-hbtn" data-lang="es">🇦🇷 ES</button>
+                    <button type="button" class="lm-hbtn" data-lang="en">🇬🇧 EN</button>
+                </div>
+                <button type="button" id="lmCloseBtn" title="Cerrar el manual" aria-label="Cerrar el manual">✕</button>
+            </div>
+            <div id="lmScroll" tabindex="-1">
+                <div class="lm-block" id="lmTextEs" lang="es">
+                    <section class="lm-sec" data-sec="top" id="lm-es-top">
+                    <h1 class="lm-h1" id="lmTitleEs">🧪 Manual del Laboratorio</h1>
+                    <p class="lm-epi">El Laboratorio es la herramienta definitiva para estudiar las damas argentinas y aprender a jugar mejor. Acá te contamos cómo sacarle todo el jugo.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="uses" id="lm-es-uses">
+                    <h2 class="lm-h2">¿Para qué sirve?</h2>
+                    <ul class="lm-uses">
+                    <li><span class="lm-ic" aria-hidden="true">♟️</span><span><a href="#lm-es-board" data-goto="board">Tu tablero, a tu antojo</a>: poné, sacá y mové fichas como en un tablero de verdad.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">📜</span><span><a href="#lm-es-replay" data-goto="replay">Volvé a ver cualquier partida</a>: las de tus duelos contra humanos y bots, o las que te pasen, jugada por jugada.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">💭</span><span><a href="#lm-es-whatif" data-goto="whatif">Probá el “¿y si…?”</a>: desde cualquier jugada, explorá lo que no se jugó, y volvé a la partida real con un clic.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">🎥</span><span><a href="#lm-es-generate" data-goto="generate">Generá tus propias crónicas</a>: jugá contra vos mismo o contra un chatbot, y queda todo anotado. Hasta podés darle otro final a una partida pasada.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">💾</span><span><a href="#lm-es-save" data-goto="save">Guardá y compartí</a>: posiciones y crónicas en archivos, para retomarlas otro día o mandárselas a quien quieras.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">👀</span><span><a href="#lm-es-live" data-goto="live">Mostrá en vivo</a>: desde el Salón de los Caballeros pueden mirar tu tablero mientras estudiás o explicás.</span></li>
+                    </ul>
+                    <p class="lm-also">Y además: <a href="#lm-es-words" data-goto="words">Dos palabras que vas a ver mucho</a> · <a href="#lm-es-signals" data-goto="signals">Las señales del tablero</a> · <a href="#lm-es-map" data-goto="map">Todos los botones de un vistazo</a> · <a href="#lm-es-faq" data-goto="faq">Preguntas frecuentes</a>.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="words" id="lm-es-words">
+                    <h2 class="lm-h2">Dos palabras que vas a ver mucho</h2>
+                    <p class="lm-word">📜 <b>Crónica</b>: el registro de una partida, jugada por jugada, como la planilla del ajedrez (“1. c3 → d4”, “2. h8 → g7”…). En tus duelos contra humanos y bots se va escribiendo sola al costado del tablero.</p>
+                    <p class="lm-word">📸 <b>Posición</b>: cómo está el tablero en un momento dado (qué fichas hay y dónde) y a quién le toca mover. Es como una foto del tablero: no dice cómo se llegó hasta ahí.</p>
+                    </section>
+
+                    <section class="lm-sec" data-sec="signals" id="lm-es-signals">
+                    <h2 class="lm-h2">Las señales del tablero</h2>
+                    <p>El color del marco te dice, de un vistazo, qué estás mirando:</p>
+                    <div class="lm-signals">
+                    <div class="lm-sig"><div class="lm-mini lm-v" data-pos="v" aria-hidden="true"></div><b>Violeta</b>Lo que pasó: una jugada de la crónica, tal cual se jugó.</div>
+                    <div class="lm-sig"><div class="lm-mini" data-pos="g" aria-hidden="true"></div><b>Verde</b>Lo que imaginás: posiciones armadas a mano, o jugadas que se apartan de la crónica.</div>
+                    <div class="lm-sig"><div class="lm-mini lm-r" data-pos="r" aria-hidden="true"></div><b>Rojo</b>Lo que se anota: la 🎥 está grabando.</div>
+                    </div>
+                    <p>La lista de la crónica repite el color: la jugada marcada se ve violeta, verde o roja, igual que el marco. Y sobre el tablero:</p>
+                    <div class="lm-cues">
+                    <div class="lm-cue"><div class="lm-sqr h" aria-hidden="true"><div class="lm-pc b"></div></div><b>Huella</b>: la última jugada (la casilla de donde salió la ficha y la de adonde llegó).</div>
+                    <div class="lm-cue"><div class="lm-sqr" aria-hidden="true"><div class="lm-pc w must"></div></div><b>Brillo celeste</b>: esa ficha tiene que capturar.</div>
+                    <div class="lm-cue"><div class="lm-sqr" aria-hidden="true"><div class="lm-pc w sel"></div></div><b>Aro rojo</b>: la ficha seleccionada.</div>
+                    <div class="lm-cue"><div class="lm-sqr g" aria-hidden="true"></div><b>Recuadro verde</b>: adónde puede ir la ficha seleccionada.</div>
+                    </div>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="board" id="lm-es-board">
+                    <h2 class="lm-h2">♟️ Tu tablero, a tu antojo</h2>
+                    <p>Acá el tablero es tuyo: armás la posición que quieras y movés los dos colores, siempre con las reglas de las damas argentinas.</p>
+                    <ol class="lm-steps">
+                    <li>Empezá con <span class="lm-chip">▶️ Posición inicial</span>, o con el tablero vacío: <span class="lm-chip">🗑️ Remover todo</span>.</li>
+                    <li>Para poner fichas, elegí cuál en <span class="lm-chip lm-pcs" aria-hidden="true"><i class="w on"></i><i class="w k"></i><i class="b"></i><i class="b k"></i></span> <b>Ficha a colocar</b> (peón o dama, blanca o negra) y hacé <b>clic derecho</b> en una casilla oscura. Con clic derecho sobre una ficha, la sacás. En celular, en vez del clic derecho, <b>dejás el dedo apretado</b> sobre la casilla.</li>
+                    <li>Para mover, <b>clic izquierdo</b> en la ficha y después en la casilla adonde va. Las capturas obligatorias, las múltiples y la coronación funcionan como en cualquier duelo.</li>
+                    </ol>
+                    <p class="lm-tip">💡 Con el mouse sobre el tablero, la <b>ruedita</b> cambia la ficha a colocar.</p>
+                    <h3 class="lm-h3">Las herramientas de todos los días</h3>
+                    <ul class="lm-list">
+                    <li><span class="lm-chip lm-dark">Control de turnos: <b>NO</b></span> es como arranca: podés mover cualquier color, en el orden que quieras. Tocalo y pasa a <b>SÍ</b>: se respetan los turnos, y las fichas obligadas a capturar brillan en celeste de entrada. Aun en NO, el Laboratorio lleva la cuenta de a quién le toca.</li>
+                    <li><span class="lm-chip lm-swapc">⇄</span> cambia a quién le toca mover; por ejemplo, en una posición que armaste a mano.</li>
+                    <li><span class="lm-chip">↩️ Deshacer</span> vuelve atrás lo último que hiciste en el tablero (una jugada entera, una ficha que pusiste o sacaste, un cambio de turno), y <span class="lm-chip lm-sq">↪️</span> <b>Rehacer</b> lo vuelve a hacer, por si te arrepentiste. En PC, también con <kbd class="lm-kbd">Ctrl+Z</kbd> y <kbd class="lm-kbd">Ctrl+Y</kbd>.</li>
+                    <li><span class="lm-chip">🔄️ Rotar Tablero</span> lo da vuelta, para verlo desde el lado de las negras. Es solo una forma de mirar: no cambia nada.</li>
+                    <li><span class="lm-chip lm-counter">⚪ 15 | ⚫ 15</span> cuenta las fichas de cada color.</li>
+                    </ul>
+                    <p class="lm-tip">💡 Lo que cambia todo el tablero de una vez (<span class="lm-chip">▶️ Posición inicial</span>, <span class="lm-chip">🗑️ Remover todo</span>, cargar una posición o ir a otra jugada de una crónica) no se deshace.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="replay" id="lm-es-replay">
+                    <h2 class="lm-h2">📜 Volvé a ver cualquier partida</h2>
+                    <p>Durante o después de un duelo contra un humano o un bot, debajo de la crónica tenés <span class="lm-chip">📋 Copiar Crónica</span> y <span class="lm-chip">💾 Guardar Crónica</span>. Con eso, acá en el Laboratorio:</p>
+                    <ol class="lm-steps">
+                    <li>Pegá la crónica en el cuadro <b>Pegá la crónica de una partida</b> y tocá <span class="lm-chip">▶️ Reproducir Crónica</span>. Si la tenés en un archivo, <span class="lm-chip">📁 Cargar Crónica</span> la abre y la reproduce de una.</li>
+                    <li>El marco se pone violeta, y el tablero arranca en la jugada 0: la posición inicial.</li>
+                    <li>Recorrela: <span class="lm-chip lm-navc">◀️</span> <span class="lm-chip lm-navc">▶️</span> de a una jugada, <span class="lm-chip lm-navc">⏮️</span> <span class="lm-chip lm-navc">⏭️</span> de a diez, o escribí el número de una jugada en el campito del medio y tocá Enter. También podés hacer clic en cualquier jugada de la lista.</li>
+                    </ol>
+                    <div class="lm-anim" data-anim="replay"></div>
+                    <p class="lm-tip">💡 <span class="lm-chip">🧹 Borrar Crónica</span> la saca de la lista; el texto queda en el cuadro. Para reproducir otra, primero borrás la que está en la lista.</p>
+                    <p class="lm-tip">💡 Una crónica no tiene por qué empezar en la posición inicial: puede arrancar en cualquier posición, con la partida ya avanzada. A ese punto de arranque lo llamamos <b>posición de partida</b>.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="whatif" id="lm-es-whatif">
+                    <h2 class="lm-h2">💭 Probá el “¿y si…?”</h2>
+                    <p>Es el corazón del estudio: frenás en una jugada y probás lo que no se jugó. ¿Qué pasaba si en vez de esa ficha movía la otra?</p>
+                    <ol class="lm-steps">
+                    <li>Con una crónica reproducida, andá hasta la jugada que te interesa.</li>
+                    <li>Mové lo que quieras: el marco pasa a verde, y en la lista queda marcada en verde la jugada desde la que te apartaste.</li>
+                    <li>Probá todo lo que se te ocurra, con los dos colores. <span class="lm-chip">↩️ Deshacer</span> te lleva para atrás de a un paso, hasta volver al violeta.</li>
+                    <li>Para volver a la partida real, tocá <span class="lm-chip lm-navc">◀️</span>, <span class="lm-chip lm-navc">▶️</span> o cualquier jugada de la lista: el tablero vuelve al violeta, en esa jugada.</li>
+                    </ol>
+                    <div class="lm-anim" data-anim="whatif"></div>
+                    <p class="lm-tip">💡 <span class="lm-chip lm-navc">◀️</span> y <span class="lm-chip lm-navc">▶️</span> cuentan desde la jugada marcada en la lista: si te apartaste en la 12, <span class="lm-chip lm-navc">▶️</span> te lleva a la 13 de la partida real.</p>
+                    <p class="lm-tip">💡 Si querés que lo que vas a probar quede anotado, prendé la 🎥 antes de mover, con el marco en violeta: así le das otro final a la partida (mirá <a href="#lm-es-generate" data-goto="generate">Generá tus propias crónicas</a>).</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="generate" id="lm-es-generate">
+                    <h2 class="lm-h2">🎥 Generá tus propias crónicas</h2>
+                    <p>Con la filmadora prendida, cada jugada que hacés en el tablero se anota en la crónica, como en un duelo.</p>
+                    <h3 class="lm-h3">De cero</h3>
+                    <ol class="lm-steps">
+                    <li>Armá la posición desde la que querés arrancar (por ejemplo, con <span class="lm-chip">▶️ Posición inicial</span>) y poné el <span class="lm-chip lm-dark">Control de turnos: <b>SÍ</b></span>. Si hace falta, elegí con <span class="lm-chip lm-swapc">⇄</span> quién mueve primero.</li>
+                    <li>Tocá <span class="lm-chip lm-sq">🎥</span>: el marco se pone rojo.</li>
+                    <li>Jugá con los dos colores. Cada jugada aparece en la lista y también en el cuadro de texto, de donde la podés copiar.</li>
+                    <li>Para terminar, tocá <span class="lm-chip lm-sq">🎥</span> otra vez: la crónica queda cargada como cualquier otra, para recorrerla o guardarla con <span class="lm-chip">💾 Guardar Crónica</span>.</li>
+                    </ol>
+                    <div class="lm-anim" data-anim="record"></div>
+                    <h3 class="lm-h3">Contra un chatbot</h3>
+                    <ol class="lm-steps">
+                    <li>Poné la posición inicial y el Control de turnos en SÍ, prendé la <span class="lm-chip lm-sq">🎥</span> y hacé tu primera jugada.</li>
+                    <li>Copiá la crónica del cuadro de texto, pegásela al chatbot y pedile que te conteste con su jugada, en el mismo formato.</li>
+                    <li>Hacé en el tablero la jugada que el chatbot te conteste, y así hasta el final.</li>
+                    </ol>
+                    <p class="lm-tip">💡 Si el chatbot te contesta una jugada que no vale, el tablero no la deja hacer: pedile otra. Pasarle la crónica entera en cada mensaje lo ayuda a no perderse.</p>
+                    <h3 class="lm-h3">Otro final para una partida</h3>
+                    <ol class="lm-steps">
+                    <li>Reproducí la crónica y andá hasta la jugada desde la que querés cambiar la historia, con el marco en violeta.</li>
+                    <li>Con el <span class="lm-chip lm-dark">Control de turnos: <b>SÍ</b></span>, tocá <span class="lm-chip lm-sq">🎥</span>. Si después venían más jugadas, te avisa que se van a descartar.</li>
+                    <li>Jugá el final nuevo: se anota a continuación. En la lista, una línea punteada separa la partida original de lo nuevo.</li>
+                    </ol>
+                    <div class="lm-anim" data-anim="splice"></div>
+                    <p class="lm-tip">💡 Mientras graba, el tablero solo cambia con jugadas: el clic derecho no pone ni saca fichas, y <span class="lm-chip">↩️ Deshacer</span> borra la última jugada anotada. Graba hasta 250 jugadas; al llegar, se apaga sola.</p>
+                    <p class="lm-tip">💡 Si apagás la 🎥 sin haber jugado nada, todo queda como estaba. Y si mientras graba tocás <span class="lm-chip">▶️ Posición inicial</span> o <span class="lm-chip">🗑️ Remover todo</span>, cargás una posición o apagás el Control de turnos, la grabación se corta: lo grabado queda en la lista.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="save" id="lm-es-save">
+                    <h2 class="lm-h2">💾 Guardá y compartí</h2>
+                    <ul class="lm-list">
+                    <li><span class="lm-chip">📸 Guardar Posición</span> baja un archivo con la posición del tablero y a quién le toca mover; <span class="lm-chip">🗺️ Cargar Posición</span> la vuelve a poner en el tablero.</li>
+                    <li><span class="lm-chip">💾 Guardar Crónica</span> baja un archivo con la crónica de la lista; <span class="lm-chip">📁 Cargar Crónica</span> abre uno y lo reproduce, en lugar de la crónica que haya en la lista.</li>
+                    </ul>
+                    <p>Son los mismos archivos de los duelos contra humanos y bots: van y vienen sin problema, en cualquiera de los dos idiomas.</p>
+                    <p>Además, son archivos de texto común: se abren con cualquier editor, y se pueden mandar por mail o por WhatsApp. Se bajan a tu carpeta de descargas, con la fecha y la hora en el nombre (por ejemplo, <i>cronica_2026-10-17_22-52.txt</i>).</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="live" id="lm-es-live">
+                    <h2 class="lm-h2">👀 Mostrá en vivo</h2>
+                    <p>En el Salón de los Caballeros aparecés como <span class="lm-salon"><span>🔬 <span class="lm-me"></span> (Laboratorio)</span></span>. Haciendo clic ahí, pueden desafiarte o mirar tu laboratorio.</p>
+                    <p>Los que miran ven tu tablero en vivo, con el mismo color de marco y la huella de la última jugada, pero no pueden tocar nada. Arriba del tablero, <b>Espectadores</b> te dice quiénes son. Ideal para explicarle una jugada a un amigo mientras charlan por el 💬 chat del Salón.</p>
+                    <p class="lm-tip">💡 Si te desafían mientras estudiás, el aviso te llega igual. Si aceptás, salís del Laboratorio para ir al duelo: antes, guardá lo que no quieras perder.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="map" id="lm-es-map">
+                    <h2 class="lm-h2">Todos los botones de un vistazo</h2>
+                    <p>Los números de la imagen son las zonas de la tabla.</p>
+                    <div class="lm-mapwrap"><div class="lm-maptoggle" role="group" aria-label="Ver el Laboratorio en"><button type="button" class="lm-hbtn" data-map="pc" aria-pressed="false">💻 PC</button><button type="button" class="lm-hbtn" data-map="cel" aria-pressed="false">📱 Celular</button></div><div class="lm-map lm-mpc"><img src="assets/manual-mapa-pc-es.jpg" width="1440" height="1386" alt="El Laboratorio en una PC, con sus zonas numeradas." loading="lazy" decoding="async"><div class="lm-zone" style="left:1.25%;top:0.76%;width:10.66%;height:4.44%"></div><div class="lm-zone" style="left:71.70%;top:0.76%;width:27.05%;height:4.44%"></div><div class="lm-zn" style="left:1.46%;top:1.41%">1</div><div class="lm-zn" style="left:71.91%;top:1.41%">1</div><div class="lm-zone" style="left:6.12%;top:12.23%;width:58.18%;height:8.44%"></div><div class="lm-zn" style="left:6.33%;top:12.45%">2</div><div class="lm-zone" style="left:6.12%;top:20.89%;width:58.18%;height:9.31%"></div><div class="lm-zn" style="left:6.33%;top:21.10%">3</div><div class="lm-zone" style="left:66.17%;top:12.23%;width:27.71%;height:17.97%"></div><div class="lm-zn" style="left:66.38%;top:12.45%">4</div><div class="lm-zone" style="left:66.17%;top:31.49%;width:27.71%;height:60.44%"></div><div class="lm-zn" style="left:66.38%;top:31.71%">5</div></div><div class="lm-map lm-mcel"><img src="assets/manual-mapa-cel-es.jpg" width="720" height="2392" alt="El Laboratorio en un celular, con sus zonas numeradas." loading="lazy" decoding="async"><div class="lm-zone" style="left:2.50%;top:0.59%;width:95.00%;height:3.04%"></div><div class="lm-zn" style="left:3.61%;top:1.09%">1</div><div class="lm-zone" style="left:2.50%;top:12.32%;width:95.00%;height:12.96%"></div><div class="lm-zn" style="left:3.61%;top:12.49%">2</div><div class="lm-zone" style="left:2.50%;top:25.45%;width:95.00%;height:6.02%"></div><div class="lm-zn" style="left:3.61%;top:25.62%">3</div><div class="lm-zone" style="left:5.00%;top:80.79%;width:44.72%;height:12.21%"></div><div class="lm-zn" style="left:5.56%;top:80.96%">4</div><div class="lm-zone" style="left:5.00%;top:62.15%;width:44.72%;height:18.48%"></div><div class="lm-zone" style="left:50.28%;top:62.15%;width:44.72%;height:30.85%"></div><div class="lm-zn" style="left:5.56%;top:62.32%">5</div><div class="lm-zn" style="left:50.83%;top:62.32%">5</div></div><table class="lm-table"><thead><tr><th>Zona</th><th>Botón</th><th>Para qué sirve</th></tr></thead><tbody><tr><td><span class="lm-zn">1</span></td><td><span class="lm-chip lm-gold">📖 Manual</span></td><td>Abre este manual.</td></tr><tr><td><span class="lm-zn">1</span></td><td><span class="lm-chip lm-langc"><i class="on">🇦🇷 ES</i><i>🇬🇧 EN</i></span></td><td>Cambian el idioma de todo el sitio.</td></tr><tr><td><span class="lm-zn">1</span></td><td><span class="lm-chip lm-gold">🚪 Salir al Lobby</span></td><td>Te lleva de vuelta al Salón de los Caballeros.</td></tr><tr><td><span class="lm-zn">2</span></td><td><b>Espectadores</b></td><td>Quiénes están mirando tu tablero.</td></tr><tr><td><span class="lm-zn">2</span></td><td><span class="lm-chip">▶️ Posición inicial</span></td><td>Pone las 30 fichas en su lugar de salida.</td></tr><tr><td><span class="lm-zn">2</span></td><td><span class="lm-chip">🗑️ Remover todo</span></td><td>Deja el tablero vacío.</td></tr><tr><td><span class="lm-zn">2</span></td><td><span class="lm-chip">🔄️ Rotar Tablero</span></td><td>Da vuelta el tablero, para verlo desde el lado de las negras.</td></tr><tr><td><span class="lm-zn lm-z-pc">3</span><span class="lm-zn lm-z-cel">2</span></td><td><span class="lm-chip">↩️ Deshacer</span> <span class="lm-chip lm-sq">↪️</span></td><td>Vuelven atrás lo último que hiciste, o lo rehacen.</td></tr><tr><td><span class="lm-zn lm-z-pc">3</span><span class="lm-zn lm-z-cel">2</span></td><td><span class="lm-chip lm-counter">⚪ 15 | ⚫ 15</span></td><td>Cuántas fichas hay de cada color.</td></tr><tr><td><span class="lm-zn">3</span></td><td><span class="lm-chip lm-pcs" aria-hidden="true"><i class="w on"></i><i class="w k"></i><i class="b"></i><i class="b k"></i></span> <b>Ficha a colocar</b></td><td>Qué ficha pone el clic derecho (en celular, el dedo apretado).</td></tr><tr><td><span class="lm-zn">3</span></td><td><span class="lm-chip lm-dark">Control de turnos: <b>SÍ</b></span></td><td>SÍ: se respetan los turnos. NO: movés cualquier color.</td></tr><tr><td><span class="lm-zn">3</span></td><td><span class="lm-chip lm-swapc">⇄</span></td><td>Cambia a quién le toca mover.</td></tr><tr><td><span class="lm-zn">4</span></td><td><span class="lm-chip">📸 Guardar Posición</span></td><td>Baja en un archivo la posición del tablero.</td></tr><tr><td><span class="lm-zn">4</span></td><td><span class="lm-chip">🗺️ Cargar Posición</span></td><td>Pone en el tablero una posición guardada.</td></tr><tr><td><span class="lm-zn">4</span></td><td><span class="lm-chip">💾 Guardar Crónica</span></td><td>Baja en un archivo la crónica de la lista.</td></tr><tr><td><span class="lm-zn">4</span></td><td><span class="lm-chip">📁 Cargar Crónica</span></td><td>Abre un archivo de crónica y la reproduce.</td></tr><tr><td><span class="lm-zn">5</span></td><td><b>Cuadro de texto</b></td><td>Para pegar una crónica con miras a reproducirla.</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip">▶️ Reproducir Crónica</span></td><td>Reproduce la crónica pegada en el cuadro.</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip">🧹 Borrar Crónica</span></td><td>Saca la crónica de la lista (el texto queda en el cuadro).</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip lm-sq">🎥</span></td><td>Genera una crónica con lo que vos movés.</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip lm-navc">⏮️</span> <span class="lm-chip lm-navc">⏭️</span></td><td>Retroceden o avanzan diez jugadas.</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip lm-navc">◀️</span> <span class="lm-chip lm-navc">▶️</span></td><td>Retroceden o avanzan una jugada.</td></tr><tr><td><span class="lm-zn">5</span></td><td><b>Campito del medio</b></td><td>Escribís un número y Enter: vas a esa jugada.</td></tr><tr><td><span class="lm-zn">5</span></td><td><b>📜 Crónica</b></td><td>La lista de jugadas: con un clic en una, el tablero va ahí.</td></tr><tr><td>—</td><td><span class="lm-chip lm-gold lm-sq">💬</span></td><td>Abre el chat del Salón.</td></tr></tbody></table></div>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="faq" id="lm-es-faq">
+                    <h2 class="lm-h2">Preguntas frecuentes</h2>
+                    <dl class="lm-faq">
+                    <dt>¿Por qué no me deja mover una ficha?</dt>
+                    <dd>Puede ser por tres motivos: hay una captura obligatoria (la ficha que tiene que capturar brilla en celeste); el Control de turnos está en SÍ y no es el turno de ese color; o estás en medio de una captura múltiple, y tiene que seguir capturando la misma ficha.</dd>
+                    <dt>¿Por qué el clic derecho no pone la ficha?</dt>
+                    <dd>Solo se puede en las casillas oscuras, y hasta 15 fichas y 7 damas por color. Tampoco mientras la 🎥 está grabando: ahí el tablero solo cambia con jugadas.</dd>
+                    <dt>¿Por qué no se prende la 🎥?</dt>
+                    <dd>Necesita el Control de turnos en SÍ, fichas de los dos colores, y que al que le toca mover le quede alguna jugada; tampoco arranca en medio de una captura múltiple. En PC, con el mouse sobre la 🎥, te dice qué falta.</dd>
+                    <dt>Me dice que la crónica no es válida. ¿Qué hago?</dt>
+                    <dd>El aviso te dice en qué jugada está el problema y por qué. Fijate que esté completa, desde la jugada 1; si no arranca en la posición inicial, arriba de las jugadas tiene que ir su posición de partida (las líneas “blancas:”, “negras:” y “turno:”). La crónica que ya estaba cargada no se toca.</dd>
+                    <dt>¿Por qué el peón se convirtió en dama solo?</dt>
+                    <dd>Porque está en la última fila: ahí corona. Un peón blanco en la fila 10, o uno negro en la fila 1, es siempre dama, aunque lo pongas a mano.</dd>
+                    <dt>¿Los que miran pueden tocar mi tablero?</dt>
+                    <dd>No: solo miran. Ven lo mismo que vos, en vivo, pero no pueden mover ni cambiar nada.</dd>
+                    <dt>¿Qué pasa con lo que hice si salgo del Laboratorio?</dt>
+                    <dd>Se pierde: el Laboratorio no guarda nada solo. Antes de salir (o de aceptar un desafío), guardá en un archivo la posición o la crónica que te interese.</dd>
+                    </dl>
+                    <p class="lm-end" aria-hidden="true">◆</p>
+                    </section>
+
+                </div>
+                <div class="lm-block" id="lmTextEn" lang="en" hidden>
+                    <section class="lm-sec" data-sec="top" id="lm-en-top">
+                    <h1 class="lm-h1" id="lmTitleEn">🧪 Laboratory Manual</h1>
+                    <p class="lm-epi">The Laboratory is the ultimate tool for studying Argentine checkers and learning to play better. Here's how to get the most out of it.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="uses" id="lm-en-uses">
+                    <h2 class="lm-h2">What is it for?</h2>
+                    <ul class="lm-uses">
+                    <li><span class="lm-ic" aria-hidden="true">♟️</span><span><a href="#lm-en-board" data-goto="board">Your board, as you please</a>: place, remove and move pieces just like on a real board.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">📜</span><span><a href="#lm-en-replay" data-goto="replay">Watch any game again</a>: the ones from your duels against humans and bots, or ones people send you, move by move.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">💭</span><span><a href="#lm-en-whatif" data-goto="whatif">Try the “what if…?”</a>: from any move, explore what wasn't played, and go back to the real game with one click.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">🎥</span><span><a href="#lm-en-generate" data-goto="generate">Generate your own chronicles</a>: play against yourself or against a chatbot, and everything gets written down. You can even give a past game a different ending.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">💾</span><span><a href="#lm-en-save" data-goto="save">Save and share</a>: positions and chronicles in files, to pick them up another day or send them to anyone you like.</span></li>
+                    <li><span class="lm-ic" aria-hidden="true">👀</span><span><a href="#lm-en-live" data-goto="live">Show it live</a>: from the Knights' Hall, others can watch your board while you study or explain.</span></li>
+                    </ul>
+                    <p class="lm-also">Also: <a href="#lm-en-words" data-goto="words">Two words you'll see a lot</a> · <a href="#lm-en-signals" data-goto="signals">The board's signals</a> · <a href="#lm-en-map" data-goto="map">Every button at a glance</a> · <a href="#lm-en-faq" data-goto="faq">Frequently asked questions</a>.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="words" id="lm-en-words">
+                    <h2 class="lm-h2">Two words you'll see a lot</h2>
+                    <p class="lm-word">📜 <b>Chronicle</b>: the record of a game, move by move, like a chess scoresheet (“1. c3 → d4”, “2. h8 → g7”…). In your duels against humans and bots, it writes itself next to the board.</p>
+                    <p class="lm-word">📸 <b>Position</b>: how the board stands at a given moment (which pieces there are, and where) and whose turn it is. It's like a photo of the board: it doesn't say how the game got there.</p>
+                    </section>
+
+                    <section class="lm-sec" data-sec="signals" id="lm-en-signals">
+                    <h2 class="lm-h2">The board's signals</h2>
+                    <p>The color of the frame tells you, at a glance, what you're looking at:</p>
+                    <div class="lm-signals">
+                    <div class="lm-sig"><div class="lm-mini lm-v" data-pos="v" aria-hidden="true"></div><b>Purple</b>What happened: a move from the chronicle, exactly as it was played.</div>
+                    <div class="lm-sig"><div class="lm-mini" data-pos="g" aria-hidden="true"></div><b>Green</b>What you imagine: positions set up by hand, or moves that stray from the chronicle.</div>
+                    <div class="lm-sig"><div class="lm-mini lm-r" data-pos="r" aria-hidden="true"></div><b>Red</b>What gets written down: the 🎥 is recording.</div>
+                    </div>
+                    <p>The chronicle's list repeats the color: the marked move shows up purple, green or red, just like the frame. And on the board:</p>
+                    <div class="lm-cues">
+                    <div class="lm-cue"><div class="lm-sqr h" aria-hidden="true"><div class="lm-pc b"></div></div><b>Footprint</b>: the last move (the square the piece left and the square it reached).</div>
+                    <div class="lm-cue"><div class="lm-sqr" aria-hidden="true"><div class="lm-pc w must"></div></div><b>Light-blue glow</b>: that piece has to capture.</div>
+                    <div class="lm-cue"><div class="lm-sqr" aria-hidden="true"><div class="lm-pc w sel"></div></div><b>Red ring</b>: the selected piece.</div>
+                    <div class="lm-cue"><div class="lm-sqr g" aria-hidden="true"></div><b>Green outline</b>: where the selected piece can go.</div>
+                    </div>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="board" id="lm-en-board">
+                    <h2 class="lm-h2">♟️ Your board, as you please</h2>
+                    <p>Here the board is yours: set up any position you like and move both colors, always under the rules of Argentine checkers.</p>
+                    <ol class="lm-steps">
+                    <li>Start with <span class="lm-chip">▶️ Initial position</span>, or with an empty board: <span class="lm-chip">🗑️ Remove all</span>.</li>
+                    <li>To place pieces, pick one in <span class="lm-chip lm-pcs" aria-hidden="true"><i class="w on"></i><i class="w k"></i><i class="b"></i><i class="b k"></i></span> <b>Piece to place</b> (pawn or king, white or black) and <b>right-click</b> a dark square. Right-clicking a piece removes it. On a phone, instead of right-clicking, <b>press and hold</b> on the square.</li>
+                    <li>To move, <b>left-click</b> the piece and then the square it goes to. Mandatory captures, multiple captures and crowning work just like in any duel.</li>
+                    </ol>
+                    <p class="lm-tip">💡 With the mouse over the board, the <b>scroll wheel</b> changes the piece to place.</p>
+                    <h3 class="lm-h3">Everyday tools</h3>
+                    <ul class="lm-list">
+                    <li><span class="lm-chip lm-dark">Turn tracker: <b>OFF</b></span> is how it starts: you can move any color, in any order. Click it and it switches to <b>ON</b>: turns are enforced, and the pieces that must capture glow light blue right away. Even when it's OFF, the Laboratory keeps track of whose turn it is.</li>
+                    <li><span class="lm-chip lm-swapc">⇄</span> switches whose turn it is; for instance, in a position you set up by hand.</li>
+                    <li><span class="lm-chip">↩️ Undo</span> takes back the last thing you did on the board (a whole move, a piece you placed or removed, a change of turn), and <span class="lm-chip lm-sq">↪️</span> <b>Redo</b> does it again, in case you change your mind. On a computer, also with <kbd class="lm-kbd">Ctrl+Z</kbd> and <kbd class="lm-kbd">Ctrl+Y</kbd>.</li>
+                    <li><span class="lm-chip">🔄️ Rotate Board</span> turns it around, to see it from Black's side. It's just a way of looking: nothing changes.</li>
+                    <li><span class="lm-chip lm-counter">⚪ 15 | ⚫ 15</span> counts each color's pieces.</li>
+                    </ul>
+                    <p class="lm-tip">💡 Anything that changes the whole board at once (<span class="lm-chip">▶️ Initial position</span>, <span class="lm-chip">🗑️ Remove all</span>, loading a position, or going to another move of a chronicle) can't be undone.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="replay" id="lm-en-replay">
+                    <h2 class="lm-h2">📜 Watch any game again</h2>
+                    <p>During or after a duel against a human or a bot, below the chronicle you'll find <span class="lm-chip">📋 Copy Chronicle</span> and <span class="lm-chip">💾 Save Chronicle</span>. With that, here in the Laboratory:</p>
+                    <ol class="lm-steps">
+                    <li>Paste the chronicle into the <b>Paste a game's chronicle</b> box and click <span class="lm-chip">▶️ Play Chronicle</span>. If you have it in a file, <span class="lm-chip">📁 Load Chronicle</span> opens it and plays it right away.</li>
+                    <li>The frame turns purple, and the board starts at move 0: the initial position.</li>
+                    <li>Step through it: <span class="lm-chip lm-navc">◀️</span> <span class="lm-chip lm-navc">▶️</span> one move at a time, <span class="lm-chip lm-navc">⏮️</span> <span class="lm-chip lm-navc">⏭️</span> ten at a time, or type a move number in the little box in the middle and press Enter. You can also click any move in the list.</li>
+                    </ol>
+                    <div class="lm-anim" data-anim="replay"></div>
+                    <p class="lm-tip">💡 <span class="lm-chip">🧹 Clear Chronicle</span> removes it from the list; the text stays in the box. To play another one, first clear the one in the list.</p>
+                    <p class="lm-tip">💡 A chronicle doesn't have to begin at the initial position: it can start from any position, with the game already under way. We call that starting point the <b>starting position</b>.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="whatif" id="lm-en-whatif">
+                    <h2 class="lm-h2">💭 Try the “what if…?”</h2>
+                    <p>It's the heart of studying: you stop at a move and try what wasn't played. What would have happened if, instead of that piece, I had moved the other one?</p>
+                    <ol class="lm-steps">
+                    <li>With a chronicle playing, go to the move you're interested in.</li>
+                    <li>Move whatever you like: the frame turns green, and the move you strayed from is marked green in the list.</li>
+                    <li>Try anything that comes to mind, with both colors. <span class="lm-chip">↩️ Undo</span> takes you back one step at a time, until you're back to purple.</li>
+                    <li>To return to the real game, click <span class="lm-chip lm-navc">◀️</span>, <span class="lm-chip lm-navc">▶️</span> or any move in the list: the board goes back to purple, at that move.</li>
+                    </ol>
+                    <div class="lm-anim" data-anim="whatif"></div>
+                    <p class="lm-tip">💡 <span class="lm-chip lm-navc">◀️</span> and <span class="lm-chip lm-navc">▶️</span> count from the move marked in the list: if you strayed at move 12, <span class="lm-chip lm-navc">▶️</span> takes you to move 13 of the real game.</p>
+                    <p class="lm-tip">💡 If you want what you're about to try to be written down, turn on the 🎥 before moving, with the frame purple: that way you give the game a different ending (see <a href="#lm-en-generate" data-goto="generate">Generate your own chronicles</a>).</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="generate" id="lm-en-generate">
+                    <h2 class="lm-h2">🎥 Generate your own chronicles</h2>
+                    <p>With the camera on, every move you make on the board is written into the chronicle, just like in a duel.</p>
+                    <h3 class="lm-h3">From scratch</h3>
+                    <ol class="lm-steps">
+                    <li>Set up the position you want to start from (for instance, with <span class="lm-chip">▶️ Initial position</span>) and set the <span class="lm-chip lm-dark">Turn tracker: <b>ON</b></span>. If needed, use <span class="lm-chip lm-swapc">⇄</span> to choose who moves first.</li>
+                    <li>Click <span class="lm-chip lm-sq">🎥</span>: the frame turns red.</li>
+                    <li>Play both colors. Each move shows up in the list and also in the text box, where you can copy it from.</li>
+                    <li>To finish, click <span class="lm-chip lm-sq">🎥</span> again: the chronicle stays loaded like any other, ready to step through or to save with <span class="lm-chip">💾 Save Chronicle</span>.</li>
+                    </ol>
+                    <div class="lm-anim" data-anim="record"></div>
+                    <h3 class="lm-h3">Against a chatbot</h3>
+                    <ol class="lm-steps">
+                    <li>Set up the initial position, turn the Turn tracker ON, switch on the <span class="lm-chip lm-sq">🎥</span> and make your first move.</li>
+                    <li>Copy the chronicle from the text box, paste it to the chatbot, and ask it to reply with its move, in the same format.</li>
+                    <li>Make on the board the move the chatbot replies with, and so on until the end.</li>
+                    </ol>
+                    <p class="lm-tip">💡 If the chatbot replies with a move that isn't valid, the board won't allow it: ask for another one. Sending it the whole chronicle in every message helps it keep track.</p>
+                    <h3 class="lm-h3">A different ending for a game</h3>
+                    <ol class="lm-steps">
+                    <li>Play the chronicle and go to the move from which you want to change history, with the frame purple.</li>
+                    <li>With the <span class="lm-chip lm-dark">Turn tracker: <b>ON</b></span>, click <span class="lm-chip lm-sq">🎥</span>. If more moves came after it, it warns you that they'll be discarded.</li>
+                    <li>Play the new ending: it's written down right after. In the list, a dashed line separates the original game from the new part.</li>
+                    </ol>
+                    <div class="lm-anim" data-anim="splice"></div>
+                    <p class="lm-tip">💡 While recording, the board only changes through moves: right-clicking doesn't place or remove pieces, and <span class="lm-chip">↩️ Undo</span> erases the last recorded move. It records up to 250 moves; when it gets there, it switches itself off.</p>
+                    <p class="lm-tip">💡 If you switch the 🎥 off without having played anything, everything stays as it was. And if, while recording, you click <span class="lm-chip">▶️ Initial position</span> or <span class="lm-chip">🗑️ Remove all</span>, load a position, or turn the Turn tracker off, the recording stops: what was recorded stays in the list.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="save" id="lm-en-save">
+                    <h2 class="lm-h2">💾 Save and share</h2>
+                    <ul class="lm-list">
+                    <li><span class="lm-chip">📸 Save Position</span> downloads a file with the board's position and whose turn it is; <span class="lm-chip">🗺️ Load Position</span> puts it back on the board.</li>
+                    <li><span class="lm-chip">💾 Save Chronicle</span> downloads a file with the chronicle in the list; <span class="lm-chip">📁 Load Chronicle</span> opens one and plays it, in place of whatever chronicle is in the list.</li>
+                    </ul>
+                    <p>They're the same files as in duels against humans and bots: they go back and forth without any trouble, in either language.</p>
+                    <p>They're also plain text files: any editor opens them, and you can send them by email or WhatsApp. They go to your downloads folder, with the date and time in the name (for example, <i>chronicle_2026-10-17_22-52.txt</i>).</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="live" id="lm-en-live">
+                    <h2 class="lm-h2">👀 Show it live</h2>
+                    <p>In the Knights' Hall you show up as <span class="lm-salon"><span>🔬 <span class="lm-me"></span> (Laboratory)</span></span>. By clicking there, others can challenge you or watch your laboratory.</p>
+                    <p>Those watching see your board live, with the same frame color and the footprint of the last move, but they can't touch anything. Above the board, <b>Spectators</b> tells you who they are. Perfect for explaining a move to a friend while you chat in the 💬 Hall Chat.</p>
+                    <p class="lm-tip">💡 If someone challenges you while you're studying, the notice still reaches you. If you accept, you leave the Laboratory to go to the duel: before that, save anything you don't want to lose.</p>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="map" id="lm-en-map">
+                    <h2 class="lm-h2">Every button at a glance</h2>
+                    <p>The numbers on the picture are the zones in the table.</p>
+                    <div class="lm-mapwrap"><div class="lm-maptoggle" role="group" aria-label="View the Laboratory on"><button type="button" class="lm-hbtn" data-map="pc" aria-pressed="false">💻 Computer</button><button type="button" class="lm-hbtn" data-map="cel" aria-pressed="false">📱 Phone</button></div><div class="lm-map lm-mpc"><img src="assets/manual-mapa-pc-en.jpg" width="1440" height="1386" alt="The Laboratory on a computer, with its numbered zones." loading="lazy" decoding="async"><div class="lm-zone" style="left:1.25%;top:0.76%;width:10.66%;height:4.44%"></div><div class="lm-zone" style="left:70.74%;top:0.76%;width:28.01%;height:4.44%"></div><div class="lm-zn" style="left:1.46%;top:1.41%">1</div><div class="lm-zn" style="left:70.95%;top:1.41%">1</div><div class="lm-zone" style="left:6.12%;top:12.23%;width:58.18%;height:8.44%"></div><div class="lm-zn" style="left:6.33%;top:12.45%">2</div><div class="lm-zone" style="left:6.12%;top:20.89%;width:58.18%;height:9.31%"></div><div class="lm-zn" style="left:6.33%;top:21.10%">3</div><div class="lm-zone" style="left:66.17%;top:12.23%;width:27.71%;height:17.97%"></div><div class="lm-zn" style="left:66.38%;top:12.45%">4</div><div class="lm-zone" style="left:66.17%;top:31.49%;width:27.71%;height:60.44%"></div><div class="lm-zn" style="left:66.38%;top:31.71%">5</div></div><div class="lm-map lm-mcel"><img src="assets/manual-mapa-cel-en.jpg" width="720" height="2356" alt="The Laboratory on a phone, with its numbered zones." loading="lazy" decoding="async"><div class="lm-zone" style="left:2.50%;top:0.59%;width:95.00%;height:3.09%"></div><div class="lm-zn" style="left:3.61%;top:1.10%">1</div><div class="lm-zone" style="left:2.50%;top:12.51%;width:95.00%;height:13.16%"></div><div class="lm-zn" style="left:3.61%;top:12.68%">2</div><div class="lm-zone" style="left:2.50%;top:25.84%;width:95.00%;height:6.11%"></div><div class="lm-zn" style="left:3.61%;top:26.01%">3</div><div class="lm-zone" style="left:5.00%;top:79.57%;width:44.72%;height:12.39%"></div><div class="lm-zn" style="left:5.56%;top:79.74%">4</div><div class="lm-zone" style="left:5.00%;top:63.10%;width:44.72%;height:16.30%"></div><div class="lm-zone" style="left:50.28%;top:63.10%;width:44.72%;height:29.80%"></div><div class="lm-zn" style="left:5.56%;top:63.27%">5</div><div class="lm-zn" style="left:50.83%;top:63.27%">5</div></div><table class="lm-table"><thead><tr><th>Zone</th><th>Button</th><th>What it does</th></tr></thead><tbody><tr><td><span class="lm-zn">1</span></td><td><span class="lm-chip lm-gold">📖 Manual</span></td><td>Opens this manual.</td></tr><tr><td><span class="lm-zn">1</span></td><td><span class="lm-chip lm-langc"><i class="on">🇦🇷 ES</i><i>🇬🇧 EN</i></span></td><td>Change the language of the whole site.</td></tr><tr><td><span class="lm-zn">1</span></td><td><span class="lm-chip lm-gold">🚪 Leave to Lobby</span></td><td>Takes you back to the Knights' Hall.</td></tr><tr><td><span class="lm-zn">2</span></td><td><b>Spectators</b></td><td>Who's watching your board.</td></tr><tr><td><span class="lm-zn">2</span></td><td><span class="lm-chip">▶️ Initial position</span></td><td>Sets up the 30 pieces as at the start of a game.</td></tr><tr><td><span class="lm-zn">2</span></td><td><span class="lm-chip">🗑️ Remove all</span></td><td>Empties the board.</td></tr><tr><td><span class="lm-zn">2</span></td><td><span class="lm-chip">🔄️ Rotate Board</span></td><td>Turns the board around, to see it from Black's side.</td></tr><tr><td><span class="lm-zn lm-z-pc">3</span><span class="lm-zn lm-z-cel">2</span></td><td><span class="lm-chip">↩️ Undo</span> <span class="lm-chip lm-sq">↪️</span></td><td>Take back the last thing you did, or redo it.</td></tr><tr><td><span class="lm-zn lm-z-pc">3</span><span class="lm-zn lm-z-cel">2</span></td><td><span class="lm-chip lm-counter">⚪ 15 | ⚫ 15</span></td><td>How many pieces each color has.</td></tr><tr><td><span class="lm-zn">3</span></td><td><span class="lm-chip lm-pcs" aria-hidden="true"><i class="w on"></i><i class="w k"></i><i class="b"></i><i class="b k"></i></span> <b>Piece to place</b></td><td>Which piece right-clicking places (on a phone, press and hold).</td></tr><tr><td><span class="lm-zn">3</span></td><td><span class="lm-chip lm-dark">Turn tracker: <b>ON</b></span></td><td>ON: turns are enforced. OFF: you can move any color.</td></tr><tr><td><span class="lm-zn">3</span></td><td><span class="lm-chip lm-swapc">⇄</span></td><td>Switches whose turn it is.</td></tr><tr><td><span class="lm-zn">4</span></td><td><span class="lm-chip">📸 Save Position</span></td><td>Downloads the board's position to a file.</td></tr><tr><td><span class="lm-zn">4</span></td><td><span class="lm-chip">🗺️ Load Position</span></td><td>Puts a saved position on the board.</td></tr><tr><td><span class="lm-zn">4</span></td><td><span class="lm-chip">💾 Save Chronicle</span></td><td>Downloads the chronicle in the list to a file.</td></tr><tr><td><span class="lm-zn">4</span></td><td><span class="lm-chip">📁 Load Chronicle</span></td><td>Opens a chronicle file and plays it.</td></tr><tr><td><span class="lm-zn">5</span></td><td><b>Text box</b></td><td>For pasting a chronicle in order to play it.</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip">▶️ Play Chronicle</span></td><td>Plays the chronicle pasted in the box.</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip">🧹 Clear Chronicle</span></td><td>Removes the chronicle from the list (the text stays in the box).</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip lm-sq">🎥</span></td><td>Generates a chronicle from the moves you make.</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip lm-navc">⏮️</span> <span class="lm-chip lm-navc">⏭️</span></td><td>Go back or forward ten moves.</td></tr><tr><td><span class="lm-zn">5</span></td><td><span class="lm-chip lm-navc">◀️</span> <span class="lm-chip lm-navc">▶️</span></td><td>Go back or forward one move.</td></tr><tr><td><span class="lm-zn">5</span></td><td><b>Little box in the middle</b></td><td>Type a number and press Enter: you go to that move.</td></tr><tr><td><span class="lm-zn">5</span></td><td><b>📜 Chronicle</b></td><td>The list of moves: click one, and the board goes there.</td></tr><tr><td>—</td><td><span class="lm-chip lm-gold lm-sq">💬</span></td><td>Opens the Hall Chat.</td></tr></tbody></table></div>
+                    <div class="lm-div" aria-hidden="true">◆</div>
+                    </section>
+
+                    <section class="lm-sec" data-sec="faq" id="lm-en-faq">
+                    <h2 class="lm-h2">Frequently asked questions</h2>
+                    <dl class="lm-faq">
+                    <dt>Why won't it let me move a piece?</dt>
+                    <dd>There can be three reasons: there's a mandatory capture (the piece that has to capture glows light blue); the Turn tracker is ON and it isn't that color's turn; or you're in the middle of a multiple capture, and the same piece has to keep capturing.</dd>
+                    <dt>Why doesn't right-clicking place the piece?</dt>
+                    <dd>It only works on dark squares, and up to 15 pieces and 7 kings per color. It doesn't work while the 🎥 is recording, either: then the board only changes through moves.</dd>
+                    <dt>Why won't the 🎥 turn on?</dt>
+                    <dd>It needs the Turn tracker ON, pieces of both colors, and the side to move must have some move left; it won't start in the middle of a multiple capture, either. On a computer, holding the mouse over the 🎥 tells you what's missing.</dd>
+                    <dt>It says the chronicle isn't valid. What do I do?</dt>
+                    <dd>The notice tells you which move has the problem and why. Check that it's complete, from move 1; if it doesn't start at the initial position, its starting position has to go above the moves (the “white:”, “black:” and “turn:” lines). The chronicle that was already loaded isn't touched.</dd>
+                    <dt>Why did the pawn turn into a king on its own?</dt>
+                    <dd>Because it's on the last row: that's where it crowns. A white pawn on row 10, or a black one on row 1, is always a king, even if you place it by hand.</dd>
+                    <dt>Can the people watching touch my board?</dt>
+                    <dd>No: they only watch. They see the same as you, live, but they can't move or change anything.</dd>
+                    <dt>What happens to my work if I leave the Laboratory?</dt>
+                    <dd>It's lost: the Laboratory doesn't save anything on its own. Before leaving (or accepting a challenge), save the position or the chronicle you care about to a file.</dd>
+                    </dl>
+                    <p class="lm-end" aria-hidden="true">◆</p>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="rules-engine.js"></script>
     <script>
@@ -2321,6 +3909,7 @@
         const TRANSLATIONS = {
             es: {
                 salirLobbyBtn: "🚪 Salir al Lobby",
+                manualBtn: "📖 Manual",
                 labTitle: "🧪 El Laboratorio",
                 labSubtitleA: "Estudiá jugadas, probá ataques y defensas,",
                 labSubtitleB: "libremente y sin restricciones.",
@@ -2394,7 +3983,7 @@
                 posErrTooManyWhiteKings: "hay más de 7 damas blancas (contando los peones que coronan solos por estar en la última fila).",
                 posErrTooManyBlackKings: "hay más de 7 damas negras (contando los peones que coronan solos por estar en la última fila).",
                 posErrBadTurn: "el turno tiene que ser \"blancas\" o \"negras\" (dice \"{0}\").",
-                chronicleInputTitle: "Pegá la crónica de una partida",
+                chronicleInputTitle: "Pegá la crónica de una partida:",
                 chronicleTextPlaceholder: "Pegá acá la crónica completa, desde la jugada 1...",
                 playChronicleBtn: "▶️ Reproducir Crónica",
                 clearChronicleBtn: "🧹 Borrar Crónica",
@@ -2443,12 +4032,13 @@
             },
             en: {
                 salirLobbyBtn: "🚪 Leave to Lobby",
+                manualBtn: "📖 Manual",
                 labTitle: "🧪 The Laboratory",
                 labSubtitleA: "Study moves, try out attacks and defenses,",
                 labSubtitleB: "freely and without restrictions.",
                 spectatorsNone: "Spectators: -",
                 spectatorsList: "Spectators: {0}",
-                posicionInicialBtn: "▶️ Starting position",
+                posicionInicialBtn: "▶️ Initial position",
                 removerTodoBtn: "🗑️ Remove all",
                 deshacerBtn: "↩️ Undo",
                 undoTitle: "Undo (Ctrl+Z)",
@@ -2513,7 +4103,7 @@
                 posErrTooManyWhiteKings: "there are more than 7 white queens (counting pawns that crown automatically on the last row).",
                 posErrTooManyBlackKings: "there are more than 7 black queens (counting pawns that crown automatically on the last row).",
                 posErrBadTurn: "the turn must be \"white\" or \"black\" (it says \"{0}\").",
-                chronicleInputTitle: "Paste a game's chronicle",
+                chronicleInputTitle: "Paste a game's chronicle:",
                 chronicleTextPlaceholder: "Paste the full chronicle here, starting from move 1...",
                 playChronicleBtn: "▶️ Play Chronicle",
                 clearChronicleBtn: "🧹 Clear Chronicle",
@@ -3161,7 +4751,8 @@
         // (chat, cuadro de la crónica, campito de la jugada) no hacen nada
         // acá: ahí son los del texto.
         document.addEventListener('keydown', (e) => {
-            if (isSpectatorMode || !(e.ctrlKey || e.metaKey) || e.altKey) return;
+            // (Con el manual abierto, tampoco: el tablero queda detrás.)
+            if (isSpectatorMode || lmIsOpen() || !(e.ctrlKey || e.metaKey) || e.altKey) return;
             const el = e.target;
             if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
             const k = (e.key || '').toLowerCase();
@@ -4796,6 +6387,809 @@
         });
 
         document.getElementById('chatBubble').style.display = 'flex';
+
+        // ============================================================
+        //  EL MANUAL DEL LABORATORIO (botón "📖 Manual")
+        // ============================================================
+        // Se abre sin salir del Laboratorio: en el idioma del sitio, y en el
+        // mismo lugar donde se lo dejó (mientras la página siga abierta),
+        // para poder leer una instrucción, cerrar, probarla en el tablero y
+        // volver. Adentro, ES | EN cambia solo el idioma del manual y deja la
+        // lectura en la misma sección. Se cierra con ✕, con Escape o con un
+        // clic afuera del pergamino.
+        // Lo que se dibuja (los tableritos y las animaciones) se arma recién
+        // la primera vez que se abre.
+
+        const LM_UI = {
+            es: {
+                idx: "↑ Índice", idxTitle: "Volver al índice", close: "Cerrar el manual",
+                noName: "Tu nombre", still: "▶ Ver la animación",
+                dlgCancel: "Cancelar", dlgOk: "Aceptar", mapPc: "💻 PC", mapCel: "📱 Celular",
+                // las animaciones
+                replay1: "Pegás la crónica en el cuadro y tocás ▶️ Reproducir Crónica.",
+                replay2: "El marco se pone violeta: estás viendo la partida tal cual se jugó.",
+                replay3: "▶️ avanza de a una jugada…",
+                replay4: "…y ◀️ vuelve atrás.",
+                replay5: "Con un clic en cualquier jugada de la lista, vas directo ahí.",
+                replay6: "⏮️ y ⏭️ saltan de a diez jugadas.",
+                whatif1: "Estás en la jugada 12 de la partida: marco violeta.",
+                whatif2: "¿Y si en vez de f4 → e5 se jugaba e3 → d4? Lo probás.",
+                whatif3: "El marco pasa a verde, y en la lista la 12 queda marcada en verde.",
+                whatif4: "Seguís probando, también con las negras.",
+                whatif5: "Con ▶️ volvés a la partida real: la jugada 13, en violeta.",
+                record1: "Ponés la posición inicial y el Control de turnos en SÍ.",
+                record2: "Tocás 🎥: el marco se pone rojo y empieza a anotar.",
+                record3: "Cada jugada que hacés se anota en la lista y en el cuadro de texto.",
+                record4: "Tocás 🎥 otra vez: la crónica queda cargada, en violeta.",
+                splice1: "Te parás en la jugada desde la que querés cambiar la historia: acá, la 4.",
+                splice2: "Tocás 🎥 y aceptás descartar las jugadas que venían después.",
+                splice3: "Jugás el final nuevo: se anota debajo de la línea punteada.",
+                splice4: "Apagás la 🎥: la partida queda con su final nuevo."
+            },
+            en: {
+                idx: "↑ Contents", idxTitle: "Back to the contents", close: "Close the manual",
+                noName: "Your name", still: "▶ Watch the animation",
+                dlgCancel: "Cancel", dlgOk: "OK", mapPc: "💻 Computer", mapCel: "📱 Phone",
+                replay1: "You paste the chronicle into the box and click ▶️ Play Chronicle.",
+                replay2: "The frame turns purple: you're looking at the game exactly as it was played.",
+                replay3: "▶️ goes forward one move at a time…",
+                replay4: "…and ◀️ goes back.",
+                replay5: "Click any move in the list and you go straight there.",
+                replay6: "⏮️ and ⏭️ jump ten moves at a time.",
+                whatif1: "You're at move 12 of the game: purple frame.",
+                whatif2: "What if instead of f4 → e5 they had played e3 → d4? You try it.",
+                whatif3: "The frame turns green, and move 12 is marked green in the list.",
+                whatif4: "You keep trying things, with Black too.",
+                whatif5: "With ▶️ you're back in the real game: move 13, in purple.",
+                record1: "You set up the initial position and turn the Turn tracker ON.",
+                record2: "You click 🎥: the frame turns red and it starts writing down.",
+                record3: "Every move you make is written into the list and the text box.",
+                record4: "You click 🎥 again: the chronicle stays loaded, in purple.",
+                splice1: "You stop at the move from which you want to change history: here, move 4.",
+                splice2: "You click 🎥 and agree to discard the moves that came after it.",
+                splice3: "You play the new ending: it's written below the dashed line.",
+                splice4: "You switch the 🎥 off: the game keeps its new ending."
+            }
+        };
+
+        // Los datos de las animaciones y de los tableritos: posiciones (100
+        // casillas, de la fila 10 a la 1 y de la a a la j; '.' vacía) y
+        // jugadas, sacadas de partidas reales y validadas con el mismo motor
+        // de reglas del Laboratorio.
+        const LM_DATA = {"replay":{"P":[".b.b.b.b.bb.b.b.b.b..b.b.b.b.b........................................w.w.w.w.w..w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b.b.b.................................w......w...w.w.w..w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b...b......b..........................w......w...w.w.w..w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b...b......b..........................w.w....w...w...w..w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b.b.b.b.b......b..........................w.w....w...w...w..w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b.b.b.b.b......b..........................w.w.w..w...w......w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b...b.b.b....b.b..........................w.w.w..w...w......w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b...b.b.b....b.b...............w............w.w..w...w......w.w.w.w.ww.w.w.w.w.",".b.b.b.b..b.b.b.b.b..b...b.b.b....b.b...............w............w.w..w...w......w.w.w.w.ww.w.w.w.w.",".b.b.b.b..b.b.b.b.b..b...b.b.b....b.b...............w.....w......w....w...w......w.w.w.w.ww.w.w.w.w.",".b.b.b.b..b.b.b.b.b..b...b...b....b.b.b.............w.....w......w....w...w......w.w.w.w.ww.w.w.w.w.",".b.b.b.b..b.b.b.b.b..b...b...b....b.b.b.............w.....w......w....w...w...w..w.w.w...ww.w.w.w.w.",".b.b.b.b..b.b.b.b.b..b...b...b......b.b......b......w.....w......w....w...w...w..w.w.w...ww.w.w.w.w.",".b.b.b.b..b.b.b.b.b..b...b...b......b.b......b......w.w...w...........w...w...w..w.w.w...ww.w.w.w.w.",".b.b.b.b..b.b.b.b.b..b...b...b......b.b.............w.....w....b......w...w...w..w.w.w...ww.w.w.w.w."],"M":[{"f":"c3","t":"d4","c":null,"k":false},{"f":"h8","t":"g7","c":null,"k":false},{"f":"g3","t":"f4","c":null,"k":false},{"f":"i9","t":"h8","c":null,"k":false},{"f":"i3","t":"h4","c":null,"k":false},{"f":"d8","t":"e7","c":null,"k":false},{"f":"d4","t":"c5","c":null,"k":false},{"f":"j10","t":"i9","c":null,"k":false},{"f":"h4","t":"i5","c":null,"k":false},{"f":"h8","t":"i7","c":null,"k":false},{"f":"h2","t":"i3","c":null,"k":false},{"f":"e7","t":"f6","c":null,"k":false},{"f":"f4","t":"e5","c":null,"k":false},{"f":"f6","t":"d4","c":"e5","k":false}],"lines":["1. c3 → d4","2. h8 → g7","3. g3 → f4","4. i9 → h8","5. i3 → h4","6. d8 → e7","7. d4 → c5","8. j10 → i9","9. h4 → i5","10. h8 → i7","11. h2 → i3","12. e7 → f6","13. f4 → e5","14. f6 → d4 ✕"]},"whatif":{"dev":[{"f":"e3","t":"d4","c":null,"k":false},{"f":"f6","t":"e5","c":null,"k":false}]},"record":{"P":[".b.b.b.b.bb.b.b.b.b..b.b.b.b.b........................................w.w.w.w.w..w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b.b.b.......................................ww.w.w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b.b..........b..............................ww.w.w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b.b..........b........................w.....ww...w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b.b.b.b.b........b........................w.....ww...w.w....w.w.w.w.ww.w.w.w.w."],"M":[{"f":"i3","t":"j4","c":null,"k":false},{"f":"j8","t":"i7","c":null,"k":false},{"f":"c3","t":"d4","c":null,"k":false},{"f":"i9","t":"j8","c":null,"k":false}],"lines":["1. i3 → j4","2. j8 → i7","3. c3 → d4","4. i9 → j8"]},"splice":{"P":[".b.b.b.b.bb.b.b.b.b..b.b.b.b.b........................................w.w.w.w.w..w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b.b.b.......................................ww.w.w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b.b..........b..............................ww.w.w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b.b..b.b.b.b..........b........................w.....ww...w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b.b.b.b.b........b........................w.....ww...w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b.b.b.b.b........b......................w.w.....w....w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b...b.b.b....b...b......................w.w.....w....w.w....w.w.w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b....b...b.b.b....b...b......................w.w.....w..w.w.w....w...w.w.ww.w.w.w.w.",".b.b.b.b.bb.b.b.b........b.b.b..b.b...b......................w.w.....w..w.w.w....w...w.w.ww.w.w.w.w."],"lines":["1. i3 → j4","2. j8 → i7","3. c3 → d4","4. i9 → j8","5. a3 → b4","6. d8 → e7","7. d2 → c3","8. b8 → c7"],"newM":[{"f":"j4","t":"i5","c":null,"k":false,"chain":false},{"f":"i7","t":"h6","c":null,"k":false,"chain":false},{"f":"i5","t":"g7","c":"h6","k":false,"chain":true},{"f":"g7","t":"i9","c":"h8","k":false,"chain":false}],"newLines":["5. j4 → i5","6. i7 → h6","7. i5 → g7 ✕","8. g7 → i9 ✕"]},"sig":{"v":{"pos":".b.b.b.b..b.b.b.b.b..b...b...b......b.b.............w.....w....b......w...w...w..w.w.w...ww.w.w.w.w.","h":["f6","d4"]},"g":{"pos":".....b...............b.......b......B.b....b..........W............w..w.w...w....w..................","h":[]},"r":{"pos":".b.b.b.b.bb.b.b.b.b..b.b.b.b..........b........................w.....ww...w.w....w.w.w.w.ww.w.w.w.w.","h":["c3","d4"]}}};
+
+        let lmLang = null;       // en qué idioma se está mostrando el manual
+        let lmBuilt = false;     // ¿ya se armaron los dibujos?
+        let lmSaved = null;      // dónde se dejó la lectura: { sec, frac }
+        let lmLastFocus = null;  // a dónde vuelve el foco al cerrar
+        let lmAnims = [];
+        let lmObserver = null;
+        // El mapa arranca mostrando el de la pantalla que se está usando.
+        let lmMapMode = window.matchMedia('(min-width: 900px)').matches ? 'pc' : 'cel';
+        const lmReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+        function lmIsOpen() {
+            return document.getElementById('labManual').classList.contains('open');
+        }
+
+        function lmBlock(lang) {
+            return document.getElementById(lang === 'en' ? 'lmTextEn' : 'lmTextEs');
+        }
+
+        function openManual() {
+            const overlay = document.getElementById('labManual');
+            if (lmIsOpen()) return;
+            if (!lmBuilt) {
+                lmBuild();
+                lmBuilt = true;
+            }
+            lmLastFocus = document.activeElement;
+            overlay.classList.add('open');
+            lmFillName();
+            // En el idioma del sitio, y en el lugar donde quedó.
+            lmShowLang(currentLang, lmSaved);
+            document.getElementById('lmScroll').focus({ preventScroll: true });
+        }
+
+        function closeManual() {
+            if (!lmIsOpen()) return;
+            lmSaved = lmWhere();
+            document.getElementById('labManual').classList.remove('open');
+            lmAnims.forEach(a => a.stop());
+            if (lmLastFocus && typeof lmLastFocus.focus === 'function') lmLastFocus.focus({ preventScroll: true });
+        }
+
+        // El alto que ocupa, arriba de todo, el relleno del área de lectura:
+        // una sección "empieza" cuando su borde de arriba llega ahí.
+        function lmSecTop(sec) {
+            const sc = document.getElementById('lmScroll');
+            return sec.offsetTop - parseFloat(getComputedStyle(sc).paddingTop || '0');
+        }
+
+        // En qué sección está la lectura, y qué fracción de ella ya pasó.
+        function lmWhere() {
+            const sc = document.getElementById('lmScroll');
+            const secs = lmBlock(lmLang).querySelectorAll('.lm-sec');
+            // (la sección cuyo comienzo ya pasó la franja de arriba, donde el
+            // texto se desvanece: así cuenta también la que se acaba de abrir
+            // con un enlace del índice, que queda unos píxeles más abajo)
+            let cur = secs[0];
+            for (const s of secs) {
+                if (lmSecTop(s) <= sc.scrollTop + 24) cur = s;
+                else break;
+            }
+            const h = cur.offsetHeight || 1;
+            const frac = Math.max(-0.5, Math.min(1, (sc.scrollTop - lmSecTop(cur)) / h));
+            return { sec: cur.dataset.sec, frac };
+        }
+
+        function lmShowLang(lang, where) {
+            lmLang = (lang === 'en') ? 'en' : 'es';
+            const ui = LM_UI[lmLang];
+            lmBlock('es').hidden = (lmLang !== 'es');
+            lmBlock('en').hidden = (lmLang !== 'en');
+            document.getElementById('labManual').setAttribute('lang', lmLang);
+            document.getElementById('labManual').setAttribute('aria-labelledby', lmLang === 'en' ? 'lmTitleEn' : 'lmTitleEs');
+            const idx = document.getElementById('lmIdxBtn');
+            idx.textContent = ui.idx;
+            idx.title = ui.idxTitle;
+            const close = document.getElementById('lmCloseBtn');
+            close.title = ui.close;
+            close.setAttribute('aria-label', ui.close);
+            document.querySelectorAll('#lmLang .lm-hbtn').forEach(b => {
+                b.classList.toggle('active', b.dataset.lang === lmLang);
+                b.setAttribute('aria-pressed', b.dataset.lang === lmLang ? 'true' : 'false');
+            });
+            const sc = document.getElementById('lmScroll');
+            const target = where && lmBlock(lmLang).querySelector('.lm-sec[data-sec="' + where.sec + '"]');
+            sc.scrollTop = target ? Math.max(0, lmSecTop(target) + where.frac * target.offsetHeight) : 0;
+            // Las animaciones del otro idioma quedan ocultas: se frenan solas
+            // (y arrancan las de este, si están a la vista).
+            lmAnims.forEach(a => { if (a.lang !== lmLang) a.stop(); });
+            lmCheckAnims();
+        }
+
+        function lmSwitchLang(lang) {
+            if (lang === lmLang) return;
+            lmShowLang(lang, lmWhere());
+        }
+
+        // Cómo aparece quien lee en el Salón de los Caballeros.
+        function lmFillName() {
+            document.querySelectorAll('#labManual .lm-me').forEach(el => {
+                const lang = el.closest('.lm-block').id === 'lmTextEn' ? 'en' : 'es';
+                el.textContent = myUsername || LM_UI[lang].noName;
+            });
+        }
+
+        // Los saltos del índice y de los enlaces: siempre adentro del manual,
+        // sin tocar la dirección de la página.
+        function lmGoTo(secName, smooth = true) {
+            const sec = lmBlock(lmLang).querySelector('.lm-sec[data-sec="' + secName + '"]');
+            if (!sec) return;
+            // (8 px antes: así el título no cae en la franja de arriba, donde el
+            // texto se desvanece)
+            document.getElementById('lmScroll').scrollTo({
+                top: Math.max(0, lmSecTop(sec) - 8),
+                behavior: (smooth && !lmReducedMotion.matches) ? 'smooth' : 'auto'
+            });
+        }
+
+        function lmSetMap(mode) {
+            lmMapMode = mode;
+            document.querySelectorAll('#labManual .lm-mapwrap').forEach(w => {
+                w.classList.toggle('lm-show-cel', mode === 'cel');
+                w.querySelectorAll('[data-map]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.map === mode);
+                    b.setAttribute('aria-pressed', b.dataset.map === mode ? 'true' : 'false');
+                });
+            });
+        }
+
+        // ------------------------------------------------------------
+        //  Los tableritos de "Las señales del tablero"
+        // ------------------------------------------------------------
+        function lmSq(name) {
+            return { row: 10 - parseInt(name.slice(1), 10), col: name.charCodeAt(0) - 97 };
+        }
+
+        function lmMiniBoard(el, pos, huella) {
+            const h = new Set((huella || []).map(s => { const q = lmSq(s); return q.row * 10 + q.col; }));
+            let html = '';
+            for (let i = 0; i < 100; i++) {
+                const r = Math.floor(i / 10), c = i % 10, p = pos[i];
+                const dark = (r + c) % 2 === 1;
+                let cls = dark ? (h.has(i) ? 'h' : 'd') : 'l';
+                if (p !== '.') cls += (p.toLowerCase() === 'w' ? ' pw' : ' pb') + (p === p.toUpperCase() ? ' k' : '');
+                html += '<span class="' + cls + '"></span>';
+            }
+            el.innerHTML = html;
+        }
+
+        // ------------------------------------------------------------
+        //  Las animaciones: un Laboratorio en miniatura que se maneja solo.
+        //  Arrancan cuando aparecen en pantalla y se repiten con una pausa
+        //  al final; si el sistema pide "reducir movimiento", quedan quietas
+        //  (en su último cuadro) y se ven con un botón.
+        // ------------------------------------------------------------
+        class LmAnim {
+            constructor(root, kind, lang) {
+                this.root = root;
+                this.kind = kind;
+                this.lang = lang;
+                this.ui = LM_UI[lang];
+                this.token = null;
+                this.instant = false;
+                this.build();
+            }
+
+            t(key) { return this.ui[key] || key; }
+            tl(key, ...args) {
+                // los textos del Laboratorio (botones, avisos), en el idioma del manual
+                let s = (TRANSLATIONS[this.lang] && TRANSLATIONS[this.lang][key]) || TRANSLATIONS.es[key] || key;
+                args.forEach((a, i) => { s = s.replace('{' + i + '}', a); });
+                return s;
+            }
+
+            build() {
+                const L = (k) => this.tl(k);
+                this.root.innerHTML =
+                    '<div class="lma-stage">' +
+                    '<div class="lma-strip"></div>' +
+                    '<div class="lma-board"><div class="lma-sqs"></div><div class="lma-pcs"></div></div>' +
+                    '<div class="lma-side">' +
+                    '<div class="lma-ta"></div>' +
+                    '<div class="lma-row lma-main"><span class="lma-c wide" data-b="main"><span class="lma-faces"><span class="f1">' + L('playChronicleBtn') +
+                    '</span><span class="f2">' + L('clearChronicleBtn') + '</span></span></span><span class="lma-c ico" data-b="rec">🎥</span></div>' +
+                    '<div class="lma-row lma-nav"><span class="lma-c nav" data-b="fb">⏮️</span><span class="lma-c nav" data-b="b">◀️</span>' +
+                    '<span class="lma-c num" data-b="num"></span><span class="lma-c nav" data-b="f">▶️</span><span class="lma-c nav" data-b="ff">⏭️</span></div>' +
+                    '<div class="lma-list"><div class="lma-lh">' + L('chronicaTitle') + '</div><div class="lma-lines"></div></div>' +
+                    '</div>' +
+                    '<div class="lma-dlg"><div class="tx"></div><div class="btns"><span class="no">' + this.t('dlgCancel') + '</span><span class="ok">' + this.t('dlgOk') + '</span></div></div>' +
+                    '</div><p class="lma-cap"></p><button type="button" class="lma-replay">' + this.t('still') + '</button>';
+                const sqs = this.root.querySelector('.lma-sqs');
+                let html = '';
+                for (let r = 0; r < 10; r++) for (let c = 0; c < 10; c++) html += '<i class="' + ((r + c) % 2 ? 'd' : 'l') + '" data-s="' + String.fromCharCode(97 + c) + (10 - r) + '"></i>';
+                sqs.innerHTML = html;
+                this.stage = this.root.querySelector('.lma-stage');
+                this.boardEl = this.root.querySelector('.lma-board');
+                this.pcsEl = this.root.querySelector('.lma-pcs');
+                this.linesEl = this.root.querySelector('.lma-lines');
+                this.taEl = this.root.querySelector('.lma-ta');
+                this.capEl = this.root.querySelector('.lma-cap');
+                this.stripEl = this.root.querySelector('.lma-strip');
+                this.dlgEl = this.root.querySelector('.lma-dlg');
+                this.root.querySelector('.lma-replay').addEventListener('click', () => this.playOnce());
+                this.reset();
+            }
+
+            btn(name) { return this.root.querySelector('[data-b="' + name + '"]'); }
+            sqEl(name) { return this.root.querySelector('.lma-sqs [data-s="' + name + '"]'); }
+
+            // --- el estado de la escena ---
+            reset() {
+                this.stage.classList.add('lma-noanim');
+                this.pieces = new Map();
+                this.pcsEl.innerHTML = '';
+                this.root.querySelectorAll('.lma-sqs i').forEach(i => i.classList.remove('h', 't'));
+                this.frame('g');
+                this.lines = [];
+                this.cur = -1;
+                this.split = -1;
+                this.renderLines(true);
+                this.setTa('', false);
+                this.face(false);
+                this.btn('rec').classList.remove('recon');
+                this.navOn(false);
+                this.dlgEl.classList.remove('show');
+                this.stripEl.innerHTML = '';
+                this.capEl.textContent = '';
+                // eslint-disable-next-line no-unused-expressions
+                this.stage.offsetWidth; // se aplica sin transiciones
+                this.stage.classList.remove('lma-noanim');
+            }
+
+            frame(mode) {
+                this.mode = mode;
+                this.boardEl.classList.toggle('v', mode === 'v');
+                this.boardEl.classList.toggle('r', mode === 'r');
+                this.linesEl.classList.toggle('g', mode === 'g');
+                this.linesEl.classList.toggle('r', mode === 'r');
+                if (mode === 'g') this.huella(null);
+            }
+
+            setBoard(pos) {
+                this.pcsEl.innerHTML = '';
+                this.pieces = new Map();
+                for (let i = 0; i < 100; i++) {
+                    const p = pos[i];
+                    if (p === '.') continue;
+                    const name = String.fromCharCode(97 + (i % 10)) + (10 - Math.floor(i / 10));
+                    this.addPiece(name, p);
+                }
+                this.updateCounter();
+            }
+
+            addPiece(name, p, hidden) {
+                const el = document.createElement('div');
+                el.className = 'lma-p ' + (p.toLowerCase() === 'w' ? 'w' : 'b') + (p === p.toUpperCase() ? ' k' : '') + (hidden ? ' gone' : '');
+                el.dataset.p = p;
+                this.place(el, name);
+                this.pcsEl.appendChild(el);
+                this.pieces.set(name, el);
+                return el;
+            }
+
+            place(el, name) {
+                const q = lmSq(name);
+                el.style.left = (q.col * 1.6) + 'em';
+                el.style.top = (q.row * 1.6) + 'em';
+            }
+
+            huella(mv) {
+                this.root.querySelectorAll('.lma-sqs i.h').forEach(i => i.classList.remove('h'));
+                if (mv && this.mode !== 'g') [mv.f, mv.t].forEach(s => this.sqEl(s).classList.add('h'));
+            }
+
+            updateCounter() {
+                const c = this.stripEl.querySelector('[data-b="cnt"]');
+                if (!c) return;
+                let w = 0, b = 0;
+                this.pieces.forEach(el => { if (el.dataset.p.toLowerCase() === 'w') w++; else b++; });
+                c.textContent = '⚪ ' + w + ' | ⚫ ' + b;
+            }
+
+            strip(items) {
+                // items: 'cnt' | 'pi' | ['tt', on]
+                this.stripEl.innerHTML = items.map(it => {
+                    if (it === 'cnt') return '<span class="lma-c cnt" data-b="cnt"></span>';
+                    if (it === 'pi') return '<span class="lma-c" data-b="pi">' + this.tl('posicionInicialBtn') + '</span>';
+                    return '<span class="lma-c tt' + (it[1] ? ' on' : '') + '" data-b="tt">' + this.tl('turnTrackerLabel') + '<b>' + this.tl(it[1] ? 'turnTrackerOn' : 'turnTrackerOff') + '</b></span>';
+                }).join('');
+                this.updateCounter();
+            }
+
+            ttOn() {
+                const tt = this.btn('tt');
+                tt.classList.add('on');
+                tt.querySelector('b').textContent = this.tl('turnTrackerOn');
+            }
+
+            face(clear) { this.root.querySelector('.lma-faces').classList.toggle('flip', clear); }
+
+            navOn(on) {
+                ['fb', 'b', 'num', 'f', 'ff'].forEach(n => { this.btn(n).style.opacity = on ? '1' : '0.45'; });
+                this.btn('main').style.opacity = '1';
+            }
+
+            setTa(text, rec, placeholder) {
+                this.taEl.classList.toggle('rec', !!rec);
+                if (!text) {
+                    this.taEl.innerHTML = '<span class="ph"></span>';
+                    this.taEl.firstChild.textContent = placeholder || '';
+                } else {
+                    this.taEl.textContent = text;
+                }
+                this.taEl.scrollTop = this.taEl.scrollHeight;
+            }
+
+            setLines(lines, cur, split = -1) {
+                this.lines = lines;
+                this.cur = cur;
+                this.split = split;
+                this.renderLines();
+            }
+
+            renderLines(empty) {
+                if (empty || this.lines.length === 0) {
+                    this.linesEl.innerHTML = '<div class="hint"></div>';
+                    this.linesEl.firstChild.textContent = this.tl('chronicleEmptyHint');
+                    this.btn('num').textContent = '';
+                    return;
+                }
+                let html = '';
+                this.lines.forEach((l, i) => {
+                    html += '<div data-i="' + i + '"' + (i === this.cur ? ' class="cur"' : '') + '></div>';
+                    if (i === this.split) html += '<div class="split"></div>';
+                });
+                this.linesEl.innerHTML = html;
+                this.linesEl.querySelectorAll('[data-i]').forEach(d => { d.textContent = this.lines[+d.dataset.i]; });
+                this.btn('num').textContent = String(this.cur);
+                this.scrollLines();
+            }
+
+            setCur(i) {
+                this.cur = i;
+                this.linesEl.querySelectorAll('[data-i]').forEach(d => d.classList.toggle('cur', +d.dataset.i === i));
+                this.btn('num').textContent = String(i);
+                this.scrollLines();
+            }
+
+            scrollLines() {
+                const cur = this.linesEl.querySelector('.cur');
+                if (!cur) return;
+                const target = cur.offsetTop - this.linesEl.clientHeight / 2 + cur.offsetHeight / 2;
+                this.linesEl.scrollTop = Math.max(0, target);
+            }
+
+            chronLines(lines, startLabelKey = 'chronicleInitialPositionLabel') {
+                return [this.tl(startLabelKey)].concat(lines);
+            }
+
+            // --- el tiempo ---
+            sleep(ms) {
+                const tok = this.token;
+                if (this.instant) return Promise.resolve();
+                return new Promise((resolve, reject) => {
+                    const id = setTimeout(() => (tok && !tok.stopped) ? resolve() : reject(new Error('stop')), ms);
+                    if (tok) tok.timers.push(id);
+                });
+            }
+
+            cap(key) { this.capEl.textContent = this.t(key); }
+
+            async press(name, el) {
+                const b = el || this.btn(name);
+                b.classList.add('press');
+                await this.sleep(320);
+                b.classList.remove('press');
+            }
+
+            // Una jugada hecha a mano: aro rojo, recuadros verdes, la ficha va.
+            async move(mv, targets) {
+                const el = this.pieces.get(mv.f);
+                el.classList.add('sel');
+                await this.sleep(420);
+                const tg = targets || [mv.t];
+                tg.forEach(s => this.sqEl(s).classList.add('t'));
+                await this.sleep(480);
+                tg.forEach(s => this.sqEl(s).classList.remove('t'));
+                this.slide(mv);
+                if (!mv.chain) el.classList.remove('sel');
+                await this.sleep(560);
+            }
+
+            // La ficha va de su casilla a la otra (y la capturada se va).
+            slide(mv) {
+                const el = this.pieces.get(mv.f);
+                this.place(el, mv.t);
+                this.pieces.delete(mv.f);
+                this.pieces.set(mv.t, el);
+                if (mv.c) {
+                    const victim = this.pieces.get(mv.c);
+                    this.pieces.delete(mv.c);
+                    if (victim) { victim.classList.add('gone'); setTimeout(() => victim.remove(), 400); }
+                }
+                if (mv.k) { el.classList.add('k'); el.dataset.p = el.dataset.p.toUpperCase(); }
+                this.huella(mv);
+                this.updateCounter();
+            }
+
+            // Para atrás, una jugada (la capturada vuelve).
+            unslide(mv) {
+                const el = this.pieces.get(mv.t);
+                this.place(el, mv.f);
+                this.pieces.delete(mv.t);
+                this.pieces.set(mv.f, el);
+                if (mv.k) { el.classList.remove('k'); el.dataset.p = el.dataset.p.toLowerCase(); }
+                if (mv.c) {
+                    const color = el.dataset.p.toLowerCase() === 'w' ? 'b' : 'w';
+                    const back = this.addPiece(mv.c, color, true);
+                    requestAnimationFrame(() => back.classList.remove('gone'));
+                }
+                this.updateCounter();
+            }
+
+            // --- reproducir ---
+            play() {
+                if (this.token && !this.token.stopped) return;
+                if (lmReducedMotion.matches) { this.still(); return; }
+                const tok = this.token = { stopped: false, timers: [] };
+                this.root.classList.remove('lma-still');
+                (async () => {
+                    while (!tok.stopped) {
+                        await this.script();
+                        await this.sleep(2600);
+                    }
+                })().catch(() => { });
+            }
+
+            // Una sola vez (el botón de "reducir movimiento"); después vuelve a
+            // quedar quieta en su último cuadro.
+            playOnce() {
+                if (this.token && !this.token.stopped) return;
+                const tok = this.token = { stopped: false, timers: [] };
+                this.root.classList.remove('lma-still');
+                (async () => {
+                    await this.script();
+                    await this.sleep(1800);
+                    tok.stopped = true;
+                    this.root.classList.add('lma-still');
+                })().catch(() => { });
+            }
+
+            stop() {
+                if (this.token) {
+                    this.token.stopped = true;
+                    this.token.timers.forEach(clearTimeout);
+                    this.token = null;
+                }
+                if (lmReducedMotion.matches) this.still();
+                else this.reset();
+            }
+
+            // Quieta: el último cuadro, sin moverse.
+            still() {
+                this.token = null;
+                this.instant = true;
+                this.stage.classList.add('lma-noanim');
+                this.script().catch(() => { }).then(() => {
+                    this.instant = false;
+                    this.stage.offsetWidth;
+                    this.stage.classList.remove('lma-noanim');
+                });
+                this.root.classList.add('lma-still');
+            }
+
+            async script() {
+                this.reset();
+                const D = LM_DATA[this.kind];
+                if (this.kind === 'replay') {
+                    this.strip(['cnt']);
+                    this.setTa(D.lines.slice(0, 6).join('\n'), false);
+                    this.taEl.scrollTop = 0;
+                    this.cap('replay1');
+                    await this.sleep(1500);
+                    await this.press('main');
+                    this.setBoard(D.P[0]);
+                    this.frame('v');
+                    this.setLines(this.chronLines(D.lines), 0);
+                    this.face(true);
+                    this.navOn(true);
+                    await this.sleep(1300);
+                    this.cap('replay2');
+                    await this.sleep(2300);
+                    this.cap('replay3');
+                    for (let i = 0; i < 3; i++) {
+                        await this.press('f');
+                        this.slide(D.M[i]);
+                        this.setCur(i + 1);
+                        await this.sleep(950);
+                    }
+                    this.cap('replay4');
+                    await this.sleep(500);
+                    await this.press('b');
+                    this.unslide(D.M[2]);
+                    this.huella(D.M[1]);
+                    this.setCur(2);
+                    await this.sleep(1700);
+                    this.cap('replay5');
+                    await this.sleep(900);
+                    const line = this.linesEl.querySelector('[data-i="14"]');
+                    this.linesEl.scrollTop = this.linesEl.scrollHeight;
+                    await this.sleep(500);
+                    await this.press(null, line);
+                    this.setBoard(D.P[14]);
+                    this.huella(D.M[13]);
+                    this.setCur(14);
+                    await this.sleep(2200);
+                    this.cap('replay6');
+                    await this.sleep(700);
+                    await this.press('fb');
+                    this.setBoard(D.P[4]);
+                    this.huella(D.M[3]);
+                    this.setCur(4);
+                    await this.sleep(1500);
+                    await this.press('ff');
+                    this.setBoard(D.P[14]);
+                    this.huella(D.M[13]);
+                    this.setCur(14);
+                    await this.sleep(1800);
+                } else if (this.kind === 'whatif') {
+                    const R = LM_DATA.replay;
+                    this.strip(['cnt']);
+                    this.setTa(R.lines.join('\n'), false);
+                    this.setBoard(R.P[12]);
+                    this.frame('v');
+                    this.huella(R.M[11]);
+                    this.setLines(this.chronLines(R.lines), 12);
+                    this.face(true);
+                    this.navOn(true);
+                    this.cap('whatif1');
+                    await this.sleep(2300);
+                    this.cap('whatif2');
+                    await this.sleep(900);
+                    await this.move(D.dev[0], ['d4']);
+                    this.frame('g');
+                    await this.sleep(500);
+                    this.cap('whatif3');
+                    await this.sleep(2400);
+                    this.cap('whatif4');
+                    await this.sleep(500);
+                    await this.move(D.dev[1], ['e5', 'g5']);
+                    await this.sleep(1300);
+                    this.cap('whatif5');
+                    await this.sleep(700);
+                    await this.press('f');
+                    this.setBoard(R.P[13]);
+                    this.frame('v');
+                    this.huella(R.M[12]);
+                    this.setCur(13);
+                    await this.sleep(2500);
+                } else if (this.kind === 'record') {
+                    this.strip(['pi', ['tt', false]]);
+                    this.setTa('', false, this.tl('chronicleTextPlaceholder'));
+                    this.cap('record1');
+                    await this.sleep(1300);
+                    await this.press('pi');
+                    this.setBoard(D.P[0]);
+                    await this.sleep(700);
+                    await this.press('tt');
+                    this.ttOn();
+                    await this.sleep(1300);
+                    this.cap('record2');
+                    await this.sleep(900);
+                    await this.press('rec');
+                    this.btn('rec').classList.add('recon');
+                    this.frame('r');
+                    this.setTa('', true, this.tl('chronicleRecordingPlaceholder'));
+                    this.setLines(this.chronLines([]), 0);
+                    this.btn('main').style.opacity = '0.45';
+                    await this.sleep(1700);
+                    this.cap('record3');
+                    const targets = [['h4', 'j4'], ['i7'], ['b4', 'd4'], ['j8']];
+                    for (let i = 0; i < D.M.length; i++) {
+                        await this.move(D.M[i], targets[i]);
+                        this.setLines(this.chronLines(D.lines.slice(0, i + 1)), i + 1);
+                        this.setTa(D.lines.slice(0, i + 1).join('\n'), true);
+                        await this.sleep(450);
+                    }
+                    await this.sleep(900);
+                    this.cap('record4');
+                    await this.sleep(700);
+                    await this.press('rec');
+                    this.btn('rec').classList.remove('recon');
+                    this.frame('v');
+                    this.huella(D.M[3]);
+                    this.setTa(D.lines.join('\n'), false);
+                    this.face(true);
+                    this.navOn(true);
+                    await this.sleep(2600);
+                } else if (this.kind === 'splice') {
+                    this.strip([['tt', true], 'cnt']);
+                    this.setTa(D.lines.join('\n'), false);
+                    this.setBoard(D.P[4]);
+                    this.frame('v');
+                    this.setLines(this.chronLines(D.lines), 4);
+                    this.huella({ f: 'i9', t: 'j8' });
+                    this.face(true);
+                    this.navOn(true);
+                    this.cap('splice1');
+                    await this.sleep(2400);
+                    this.cap('splice2');
+                    await this.sleep(800);
+                    await this.press('rec');
+                    this.dlgEl.querySelector('.tx').textContent = this.tl('recordConfirmDiscard', 5, 8);
+                    this.dlgEl.classList.add('show');
+                    await this.sleep(1700);
+                    await this.press(null, this.dlgEl.querySelector('.ok'));
+                    this.dlgEl.classList.remove('show');
+                    this.btn('rec').classList.add('recon');
+                    this.frame('r');
+                    this.huella({ f: 'i9', t: 'j8' });
+                    this.setLines(this.chronLines(D.lines.slice(0, 4)), 4, 4);
+                    this.setTa(D.lines.slice(0, 4).join('\n'), true);
+                    this.navOn(false);
+                    this.btn('main').style.opacity = '0.45';
+                    await this.sleep(1400);
+                    this.cap('splice3');
+                    const targets = [['i5'], ['h6', 'j6'], ['g7'], ['i9']];
+                    for (let i = 0; i < D.newM.length; i++) {
+                        const mv = D.newM[i];
+                        if (i > 0 && D.newM[i - 1].chain) {
+                            // sigue la misma ficha (captura múltiple): ya está seleccionada
+                            targets[i].forEach(s => this.sqEl(s).classList.add('t'));
+                            await this.sleep(600);
+                            targets[i].forEach(s => this.sqEl(s).classList.remove('t'));
+                            this.slide(mv);
+                            this.pieces.get(mv.t).classList.remove('sel');
+                            await this.sleep(560);
+                        } else {
+                            await this.move(mv, targets[i]);
+                        }
+                        const lines = D.lines.slice(0, 4).concat(D.newLines.slice(0, i + 1));
+                        this.setLines(this.chronLines(lines), 5 + i, 4);
+                        this.setTa(lines.join('\n'), true);
+                        await this.sleep(450);
+                    }
+                    await this.sleep(900);
+                    this.cap('splice4');
+                    await this.sleep(700);
+                    await this.press('rec');
+                    this.btn('rec').classList.remove('recon');
+                    this.frame('v');
+                    this.huella(D.newM[3]);
+                    this.setTa(D.lines.slice(0, 4).concat(D.newLines).join('\n'), false);
+                    this.navOn(true);
+                    await this.sleep(2600);
+                }
+            }
+        }
+
+        // Cuáles están a la vista (al menos la mitad), adentro del manual.
+        function lmCheckAnims() {
+            if (!lmObserver) return;
+            lmAnims.forEach(a => {
+                lmObserver.unobserve(a.root);
+                lmObserver.observe(a.root);
+            });
+        }
+
+        function lmBuild() {
+            // Los tableritos de las señales.
+            document.querySelectorAll('#labManual .lm-mini[data-pos]').forEach(el => {
+                const s = LM_DATA.sig[el.dataset.pos];
+                lmMiniBoard(el, s.pos, s.h);
+            });
+            // Las animaciones (una por idioma).
+            document.querySelectorAll('#labManual .lm-anim[data-anim]').forEach(el => {
+                const lang = el.closest('.lm-block').id === 'lmTextEn' ? 'en' : 'es';
+                lmAnims.push(new LmAnim(el, el.dataset.anim, lang));
+            });
+            if ('IntersectionObserver' in window) {
+                lmObserver = new IntersectionObserver(entries => {
+                    entries.forEach(en => {
+                        const a = lmAnims.find(x => x.root === en.target);
+                        if (!a) return;
+                        if (en.isIntersecting && lmIsOpen() && a.lang === lmLang) a.play();
+                        else if (!en.isIntersecting) a.stop();
+                    });
+                }, { root: document.getElementById('lmScroll'), threshold: 0.5 });
+                lmAnims.forEach(a => lmObserver.observe(a.root));
+            } else {
+                lmAnims.forEach(a => a.still());
+            }
+            lmReducedMotion.addEventListener && lmReducedMotion.addEventListener('change', () => lmAnims.forEach(a => a.stop()));
+            // El mapa: PC o celular.
+            document.querySelectorAll('#labManual [data-map]').forEach(b => {
+                b.addEventListener('click', () => lmSetMap(b.dataset.map));
+            });
+            lmSetMap(lmMapMode);
+        }
+
+        // Los botones y enlaces de adentro del manual.
+        (function () {
+            const overlay = document.getElementById('labManual');
+            const sc = document.getElementById('lmScroll');
+            document.getElementById('lmCloseBtn').addEventListener('click', closeManual);
+            document.getElementById('lmIdxBtn').addEventListener('click', () => lmGoTo('uses'));
+            document.querySelectorAll('#lmLang .lm-hbtn').forEach(b => {
+                b.addEventListener('click', () => lmSwitchLang(b.dataset.lang));
+            });
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeManual();
+                const a = e.target.closest && e.target.closest('a[data-goto]');
+                if (a) {
+                    e.preventDefault();
+                    lmGoTo(a.dataset.goto);
+                }
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && lmIsOpen()) closeManual();
+            });
+            // Con el manual abierto, la página de atrás no se mueve: la rueda
+            // y el dedo solo desplazan el texto del manual.
+            const outside = (e) => { if (!sc.contains(e.target)) e.preventDefault(); };
+            overlay.addEventListener('wheel', outside, { passive: false });
+            overlay.addEventListener('touchmove', outside, { passive: false });
+            // El pergamino se pide apenas alguien se acerca al botón (así, al
+            // abrir, ya está).
+            const pre = () => { const img = new Image(); img.src = 'assets/pergamino-manual-lab.jpg'; };
+            const mb = document.getElementById('manualBtn');
+            mb.addEventListener('pointerenter', pre, { once: true });
+            mb.addEventListener('focus', pre, { once: true });
+            mb.addEventListener('touchstart', pre, { once: true, passive: true });
+        })();
 
         // ============================================================
         //  ARRANQUE: tablero vacío, tipo de ficha por defecto = peón

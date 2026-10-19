@@ -37,8 +37,8 @@ const BOT_CHARACTERS = [
         level: 1,
         name: "Neanderthalius",
         image: "assets/bots/neanderthalius.jpg",
-        description: "Desde el albor de los tiempos llega nuestro más primitivo participante, un ejemplar de homínido que se preservó congelado en un glaciar durante 300.000 años. Junta palitos, golpea piedras y ahora también juega a las damas. Comele las fichas antes de que se las coma él. Si perdés contra él probablemente seas el eslabón perdido.",
-        description_en: "From the dawn of time comes our most primitive contender, a specimen of hominid preserved frozen in a glacier for 300,000 years. He gathers sticks, bangs rocks together, and now also plays checkers. Eat his pieces before he eats yours. If you lose to him, you're probably the missing link."
+        description: "Desde el albor de los tiempos llega nuestro más primitivo participante, un ejemplar de homínido que se preservó congelado en un glaciar durante 300.000 años. Junta palitos, golpea piedras y ahora también juega a las damas. Comele las fichas antes de que se las coma él. Si te gana probablemente seas el eslabón perdido.",
+        description_en: "From the dawn of time comes our most primitive contender, a specimen of hominid preserved frozen in a glacier for 300,000 years. He gathers sticks, bangs rocks together, and now also plays checkers. Eat his pieces before he eats them himself. If you lose to him, you're probably the missing link."
     },
     {
         id: "termidor",
@@ -970,7 +970,7 @@ const BOT_LEVEL_CONFIG = {
     4: { depth: 2, noise: 0.11, evalMode: "material" },   // CALIBRADO (V12): 3 vs 4 = 75% para el 4 (47 partidas); 4 vs 5 = 62% para el 5 (45 partidas)
     5: { depth: 3, noise: 0.17, evalMode: "full" },       // CALIBRADO: 1 vs 5 = 95% para el 5 (20 partidas); 5 vs 6 = 70% para el 6 (43 partidas, tras recalibrar el 6)
     6: { depth: 3, noise: 0.095, evalMode: "full" },      // CALIBRADO (V8, nivel intermedio nuevo): 5 vs 6 = 70% para el 6; 6 vs 7 = 77% para el 7 (43 partidas cada enfrentamiento)
-    7: { depth: 3, noise: 0.00, evalMode: "full", softErrorRate: 0.09, softErrorMinLoss: 8, softErrorMaxLoss: 45 },       // CALIBRADO: era el "6" de V6/V7 — Otto lo probó extensamente y lo sintió más como un 7 que un 6 (le ganaba 70-75% de sus partidas humanas), así que se corrió acá. 6 vs 7 = 77% para el 7; 7 vs 10 = dominante en la muestra, sin colapso
+    7: { depth: 3, noise: 0.00, evalMode: "full", softErrorRate: 0.1, softErrorMinLoss: 8, softErrorMaxLoss: 45 },       // CALIBRADO: era el "6" de V6/V7 — Otto lo probó extensamente y lo sintió más como un 7 que un 6 (le ganaba 70-75% de sus partidas humanas), así que se corrió acá. 6 vs 7 = 77% para el 7; 7 vs 10 = dominante en la muestra, sin colapso
     8: { depth: 4, noise: 0.03, evalMode: "full" },       // CALIBRADO (V10): 7 vs 8 = 79% para el 8 (34 partidas decisivas) -- recalibrado tras arreglar el bug de empates falsos (ver comentario en pickBestFullMoves): sin ruido, el 8 le ganaba al 7 el 86% (demasiado, por encima de la franja), porque el arreglo lo hizo más fuerte de lo que parecía antes
     9: { depth: 5, noise: 0.00, evalMode: "full" },       // CALIBRADO (V9): 8 vs 9 = 78% para el 9; 9 vs 10 = 86% para el 10 (borde superior sano, sin colapso)
     10: { timeLimitMs: 8000, maxDepth: 16, noise: 0.00, evalMode: "full" }

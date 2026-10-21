@@ -328,7 +328,7 @@
             align-items: center;
             gap: 6px;
             padding: 3px 2px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            /* Sin líneas entre registro y registro (a pedido de Otto). */
         }
 
         .move-entry .move-num {
@@ -6333,7 +6333,7 @@
         // --- EL DESAFÍO QUE PUEDE ARREPENTIRSE ---
         // Un solo desafío pendiente a la vez (igual que el resto del lobby, que
         // ya asumía eso implícitamente con un solo texto de "waitingStatus").
-        // Se cancela por lo que pase primero: el botón, o 30 segundos sin
+        // Se cancela por lo que pase primero: el botón, o 40 segundos sin
         // respuesta. cancelPendingChallenge() se usa para ambos casos.
         // timeControl: null para modo normal, o { initialMs } para
         // contrarreloj -- siempre lo decide quien desafía, nunca quien
@@ -6343,13 +6343,13 @@
             pendingChallengeTarget = username;
 
             const modalityLabel = timeControl ? ` (⏱️ contrarreloj, ${formatMinutesLabel(timeControl.initialMs)})` : '';
-            document.getElementById("waitingStatus").textContent = `Esperando respuesta de ${username}${modalityLabel}... (se cancela a los 30s si no responde)`;
+            document.getElementById("waitingStatus").textContent = `Esperando respuesta de ${username}${modalityLabel}... (se cancela a los 40s si no responde)`;
             document.getElementById("cancelChallengeBtn").style.display = "inline-block";
 
             if (pendingChallengeTimeout) clearTimeout(pendingChallengeTimeout);
             pendingChallengeTimeout = setTimeout(() => {
                 cancelPendingChallenge();
-            }, 30000);
+            }, 40000);
         }
 
         // --- MODO CONTRARRELOJ: los dos modales del flujo de desafío ---
@@ -6464,7 +6464,7 @@
             playSound(soundChallenge);
         });
 
-        // El desafiante cambió de opinión (botón de Cancelar o timeout de 30s
+        // El desafiante cambió de opinión (botón de Cancelar o timeout de 40s
         // de su lado) mientras nosotros todavía teníamos el modal abierto.
         socket.on('challenge-canceled', (data) => {
             if (currentChallengerId && data.fromId === currentChallengerId) {

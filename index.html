@@ -2,11 +2,20 @@
 <!-- © 2026 Otto Helmut - Damas Argentinas Online - Todos los derechos reservados -->
 <!--
     EL INVENTARIO DE GODOFREDO (assets/ usados por el castillo)
-    Fondos:    pergamino.jpg (modal de Reglas), castillo.jpg (entrada),
-               saloncaballeros.jpg (lobby), autumn-background.jpg (tapiz de
-               fondo detrás de todo el sitio, body).
-    Sonidos:   move.mp3, capture.mp3, victory.mp3, crowning.mp3 (juego,
-               preexistentes) · chatalarm.mp3, ritmoespadas3.mp3 (chat/desafío).
+    Fondos:    pergamino.jpg (Reglas y Términos de Uso), castillo.jpg
+               (entrada), saloncaballeros.jpg (lobby), saladearmas.jpg (Sala
+               de Armas), autumn-background.jpg (tapiz de fondo detrás de todo
+               el sitio, body), bots/backgrounds/myrthlagrandebackground.jpg
+               (las partidas contra Myrth La Grande).
+    Logo:      logo.png (entrada, Salón y pie de página) · favicon.ico,
+               favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png
+               (íconos de la pestaña y del celular).
+    Bots:      bots/<id>.jpg (retratos de la Sala de Armas; las rutas están en
+               bots.js) · bots/caras/<id>cara.jpg (la cara en el banner de la
+               partida) · bots/*.mp3 (los sonidos de algunos personajes; las
+               rutas están en bot-dialogue.js).
+    Sonidos:   move.mp3, capture.mp3, victorybajo.mp3, crowning.mp3 (juego)
+               · chatalarm.mp3, ritmoespadas3.mp3 (chat/desafío).
 -->
 <html lang="es">
 
@@ -226,9 +235,11 @@
            "Crónica" se iba de la pantalla junto con ellas (bug
            reportado por Otto). Ahora el panel es una columna flex de
            tres partes: el título (fijo), la lista (la ÚNICA que
-           scrollea, con su propio overflow y max-height acá abajo), y
-           el botón de Copiar Crónica (fijo, siempre visible debajo de
-           la lista, nunca se lo "come" el scroll). */
+           scrollea, con su propio overflow y su alto fijo, acá abajo), y
+           los botones de Copiar Crónica, Guardar Crónica y Guardar
+           Posición (fijos, siempre visibles debajo de la lista, nunca se
+           los "come" el scroll). En celular, en cambio, el panel se arma
+           en dos columnas (ver "LA CRÓNICA EN CELULAR", más abajo). */
         #moveHistoryPanel {
             width: min(90vw, 480px);
             display: flex;
@@ -260,23 +271,21 @@
             padding-bottom: 6px;
         }
 
-        /* ~21 líneas de jugada (medidas: 21px cada una) -- eran 22, pero
-           al sumar el botón de Guardar Crónica se le restó una línea a
-           la lista para hacerle lugar, en vez de estirar la Arena hacia
-           abajo (autorizado explícitamente por Otto: prefiere una línea
-           menos en la lista a que la Arena crezca). */
         /* La lista tiene alto FIJO desde que arranca la partida (a pedido de
            Otto): el panel ya aparece con su tamaño final y las jugadas lo
            van llenando, en vez de que el panel entero vaya creciendo hacia
            abajo con cada jugada. 429.5px (~20 líneas) es lo justo para que,
-           con los tres botones de abajo, el borde inferior del panel calce
+           en pantalla ancha (con la Crónica al costado del tablero) y con
+           los tres botones de abajo, el borde inferior del panel calce
            con la base del circulito del nombre del jugador -- medido en las
            dos Arenas (humanos y bots): da lo mismo en las dos. Abajo de la
            crónica no hay nada (el nombre no llega hasta esa columna), así
            que ese lugar se puede usar sin estirar la página.
            flex:none (y no flex:1, como antes): con flex:1, en una columna
            sin alto definido, el tamaño base de la lista es CERO y el height
-           se ignora. */
+           se ignora.
+           En celular la lista mide otra cosa: 15 registros justos (ver "LA
+           CRÓNICA EN CELULAR", más abajo). */
         #moveHistoryList {
             flex: none;
             overflow-y: auto;
@@ -336,6 +345,97 @@
             flex-shrink: 0;
         }
 
+        /* En pantalla ancha y en tablet, el contenedor de los tres botones
+           no existe para el diseño: los botones siguen siendo, cada uno,
+           una parte más de la columna del panel, como siempre. */
+        #chronicleButtons {
+            display: contents;
+        }
+
+        /* --- LA CRÓNICA EN CELULAR (hasta 700 px, el corte de celular de
+           la Arena) ---
+           Debajo del tablero, la Crónica a lo ancho de todo el tablero era
+           una columna larguísima con mucho lugar de sobra a los costados.
+           En celular se arma en dos columnas, como el Reproductor del
+           Laboratorio (a pedido de Otto): a la izquierda el título y la
+           lista; a la derecha, desde arriba, los tres botones (en el mismo
+           orden de siempre), más a mano del tablero. Todo adentro del mismo
+           marco y con el mismo fondo, sin ninguna línea entre las dos
+           columnas: se lee como un solo panel. Abajo de los botones, la
+           columna derecha queda libre.
+           - Las dos columnas son mitades exactas (minmax(0, 1fr), igual que
+             en el Laboratorio: con "1fr" a secas, un contenido ancho podía
+             estirar una columna y empujar a la otra fuera del panel).
+           - La lista muestra 15 registros justos: con el registro 16 aparece
+             el scroll (que queda en el medio del panel, al costado derecho
+             de la lista). Para que sean siempre 15, sin importar con qué
+             letras dibuje cada celular la flecha, la cruz o la corona, cada
+             registro mide exactamente 24 px (lo que ya miden en el celular
+             de Otto, donde entraban 18 en los 429.5 px de siempre):
+             15 x 24 = 360.
+           - El panel sube 9 px (margin-top de 14 a 5 px): un tercio del
+             espacio que había entre la base del nombre del jugador y el
+             borde de arriba de la Crónica (unos 26 px, a pedido de Otto). */
+        @media (max-width: 700px) {
+            #moveHistoryPanel {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                column-gap: 10px;
+                align-items: start;
+                margin-top: 5px;
+            }
+
+            #moveHistoryPanel h3 {
+                grid-column: 1;
+                grid-row: 1;
+            }
+
+            #moveHistoryList {
+                grid-column: 1;
+                grid-row: 2;
+                height: 360px;
+            }
+
+            .move-entry {
+                height: 24px;
+                box-sizing: border-box;
+            }
+
+            #chronicleButtons {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            /* Con la mitad del ancho, un poco menos de relleno a los
+               costados, para que los nombres entren en un renglón. Si en un
+               celular muy angosto no entran, pasan a dos renglones (con
+               interlineado justo, para que el botón no crezca de más). */
+            #chronicleButtons > button {
+                margin-top: 0;
+                padding: 6px 5px;
+                line-height: 1.15;
+            }
+        }
+
+        /* El aviso de desafío, en celular y durante una partida: abajo de
+           la pantalla en vez de en el medio. Con la Crónica en dos columnas,
+           sus botones quedan a media pantalla cuando uno baja hasta ella, y
+           el aviso en el medio los tapaba hasta la mitad; abajo, en cambio,
+           con la Crónica a la vista los botones quedan por encima de él,
+           libres. En el Salón sigue en el medio, como siempre (y en tablet y
+           en pantalla ancha, también). Lleva !important porque la posición
+           del aviso está escrita en línea, en su propio style. */
+        @media (max-width: 700px) {
+            #boardAndHistoryWrapper:not(.hidden-before-game) ~ #challengeModal {
+                top: auto !important;
+                bottom: 12px !important;
+                transform: translateX(-50%) !important;
+            }
+        }
+
         /* Como el tablero queda centrado en TODO el viewport (para alinearse
            con el título y las barras de arriba), el espacio libre a su
            derecha es solo la MITAD del sobrante total del viewport — la
@@ -368,9 +468,9 @@
                    tablero quedara "enganchado" y arrastrado hacia abajo
                    a medida que crecía el historial. Acá quedan
                    completamente desacoplados: el historial tiene su
-                   propio max-height fijo con scroll interno (ver
-                   #moveHistoryList, ~22 líneas en los dos anchos), y el
-                   tablero no sabe nada de él. */
+                   propio alto fijo con scroll interno (ver
+                   #moveHistoryList, unas 20 líneas), y el tablero no sabe
+                   nada de él. */
                 left: 100%;
                 margin-left: 18px;
                 margin-top: 0;
@@ -388,9 +488,12 @@
         /* El Escudo de Adaptación (Responsividad para móviles) */
         /* --sq-size, --board-border y el tamaño del título ya escalan de
            forma fluida (ver :root y la regla h1) — no hace falta un salto
-           acá para eso. Lo único que sigue necesitando un quiebre real es
-           #rulesButtonsBar (ver su propia regla, más abajo), que pasa de
-           flotar sobre el título a ocupar su lugar en el flujo normal. */
+           acá para eso. Los quiebres que quedan van cada uno junto a su
+           regla: 700 px (el corte de celular de toda la Arena: las barras
+           de botones de arriba, los anchos, el cartel final, el nombre del
+           bot), 1100 px (la Crónica pasa al costado del tablero) y dos
+           ajustes chicos: 480 px (la barra de turno) y 420 px (el
+           encabezado de Reglas). */
 
         /* La Huella en el Barro (Resaltado del último movimiento) */
         .last-move-highlight {
@@ -566,7 +669,7 @@
             box-shadow: inset 0 0 0 4px lime;
         }
 
-        /* Nuevo tablero de mandos */
+        /* El tablero de mandos: turno, puntaje y botones de la partida */
         .status-container {
             display: flex;
             justify-content: space-between;
@@ -597,7 +700,7 @@
             font-size: 18px;
         }
 
-        /* Punto 4 (pedido de Otto): "Turno: Blancas" es apenas más ancho
+        /* A pedido de Otto: "Turno: Blancas" es apenas más ancho
            que "Turno: Negras" (y lo mismo pasa en inglés, "White" contra
            "Black") -- una diferencia de unos pocos píxeles, pero
            suficiente para que, en ciertos anchos de pantalla puntuales,
@@ -635,7 +738,9 @@
             border-radius: 20px;
             text-align: center;
             z-index: 3000;
-            /* Por encima de todo (menos un desafío entrante, que va a 3100) */
+            /* Por encima de la partida y de las barras de botones (2500);
+               por debajo de un desafío entrante (3100) y de las mantas de
+               Reglas, Términos, Acerca de y Sala de Armas (4000). */
         }
 
         #victoryBanner h1 {
@@ -675,7 +780,7 @@
             font-size: 20px;
         }
 
-        /* Punto 5 (pedido de Otto): con los mismos tamaños fijos que en
+        /* A pedido de Otto: con los mismos tamaños fijos que en
            desktop, este cartel terminaba ocupando muchísimo más de la
            pantalla en un celular (llegó a medir 612px de alto en una
            pantalla de 800px), tapando por completo el dialogo del
@@ -1008,10 +1113,10 @@
 
         /* --- EL RELOJ DE ARENA (modo contrarreloj, solo humano-vs-humano) --- */
         /* Oculto por defecto (display:none): solo showClocks() lo hace
-           visible, y solo cuando la partida tiene timeControl. En
-           duelos normales (que son todos, hasta que exista la interfaz
-           de desafíos con reloj) este span existe en el DOM pero nunca
-           se muestra, así que no cambia nada de lo que ya había. */
+           visible, y solo cuando la partida tiene timeControl (un desafío
+           en Modo Contrarreloj). En los duelos en Modo Normal y en las
+           partidas contra los bots, este span existe en el DOM pero nunca
+           se muestra. */
         .player-clock {
             display: none;
             position: absolute;
@@ -1141,7 +1246,7 @@
                 margin: 10px auto 0 auto;
             }
 
-            /* Punto 1 (pedido de Otto): a este interletrado, "DAMAS
+            /* A pedido de Otto: a este interletrado, "DAMAS
                ARGENTINAS" + las dos banderitas no entran en una sola
                línea en varios celulares (la bandera derecha cae sola a
                un renglón nuevo). Achicar el interletrado (en vez de la
@@ -1440,11 +1545,10 @@
            contenido en sí NO va embebido acá adentro como los otros dos,
            sino en un iframe que apunta a acerca-de.html. Son 10 y 60
            páginas de Word respectivamente: meter todo ese texto directo
-           acá (y otra vez en laboratorio.html) inflaría innecesariamente
-           ambos archivos. El iframe resuelve eso, y de paso el link
-           interno de "Creación de los bots" (adentro de acerca-de.html)
-           navega solo, puertas adentro del iframe, sin tocar nunca esta
-           página. */
+           acá inflaría innecesariamente este archivo. El iframe resuelve
+           eso, y de paso el link interno de "Creación de los bots"
+           (adentro de acerca-de.html) navega solo, puertas adentro del
+           iframe, sin tocar nunca esta página. */
         #aboutModal {
             display: none;
             position: fixed;
@@ -1716,11 +1820,11 @@
             margin-bottom: 54px;
         }
 
-        /* El escudo de Godofredo: el logo del sitio, en los dos lugares
-           donde Otto pidió que apareciera dentro de la página (además del
-           favicon de la pestaña del navegador, que se agrega aparte en el
-           <head>). Mismo archivo en los dos casos, dos tamaños distintos
-           según el peso visual que le corresponde a cada pantalla. */
+        /* El escudo de Godofredo: el logo del sitio, en la Entrada y en el
+           Salón (además de la versión chiquita del pie de página, ver
+           .footer-logo, y del favicon de la pestaña del navegador, que se
+           agrega aparte en el <head>). Mismo archivo en todos los casos,
+           con el tamaño que le corresponde a cada lugar. */
         .site-logo-entrance {
             width: 112px;
             height: 112px;
@@ -1847,12 +1951,12 @@
         .bots-table {
             width: 100%;
             min-width: 700px;
+            /* Por debajo de esto ya conviene el scroll horizontal antes que aplastar */
             table-layout: fixed;
             /* Junto con el <colgroup>: los anchos de columna quedan fijos
                de antemano, sin depender del contenido — necesario para que
                la medición de altura de fila (resizeBotThumbnailsToFitRow)
                sea estable. */
-            /* Por debajo de esto ya conviene el scroll horizontal antes que aplastar */
             border-collapse: collapse;
             font-family: 'Segoe UI', Tahoma, sans-serif;
         }
@@ -2156,7 +2260,7 @@
                si ni comprimiendo al máximo razonable alcanza. */
         }
 
-        /* Punto 3 (pedido de Otto): en mobile, con la columna del
+        /* A pedido de Otto: en mobile, con la columna del
            tablero mucho más angosta, ese mismo centrado de arriba deja
            un hueco feo entre el círculo de la foto y el nombre -- acá
            conviene lo opuesto de lo que conviene en desktop. Alineado a
@@ -2278,7 +2382,9 @@
         <a href="#" onclick="openTerms(); return false;" data-i18n="footerTermsLink">Ver Términos de Uso</a>.
     </footer>
 
-    <!-- La Barra de Godofredo: botones de Reglas y sonido, flotando siempre visibles -->
+    <!-- Las Barras de Godofredo, siempre visibles: Acerca de (arriba a la
+         izquierda) y, arriba a la derecha, el idioma, Reglas y el sonido.
+         En celular dejan de flotar y van arriba del título. -->
     <div id="aboutButtonBar">
         <button class="rules-btn" onclick="openAbout()" data-i18n="aboutBtn">📖 Acerca de</button>
     </div>
@@ -2301,7 +2407,8 @@
         <div class="score-box">
             ⚪ <span id="whiteCount">15</span> | ⚫ <span id="blackCount">15</span>
         </div>
-        <!-- Solo queda el botón de Rendición -->
+        <!-- Rendirse: solo para los jugadores (el espectador ve, en su lugar,
+             "Salir al Lobby", más abajo) -->
         <button id="surrenderBtn" onclick="surrender()" data-i18n="surrenderBtn">Rendirse</button>
         <!-- Los dos botones de preferencias sobre el bot van juntos en un
              contenedor: así, si la barra pasa a dos renglones, pasan JUNTOS
@@ -2332,11 +2439,16 @@
 
         <!-- El Mensajero de Godofredo: crónica de jugadas de la partida -->
         <div id="moveHistoryPanel">
-            <h3 data-i18n="cronicaTitle" data-i18n-title="cronicaTooltip" title="Copiá o guardá la crónica, y cargala en el Laboratorio para volver a ver el partido.">📜 Crónica</h3>
+            <h3 data-i18n="cronicaTitle" data-i18n-title="cronicaTooltip" title="Copiá o guardá la crónica, y cargala en el Laboratorio para volver a ver la partida.">📜 Crónica</h3>
             <div id="moveHistoryList"></div>
-            <button id="copyChronicleBtn" onclick="copyChronicle()" disabled data-i18n="copyChronicleBtn">📋 Copiar Crónica</button>
-            <button id="saveChronicleBtn" onclick="saveChronicle()" disabled data-i18n="saveChronicleBtn">💾 Guardar Crónica</button>
-            <button id="savePositionBtn" onclick="savePosition()" data-i18n="savePositionBtn">📸 Guardar Posición</button>
+            <!-- Los tres botones van juntos en un contenedor: en pantalla
+                 ancha y en tablet no cuenta para nada (display:contents), y
+                 en celular es la columna derecha de la Crónica. -->
+            <div id="chronicleButtons">
+                <button id="copyChronicleBtn" onclick="copyChronicle()" disabled data-i18n="copyChronicleBtn">📋 Copiar Crónica</button>
+                <button id="saveChronicleBtn" onclick="saveChronicle()" disabled data-i18n="saveChronicleBtn">💾 Guardar Crónica</button>
+                <button id="savePositionBtn" onclick="savePosition()" data-i18n="savePositionBtn">📸 Guardar Posición</button>
+            </div>
         </div>
     </div>
 
@@ -2386,7 +2498,9 @@
          así que cuando alguien estaba espectando (con waitingOverlay en display:none)
          un desafío entrante jamás podía verse, por más que este div dijera "block".
          Ahora vive afuera, como hermano de waitingOverlay, y puede mostrarse
-         flotando sobre el tablero en cualquier momento. -->
+         flotando sobre el tablero en cualquier momento. En celular, durante
+         una partida, va abajo de la pantalla en vez de en el medio (ver su
+         regla en el CSS, después de LA CRÓNICA EN CELULAR). -->
     <div id="challengeModal"
         style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100;">
         <h3 id="challengeText" data-i18n="challengeDefaultText">¡Un caballero te desafía!</h3>
@@ -2452,14 +2566,6 @@
     </div>
 
 
-    <!-- El Cartel de la Doble Puerta: aparece cuando clickeás a alguien que
-         está jugando contra un bot. Dos caminos posibles: desafiarlo a un
-         duelo de verdad, o sentarte a espectar su partida contra el bot. -->
-    <!-- Los Términos de Uso: antes una página aparte (/terminos), con su
-         propio botón de "Volver" que te sacaba de cualquier partida o
-         laboratorio en curso -- ahora una "manta" más, calcada del
-         mecanismo de Reglas (ver #rulesModal): se abre y se cierra sin
-         navegar a ningún lado, así que nunca hay nada que perder. -->
     <!-- El Acerca de, y desde ahí (por un link interno) la Creación de los
          bots: mismo mecanismo de "manta" que Reglas y Términos, pero el
          contenido vive en un iframe aparte (ver el comentario en el CSS de
@@ -2473,6 +2579,11 @@
         </div>
     </div>
 
+    <!-- Los Términos de Uso: antes una página aparte (/terminos), con su
+         propio botón de "Volver" que te sacaba de cualquier partida o
+         laboratorio en curso -- ahora una "manta" más, calcada del
+         mecanismo de Reglas (ver #rulesModal): se abre y se cierra sin
+         navegar a ningún lado, así que nunca hay nada que perder. -->
     <div id="termsModal">
         <div id="termsModalFrame">
             <div id="termsModalHeader">
@@ -2786,6 +2897,10 @@
         </div>
     </div>
 
+    <!-- El Cartel de la Doble Puerta: aparece cuando clickeás a alguien que
+         está jugando contra un bot o está en el Laboratorio. Dos caminos
+         posibles: desafiarlo a un duelo de verdad, o sentarte a espectar
+         su partida contra el bot (o su Laboratorio). -->
     <div id="challengeOrSpectateModal"
         style="display: none; background: #2c3e50; padding: 20px; border: 3px solid #f1c40f; border-radius: 15px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3100; max-width: min(420px, 90vw); text-align: center;">
         <h3 id="challengeOrSpectateText" style="margin-top: 0;">¿Desea desafiar a Fulano o espectar su partida contra el Bot?</h3>
@@ -3244,7 +3359,7 @@
                 spectatorsNone: "Espectadores: -",
                 spectatorsList: "Espectadores: {0}",
                 cronicaTitle: "📜 Crónica",
-                cronicaTooltip: "Copiá o guardá la crónica, y cargala en el Laboratorio para volver a ver el partido.",
+                cronicaTooltip: "Copiá o guardá la crónica, y cargala en el Laboratorio para volver a ver la partida.",
                 copyChronicleBtn: "📋 Copiar Crónica",
                 saveChronicleBtn: "💾 Guardar Crónica",
                 savePositionBtn: "📸 Guardar Posición",
@@ -3320,7 +3435,7 @@
 
                 // --- Lista del lobby (dinámica) ---
                 vsSuffix: " (vs. {0})",
-                labSuffix: " (laboratorio)",
+                labSuffix: " (Laboratorio)",
                 spectatingSuffix: " (espectando)",
                 challengeSuffix: " (Desafiar)",
                 tournamentsInProgress: "Torneos en Curso:",
@@ -3481,7 +3596,7 @@
 
                 // --- Lobby list (dynamic) ---
                 vsSuffix: " (vs. {0})",
-                labSuffix: " (laboratory)",
+                labSuffix: " (Laboratory)",
                 spectatingSuffix: " (spectating)",
                 challengeSuffix: " (Challenge)",
                 tournamentsInProgress: "Games in Progress:",
@@ -3654,10 +3769,6 @@
             updateMuteButton();
         }
 
-        // Silenciar los DIÁLOGOS de los bots es un interruptor aparte del
-        // de sonido -- no hace falta que recuerde la preferencia entre
-        // partidas (a diferencia del de sonido), así que alcanza con una
-        // variable en memoria, sin sessionStorage.
         // ============================================================
         //  MODO LENTO (🐢)
         // ============================================================
@@ -3728,6 +3839,10 @@
         }
         updateBotColorPicker();
 
+        // Silenciar los DIÁLOGOS de los bots es un interruptor aparte del
+        // de sonido -- no hace falta que recuerde la preferencia entre
+        // partidas (a diferencia del de sonido), así que alcanza con una
+        // variable en memoria, sin sessionStorage.
         let dialoguesMuted = false;
 
         function updateMuteDialogueButton() {
@@ -3782,12 +3897,13 @@
         let highlightedSquares = [];
 
         // --- LA CRÓNICA DEL MENSAJERO (historial de jugadas) ---
-        let moveHistory = []; // Mezcla de jugadas {color, from, to, captured, crowned} y separadores {type:'divider', label}
+        let moveHistory = []; // Una entrada por salto: {color, from, to, captured, crowned}
 
         // --- EL PREGONERO DE GODOFREDO (aviso de turno en la pestaña) ---
-        // let (no const): se reasigna en setLanguage(), para que el título
-        // "de reposo" de la pestaña también seas el correcto en el idioma
-        // nuevo, no el que había cuando cargó la página.
+        // let (no const): se reasigna en applyTranslations() (al cargar y
+        // en cada cambio de idioma), para que el título "de reposo" de la
+        // pestaña también sea el correcto en el idioma nuevo, no el que
+        // había cuando cargó la página.
         let ORIGINAL_TITLE = document.title;
 
         // --- EL DESAFÍO QUE PUEDE ARREPENTIRSE (cancelar / timeout) ---
@@ -4016,10 +4132,10 @@
         // pantalla, donde la jugada más reciente va primera) y con el
         // mismo formato exacto que ya usa cada línea en pantalla
         // (número, flecha, cruz de captura, corona de coronación). Este
-        // formato es, a propósito, el mismo que en el futuro va a leer
-        // el Reproductor de Crónicas del Laboratorio -- de ahí que
-        // number, flecha y marcas tengan que coincidir siempre con lo
-        // que ya se ve acá, sin inventar un formato paralelo.
+        // formato es, a propósito, el mismo que lee el Reproductor de
+        // Crónicas del Laboratorio -- de ahí que número, flecha y marcas
+        // tengan que coincidir siempre con lo que se ve acá, sin inventar
+        // un formato paralelo.
         function buildChronicleText() {
             const lineas = moveHistory.map((m, index) => {
                 const fromTxt = squareLabel(m.from.row, m.from.col);
@@ -4052,9 +4168,9 @@
             });
         }
 
-        // Utilidad genérica de descarga, pensada para reusarse tal cual
-        // en el Laboratorio unificado (Guardar Crónica y Guardar
-        // Posición van a llamar a esta misma función). El patrón
+        // Utilidad genérica de descarga: la usan Guardar Crónica y Guardar
+        // Posición (el Laboratorio, que es una página aparte, tiene su
+        // propia copia de esta misma función). El patrón
         // Blob + <a download> + click programático es el estándar para
         // esto en cualquier navegador, de escritorio o celular.
         function downloadTextFile(filename, content) {
@@ -4663,8 +4779,9 @@
             }, durationMs);
         }
 
-        // El tope del historial de jugadas tiene que coincidir con el
-        // tope del TABLERO -- no con el tope de todo el banner de arriba
+        // En pantalla ancha (de 1100 px para arriba, con la Crónica al
+        // costado), el tope del historial de jugadas tiene que coincidir con
+        // el tope del TABLERO -- no con el tope de todo el banner de arriba
         // (círculo+nombre+globo, o la fila simple de un duelo humano),
         // que puede medir un poco distinto según el caso. A propósito
         // esto NO comparte ninguna fila/altura con el tablero mismo (ni
@@ -4672,8 +4789,8 @@
         // real del banner con JavaScript y la usa como desplazamiento
         // del historial, dejando a ambos completamente independientes
         // uno del otro en cuanto a su propio tamaño (el historial sigue
-        // teniendo su max-height fijo con scroll interno, ajeno a
-        // cualquier cosa que pase con el tablero).
+        // teniendo su alto fijo con scroll interno, ajeno a cualquier
+        // cosa que pase con el tablero).
         function alignMoveHistoryTop() {
             const banner = document.getElementById("topPlayerName");
             const boardEl = document.getElementById("board");
@@ -4703,23 +4820,12 @@
                 const bannerMarginBottom = parseFloat(bannerStyle.marginBottom) || 0;
                 historyPanel.style.top = (banner.offsetHeight + bannerMarginTop + bannerMarginBottom + boardMarginTop) + "px";
             } else {
-                historyPanel.style.top = ""; // no aplica en el layout apilado (móvil)
+                historyPanel.style.top = ""; // no aplica con la Crónica debajo del tablero (celular y tablet)
             }
         }
 
-        // Si el nombre del bot (ya con el tamaño de letra correcto, igual
-        // al del humano) todavía no entra en el espacio disponible --
-        // candidato principal: "Princesa María Eugenia de China", el más
-        // largo del elenco -- lo comprimimos horizontalmente lo justo y
-        // necesario para que entre entero, sin cambiar de fuente ni de
-        // tamaño de letra. La cantidad de compresión se recalcula cada
-        // vez (no es un valor fijo): medimos cuánto se pasa el texto de
-        // su espacio real, y comprimimos esa proporción exacta -- nunca
-        // más allá de un piso de legibilidad (0.6), por debajo del cual
-        // preferimos que trunque con puntos suspensivos antes que
-        // volverse ilegible.
-        // Punto 1, segunda vuelta (pedido de Otto): el letter-spacing
-        // reducido en mobile (ver el media query más arriba) alcanza en
+        // El título de la Entrada (a pedido de Otto): el letter-spacing
+        // reducido en celular (ver #entranceSection h1 en el CSS) alcanza en
         // la enorme mayoría de los casos, pero no en todos -- distintos
         // fabricantes empaquetan su propia fuente de emojis (Samsung
         // usa la suya propia, distinta de la que trae Android de
@@ -4794,6 +4900,17 @@
             document.fonts.ready.then(() => fitEntranceTitle());
         }
 
+        // Si el nombre del bot (ya con el tamaño de letra correcto, igual
+        // al del humano) todavía no entra en el espacio disponible --
+        // candidato principal: "Princesa María Eugenia de China", el más
+        // largo del elenco -- lo comprimimos horizontalmente lo justo y
+        // necesario para que entre entero, sin cambiar de fuente ni de
+        // tamaño de letra. La cantidad de compresión se recalcula cada
+        // vez (no es un valor fijo): medimos cuánto se pasa el texto de
+        // su espacio real, y comprimimos esa proporción exacta -- nunca
+        // más allá de un piso de legibilidad (0.6), por debajo del cual
+        // preferimos que trunque con puntos suspensivos antes que
+        // volverse ilegible.
         function checkBotNameOverflow() {
             const el = document.querySelector(".bot-name-text");
             if (!el) return;
@@ -5112,7 +5229,6 @@
         });
 
         // El servidor nos dice qué color somos
-        // El servidor nos dice qué color somos
         socket.on('assign-role', (role) => {
             myColor = role;
             const boardElement = document.getElementById("board");
@@ -5210,10 +5326,12 @@
                 // arranca de cero, y en CUALQUIER partida (no solo con bot).
                 oneKingEachStreak = 0;
 
-                // El botón de silenciar diálogos solo tiene sentido en
-                // partidas contra un bot -- se muestra u oculta acá, y la
-                // preferencia arranca de cero en cada partida nueva (no
-                // hace falta que se recuerde entre partidas).
+                // Los dos botones de preferencias del bot (🗣️ silenciar
+                // diálogos y 🐢 modo lento) solo tienen sentido en partidas
+                // contra un bot -- se muestran u ocultan acá. Silenciar
+                // diálogos arranca de cero en cada partida nueva (no hace
+                // falta que se recuerde); el modo lento, en cambio, se
+                // recuerda entre partidas (ver slowModeEnabled).
                 dialoguesMuted = false;
                 const botPrefButtons = document.getElementById("botPrefButtons");
                 if (botPrefButtons) botPrefButtons.style.display = currentBotId ? "inline-flex" : "none";
@@ -5361,9 +5479,12 @@
                     // fue (por desconexión, o porque aceptó jugar otra cosa).
                     // No hay "ganador por abandono" en el sentido de puntaje
                     // acá — simplemente la partida quedó sin nadie del lado
-                    // humano. blackPlayerName es el nombre del bot: en toda
-                    // partida vs. bot, el bot siempre figura como "Negras".
-                    msg = t('spectatorGameAbandonedVsBot', leaverName, blackPlayerName);
+                    // humano. El nombre del bot es el de su color (puede
+                    // jugar con cualquiera de los dos: antes se tomaba siempre
+                    // el de Negras, y si el humano jugaba con negras el cartel
+                    // decía que se había retirado de su partida contra sí mismo).
+                    const botName = (currentBotColor === 'w') ? whitePlayerName : blackPlayerName;
+                    msg = t('spectatorGameAbandonedVsBot', leaverName, botName);
                 } else if (leaverName && winnerName) {
                     msg = t('spectatorGameAbandoned', leaverName, winnerName);
                 } else {
@@ -5536,9 +5657,8 @@
         // (ver detectCommentaryEvent en bots.js) para la partida actual
         // contra un bot — null si no estamos jugando contra ninguno. Se
         // reinicia cada vez que arranca una partida nueva contra un bot
-        // (ver 'start-game' más arriba). Por ahora, cuando dispara un
-        // evento, solo lo mostramos por consola — todavía no existe el
-        // cartel visual en pantalla, eso viene en una vuelta aparte.
+        // (ver 'start-game' más arriba). Cuando dispara un evento, el
+        // personaje lo comenta en su globo de diálogo (ver botSpeak).
         let botCommentaryState = null;
 
         // --- EL EMPATE DE LAS DOS DAMAS SOLITARIAS ---
@@ -5843,7 +5963,7 @@
 
         // Se llama desde changeTurn() cada vez que la partida sigue en
         // pie. Si no corresponde (no es una partida vs bot, no soy yo el
-        // jugador humano real, o no es el turno de Negras), no hace nada.
+        // jugador humano real, o no es el turno del bot), no hace nada.
         function maybeTriggerBotMove() {
             if (botColorForThisClient() === null || currentPlayer !== botColorForThisClient()) return;
 
@@ -6158,7 +6278,9 @@
             const listElement = document.getElementById("userList");
             listElement.innerHTML = "";
 
-            // SECCIÓN 1: Caballeros Libres (todos menos los que están jugando)
+            // SECCIÓN 1: Caballeros Libres (todos menos los que están en un
+            // duelo entre humanos: a los que juegan contra un bot, están en
+            // el Laboratorio o están espectando también se los puede desafiar)
             const freeUsers = data.users.filter(u => u.status !== "playing");
             if (freeUsers.length > 0) {
                 const header = document.createElement("div");
@@ -6485,4 +6607,3 @@
 </body>
 
 </html>
-

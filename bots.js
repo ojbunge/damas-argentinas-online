@@ -2,25 +2,28 @@
 //  LOS GUERREROS DE LA SALA DE ARMAS
 // ============================================================
 // Datos de los 10 personajes que representan los niveles de dificultad
-// de los bots (1 = más fácil, 10 = más difícil), más el motor completo
-// que decide sus jugadas: reglas de movimiento (compartidas con
-// rules-engine.js), evaluación de posiciones, búsqueda minimax con
-// poda alfa-beta y quietud, la "zona de azar" de la apertura, y la
-// configuración de cada nivel. Este archivo vive separado de
-// index.html a propósito, para no seguir engordando el archivo
-// principal — pero ya no es solo dato: acá vive el "cerebro" completo
-// del bot, no un esqueleto a la espera de él.
+// de los bots (1 = más fácil, 10 = más difícil), más el "cerebro"
+// completo que decide sus jugadas: las jugadas completas de cada turno
+// (armadas sobre las reglas de rules-engine.js), la evaluación de
+// posiciones, la búsqueda minimax con poda alfa-beta y quietud, la
+// "zona de azar" de la apertura, los errores leves y la configuración
+// de cada nivel. Al final, El Pregonero: el detector de los momentos
+// de la partida que los personajes comentan (sus frases viven en
+// bot-dialogue.js). Este archivo vive separado de index.html a
+// propósito, para no seguir engordando el archivo principal; el motor
+// corre en un Web Worker (bot-worker.js), que carga este mismo archivo.
 //
-// ESTADO ACTUAL (V12): los diez niveles están calibrados y probados —
-// ver BOT_LEVEL_CONFIG más abajo para el detalle y el respaldo de cada
-// uno. Con esto se completa la primera vuelta de calibración de punta
-// a punta (1 al 10). Otto se reservó la posibilidad de pedir ajustes
-// finos más adelante, después de jugar más extensivamente contra todos
-// ellos — pero, por ahora, no hay ningún nivel pendiente de armar.
+// ESTADO ACTUAL: los diez niveles están calibrados y probados — ver
+// BOT_LEVEL_CONFIG más abajo para el detalle y el respaldo de cada
+// uno. Después de la calibración de punta a punta (1 al 10), Otto hizo
+// algunos ajustes finos a mano (el último: la frecuencia de errores
+// leves del nivel 7). Se hacen tocando directamente BOT_LEVEL_CONFIG.
 //
-// Personajes provisorios (tal como aclaró Otto): pueden cambiar de
-// nombre, historia o temática más adelante sin que eso afecte en nada
-// la arquitectura de abajo.
+// El nombre, la historia y las descripciones de cada personaje se
+// pueden cambiar cuando se quiera, sin que eso afecte en nada la
+// arquitectura de abajo. El id, en cambio, conviene no tocarlo: es con
+// lo que la Arena identifica a cada bot, y la clave de sus frases en
+// bot-dialogue.js.
 //
 // Cada bot espera su imagen de perfil en:
 //   assets/bots/<id>.jpg
@@ -129,7 +132,9 @@ function getBotById(id) {
 // robóticamente inmediato. Si el cálculo real tarda más que este piso
 // (los niveles profundos, en posiciones complejas), no se le suma nada
 // encima — el tiempo de espera total es el que ya tardó pensando de
-// verdad, no piso + cálculo.
+// verdad, no piso + cálculo. Con el modo lento (🐢) prendido, la Arena
+// usa en su lugar un piso más largo (SLOW_MODE_MIN_MS y
+// SLOW_MODE_MAX_MS, en index.html), con la misma cuenta.
 // Tocá estos dos números directamente si querés ajustar la sensación,
 // no hace falta pedírmelo.
 const BOT_THINK_FLOOR_MS = 700;       // piso mínimo, en milisegundos
@@ -150,10 +155,11 @@ const BOT_HOP_DELAY_MS = 550;
 // ============================================================
 // Motor compartido por los 10 niveles: minimax con poda alfa-beta sobre
 // una función de evaluación, combinado con ruido deliberado en los
-// niveles más flojos. Reutiliza el motor de reglas de index.html
-// (getLegalMoves, getBestCaptureSequences) en vez de reimplementarlo —
-// así el bot queda 100% atado a las mismas reglas que ya rigen las
-// partidas humanas, sin posibilidad de que diverjan con el tiempo.
+// niveles más flojos (y errores leves en el 7). Reutiliza el motor de
+// reglas de rules-engine.js (getLegalMoves, getBestCaptureSequences),
+// el mismo que usa index.html, en vez de reimplementarlo — así el bot
+// queda 100% atado a las mismas reglas que ya rigen las partidas
+// humanas, sin posibilidad de que diverjan con el tiempo.
 //
 // Todo lo de acá abajo es deliberadamente "puro": ninguna función toca
 // el DOM, sockets, ni las variables globales de la partida en curso
@@ -220,13 +226,12 @@ function expandCaptureSequences(boardForSearch, row, col, isKing) {
 
 // Enumera TODAS las jugadas completas legales de un jugador en un
 // tablero dado — un "turno entero", no un solo salto. Reimplementa la
-// misma orquestación que getGlobalBestMoves() de index.html (captura
-// obligatoria, prioridad de dama sobre peón, máxima captura), pero
-// parametrizada por tablero (no depende del board global) y devolviendo
-// secuencias COMPLETAS en vez de solo el primer salto — las dos cosas
-// que getGlobalBestMoves() no puede darnos tal como está, porque está
-// pensada para la UI humana (que avanza de a un click), no para un
-// árbol de búsqueda.
+// misma orquestación que getGlobalBestMoves() de rules-engine.js
+// (captura obligatoria, prioridad de dama sobre peón, máxima captura),
+// pero devolviendo secuencias COMPLETAS en vez de solo el primer
+// salto — lo que getGlobalBestMoves() no puede darnos tal como está,
+// porque está pensada para la UI humana (que avanza de a un click), no
+// para un árbol de búsqueda.
 //
 // Cada jugada devuelta tiene la forma:
 //   { type: 'simple', from: {row,col}, to: {row,col} }
@@ -632,21 +637,6 @@ function minimaxSearch(boardForSearch, player, depth, alpha, beta, botColor, eva
     }
 }
 
-// Punto de entrada del motor "de verdad" (sin ruido): evalúa cada jugada
-// legal disponible y devuelve TODAS las que empatan en el mejor puntaje
-// (el llamador elige entre ellas al azar — así, aunque el nivel sea muy
-// fuerte, no repite mecánicamente la misma línea cuando hay varias
-// jugadas objetivamente equivalentes).
-//
-// A diferencia de una primera versión de esta función, acá SÍ propagamos
-// alfa entre las jugadas de primer nivel (no solo dentro de cada una) —
-// sin eso, cada jugada top-level arrancaba con una ventana alfa-beta
-// completamente nueva, perdiendo toda la poda que se podía haber
-// heredado de las jugadas hermanas ya evaluadas. No cortamos por beta a
-// este nivel (beta se mantiene en +Infinity a propósito): necesitamos
-// evaluar TODAS las jugadas de primer nivel igual, para poder recolectar
-// todas las que empatan en el mejor puntaje — pero cada una sigue
-// aprovechando el alfa ya conocido para podar SUS PROPIAS ramas internas.
 // Compara dos jugadas completas por igualdad estructural (mismo origen,
 // mismo destino o misma cadena de saltos) — necesario para poder
 // "reconocer" si la jugada preferida de la profundidad anterior sigue
@@ -665,6 +655,22 @@ function movesEqual(a, b) {
     });
 }
 
+// La búsqueda "de verdad" (sin ruido) a una profundidad dada: evalúa
+// cada jugada legal disponible y devuelve TODAS las que empatan en el
+// mejor puntaje (el llamador elige entre ellas al azar — así, aunque el
+// nivel sea muy fuerte, no repite mecánicamente la misma línea cuando
+// hay varias jugadas objetivamente equivalentes).
+//
+// A diferencia de una primera versión de esta función, acá SÍ propagamos
+// alfa entre las jugadas de primer nivel (no solo dentro de cada una) —
+// sin eso, cada jugada top-level arrancaba con una ventana alfa-beta
+// completamente nueva, perdiendo toda la poda que se podía haber
+// heredado de las jugadas hermanas ya evaluadas. No cortamos por beta a
+// este nivel (beta se mantiene en +Infinity a propósito): necesitamos
+// evaluar TODAS las jugadas de primer nivel igual, para poder recolectar
+// todas las que empatan en el mejor puntaje — pero cada una sigue
+// aprovechando el alfa ya conocido para podar SUS PROPIAS ramas internas.
+//
 // preferredMove (opcional): si viene, se prueba PRIMERO entre las
 // jugadas candidatas, antes de cualquier otra por más prometedora que
 // parezca según la evaluación estática. Dos motivos para esto: (1) poda
@@ -785,7 +791,7 @@ function pickBestFullMoves(boardForSearch, player, depth, evalMode, preferredMov
 // el que sea MÁS restrictivo de los dos. Es más seguro que cualquiera
 // de los dos intentos anteriores por separado.
 //
-// NOVEDAD: lleva una "jugada preferida" de una profundidad a la
+// Además, lleva una "jugada preferida" de una profundidad a la
 // siguiente (ver comentario en pickBestFullMoves). Esto surgió de un
 // hallazgo real jugando contra el bot: en algunas posiciones, el valor
 // que la búsqueda le asigna a una misma jugada oscila de una profundidad
@@ -852,6 +858,93 @@ function pickBestFullMovesIterativeDeepening(boardForSearch, player, evalMode, t
 }
 
 // ============================================================
+//  LA ZONA DE AZAR DE GODOFREDO (funciones de apoyo)
+// ============================================================
+// Todo esto va aparte del motor de arriba, a propósito: en un intento
+// anterior, compartir una misma función entre "la zona de azar" y "el
+// resto de la partida" terminó afectando, sin que lo notáramos a
+// tiempo, al juego de fuera de esa zona también. Por eso la zona de
+// azar tiene su propia función de búsqueda (pickScoredFullMoves),
+// aparte de la del camino normal (pickBestFullMoves): retocar una no
+// cambia en nada a la otra. (Los errores leves, más abajo, también usan
+// pickScoredFullMoves, por el mismo motivo que la zona de azar:
+// necesitan el puntaje exacto de cada jugada, no solo cuál es la mejor.)
+
+// Cuenta el total de piezas (de cualquier color) que quedan sobre el
+// tablero. Como cada captura saca exactamente una ficha, comparar esto
+// contra STARTING_PIECE_COUNT es la forma más simple de saber si
+// todavía no hubo NINGUNA captura en la partida — sin necesitar que
+// nadie le pase historial ni contador aparte, con solo mirar el
+// tablero actual. index.html también la usa (con STARTING_PIECE_COUNT)
+// para saber si al nivel 10 le corresponde el modo lento: el mismo
+// criterio, no una copia.
+function countTotalPieces(boardForSearch) {
+    let count = 0;
+    for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 10; c++) {
+            if (boardForSearch[r][c]) count++;
+        }
+    }
+    return count;
+}
+
+// Evalúa TODAS las jugadas candidatas a la profundidad dada, y devuelve
+// el RANKING COMPLETO (jugada + puntaje), ordenado de mejor a peor —
+// necesario para poder sortear entre las que están "cerca" de la mejor
+// (dentro de un margen), no solo quedarse con la ganadora.
+//
+// A diferencia de pickBestFullMoves (de arriba), acá CADA
+// jugada candidata se explora con una ventana de cálculo COMPLETA
+// (-Infinity, +Infinity) propia, sin heredar nada de sus hermanas.
+// Hace falta así, y no alcanza con simplemente "podar menos": la poda
+// alfa-beta normal puede devolver una COTA optimista en vez del valor
+// real en cualquier punto profundo del árbol de una jugada candidata,
+// no solo en el nivel superior — confirmado con un caso real durante
+// las pruebas, donde una jugada marcada con -25 (aparentando estar
+// dentro del margen) resultó valer -31 de verdad (afuera) al
+// recalcularla sin ninguna poda. La única forma de garantizar
+// precisión real es esta: ventana completa para cada candidata. Es más
+// lento que el camino de siempre (por eso solo se usa donde hace falta
+// el puntaje exacto: la zona de azar y los errores leves), pero a las
+// profundidades fijas y modestas en que se usa (OPENING_ZONE_DEPTH, o
+// la del nivel en los errores leves) el costo es bajo.
+function pickScoredFullMoves(boardForSearch, player, depth, evalMode) {
+    const moves = enumerateFullMoves(boardForSearch, player);
+    if (moves.length === 0) return [];
+
+    const opponent = (player === "w") ? "b" : "w";
+    const scored = moves.map(move => {
+        const nextBoard = applyFullMove(boardForSearch, move);
+        const score = minimaxSearch(nextBoard, opponent, depth - 1, -Infinity, Infinity, player, evalMode, QUIESCENCE_MAX_EXTRA_PLIES);
+        return { move, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored;
+}
+
+// La profundidad de la zona de azar es FIJA y MODESTA a propósito — no
+// compite con la profundidad que alcanza el nivel 10 en el resto de la
+// partida (con su búsqueda por tiempo, mucho más profunda). No hace
+// falta que compita: como discutimos, en la apertura, antes de cualquier
+// contacto, el costo de no jugar la jugada absolutamente óptima es
+// mínimo — así que preferimos una búsqueda barata y rápida acá, en vez
+// de intentar igualar la fuerza máxima del resto de la partida (que es
+// justamente lo que, al intentarlo la vez pasada, terminó costando
+// hasta una jugada entera de profundidad en CADA jugada de la zona de
+// azar, y esa pérdida se repetía varias veces antes de la primera
+// captura). Medido: a esta profundidad, con ventana completa, cada
+// jugada tarda bien por debajo de 1 segundo.
+//
+// Es la misma para los diez niveles. Del 1 al 8 es más de lo que miran
+// en el resto de la partida (entre 1 y 4), así que en la apertura
+// juegan más sólido que después, salvo por el ruido de los que lo
+// tienen, que se aplica antes. Sus calibraciones ya se midieron así.
+const OPENING_ZONE_DEPTH = 5;
+const STARTING_PIECE_COUNT = 30; // 15 fichas por lado en el tablero de 10x10
+const OPENING_ZONE_SCORE_MARGIN = 20; // referencia: una ficha vale 100 en esta escala
+
+// ============================================================
 //  CONFIGURACIÓN POR NIVEL
 // ============================================================
 // Cada nivel puede definirse de dos formas:
@@ -869,12 +962,15 @@ function pickBestFullMovesIterativeDeepening(boardForSearch, player, evalMode, t
 //        sin ninguna intención táctica detrás.
 // evalMode: 'material' (solo cuenta fichas) o 'full' (suma avance,
 //        posición, movilidad, fichas colgadas, respaldo y fila de fondo).
+// softErrorRate, softErrorMinLoss, softErrorMaxLoss (opcionales): los
+//        errores leves, ver PERFIL DE ERRORES más abajo. Solo sirven en
+//        niveles de profundidad fija (usan su depth).
 //
-// ESTADO ACTUAL (V12): los diez niveles (1 al 10) están calibrados y
+// ESTADO ACTUAL: los diez niveles (1 al 10) están calibrados y
 // probados — ver el detalle y el respaldo de cada uno en los
-// comentarios de abajo. Se completó la primera vuelta de calibración
-// de punta a punta. Quedan reservados únicamente para ajustes finos
-// futuros, si Otto los pide después de jugar más extensivamente.
+// comentarios de abajo. Los porcentajes salen de autopartidas entre
+// niveles (todas ya con la zona de azar funcionando); los ajustes finos
+// que Otto hizo después, a mano, quedan anotados en su nivel.
 //
 // El nivel 10 pasó de profundidad fija (6) a profundización iterativa
 // con límite de tiempo: con la evaluación nueva (más cara de calcular)
@@ -884,85 +980,6 @@ function pickBestFullMovesIterativeDeepening(boardForSearch, player, evalMode, t
 // que preocuparse por trabar la página, así que el límite de 8
 // segundos es puro margen de comodidad para la persona esperando, no
 // una restricción técnica.
-// ============================================================
-//  LA ZONA DE AZAR DE GODOFREDO (funciones de apoyo)
-// ============================================================
-// Todo lo que sigue es NUEVO, agregado aparte de lo de arriba (que es
-// el motor tal como funcionaba, sin ningún cambio) — a propósito, para
-// no repetir el problema real que tuvimos la vez pasada: ahí,
-// compartir una misma función entre "la zona de azar" y "el resto de
-// la partida" terminó afectando, sin que lo notáramos a tiempo, al
-// juego de fuera de esa zona también. Esta vez, cero código compartido
-// entre ambos caminos — la zona de azar es una rama aparte, con su
-// propia función, que ni siquiera se llama durante el resto de la
-// partida.
-
-// Cuenta el total de piezas (de cualquier color) que quedan sobre el
-// tablero. Como cada captura saca exactamente una ficha, comparar esto
-// contra STARTING_PIECE_COUNT es la forma más simple de saber si
-// todavía no hubo NINGUNA captura en la partida — sin necesitar que
-// nadie le pase historial ni contador aparte, con solo mirar el
-// tablero actual.
-function countTotalPieces(boardForSearch) {
-    let count = 0;
-    for (let r = 0; r < 10; r++) {
-        for (let c = 0; c < 10; c++) {
-            if (boardForSearch[r][c]) count++;
-        }
-    }
-    return count;
-}
-
-// Evalúa TODAS las jugadas candidatas a la profundidad dada, y devuelve
-// el RANKING COMPLETO (jugada + puntaje), ordenado de mejor a peor —
-// necesario para poder sortear entre las que están "cerca" de la mejor
-// (dentro de un margen), no solo quedarse con la ganadora.
-//
-// A diferencia de pickBestFullMoves (de arriba, sin tocar), acá CADA
-// jugada candidata se explora con una ventana de cálculo COMPLETA
-// (-Infinity, +Infinity) propia, sin heredar nada de sus hermanas.
-// Hace falta así, y no alcanza con simplemente "podar menos": la poda
-// alfa-beta normal puede devolver una COTA optimista en vez del valor
-// real en cualquier punto profundo del árbol de una jugada candidata,
-// no solo en el nivel superior — confirmado con un caso real durante
-// las pruebas, donde una jugada marcada con -25 (aparentando estar
-// dentro del margen) resultó valer -31 de verdad (afuera) al
-// recalcularla sin ninguna poda. La única forma de garantizar
-// precisión real es esta: ventana completa para cada candidata. Es más
-// lento que el camino de siempre (por eso NO se usa fuera de la zona
-// de azar, donde no hace falta), pero a la profundidad fija y modesta
-// que usamos acá (ver OPENING_ZONE_DEPTH) el costo es bajo.
-function pickScoredFullMoves(boardForSearch, player, depth, evalMode) {
-    const moves = enumerateFullMoves(boardForSearch, player);
-    if (moves.length === 0) return [];
-
-    const opponent = (player === "w") ? "b" : "w";
-    const scored = moves.map(move => {
-        const nextBoard = applyFullMove(boardForSearch, move);
-        const score = minimaxSearch(nextBoard, opponent, depth - 1, -Infinity, Infinity, player, evalMode, QUIESCENCE_MAX_EXTRA_PLIES);
-        return { move, score };
-    });
-
-    scored.sort((a, b) => b.score - a.score);
-    return scored;
-}
-
-// La profundidad de la zona de azar es FIJA y MODESTA a propósito — no
-// compite por la misma profundidad que alcanza el resto de la partida
-// (con su búsqueda por tiempo, mucho más profunda). No hace falta que
-// compita: como discutimos, en la apertura, antes de cualquier
-// contacto, el costo de no jugar la jugada absolutamente óptima es
-// mínimo — así que preferimos una búsqueda barata y rápida acá, en vez
-// de intentar igualar la fuerza máxima del resto de la partida (que es
-// justamente lo que, al intentarlo la vez pasada, terminó costando
-// hasta una jugada entera de profundidad en CADA jugada de la zona de
-// azar, y esa pérdida se repetía varias veces antes de la primera
-// captura). Medido: a esta profundidad, con ventana completa, cada
-// jugada tarda bien por debajo de 1 segundo.
-const OPENING_ZONE_DEPTH = 5;
-const STARTING_PIECE_COUNT = 30; // 15 fichas por lado en el tablero de 10x10
-const OPENING_ZONE_SCORE_MARGIN = 20; // referencia: una ficha vale 100 en esta escala
-
 const BOT_LEVEL_CONFIG = {
     1: { depth: 1, noise: 0.54, evalMode: "material" },   // CALIBRADO (V13): 1 vs 2 = 68% para el 2 (66 partidas) -- bajado de 0.85, que dejaba a 1-vs-2 en 95% (fuera de la franja habitual). Con esto el nivel 1 tiene algo más de lógica y menos puro azar, sin dejar de ser el escalón más simple
     2: { depth: 1, noise: 0.35, evalMode: "material" },   // CALIBRADO (V12, ajustado en V13): 2 vs 3 = 79% para el 3 (44 partidas). El primer número de calibración (1 vs 2) quedó en 68% para el 2 después de bajarle el ruido al nivel 1 en V13 (antes corría en 95%, fuera de la franja) -- ver comentario en el nivel 1
@@ -970,25 +987,12 @@ const BOT_LEVEL_CONFIG = {
     4: { depth: 2, noise: 0.11, evalMode: "material" },   // CALIBRADO (V12): 3 vs 4 = 75% para el 4 (47 partidas); 4 vs 5 = 62% para el 5 (45 partidas)
     5: { depth: 3, noise: 0.17, evalMode: "full" },       // CALIBRADO: 1 vs 5 = 95% para el 5 (20 partidas); 5 vs 6 = 70% para el 6 (43 partidas, tras recalibrar el 6)
     6: { depth: 3, noise: 0.095, evalMode: "full" },      // CALIBRADO (V8, nivel intermedio nuevo): 5 vs 6 = 70% para el 6; 6 vs 7 = 77% para el 7 (43 partidas cada enfrentamiento)
-    7: { depth: 3, noise: 0.00, evalMode: "full", softErrorRate: 0.1, softErrorMinLoss: 8, softErrorMaxLoss: 45 },       // CALIBRADO: era el "6" de V6/V7 — Otto lo probó extensamente y lo sintió más como un 7 que un 6 (le ganaba 70-75% de sus partidas humanas), así que se corrió acá. 6 vs 7 = 77% para el 7; 7 vs 10 = dominante en la muestra, sin colapso
+    7: { depth: 3, noise: 0.00, evalMode: "full", softErrorRate: 0.1, softErrorMinLoss: 8, softErrorMaxLoss: 45 },       // CALIBRADO: era el "6" de V6/V7 — Otto lo probó extensamente y lo sintió más como un 7 que un 6 (le ganaba 70-75% de sus partidas humanas), así que se corrió acá. 6 vs 7 = 77% para el 7; 7 vs 10 = dominante en la muestra, sin colapso -- después se le sumaron los errores leves (ver PERFIL DE ERRORES), para dejarlo equidistante entre el 6 y el 8: los porcentajes contra el 6 y el 8 se midieron antes de eso. La frecuencia (softErrorRate: 0.1) la ajustó Otto a mano
     8: { depth: 4, noise: 0.03, evalMode: "full" },       // CALIBRADO (V10): 7 vs 8 = 79% para el 8 (34 partidas decisivas) -- recalibrado tras arreglar el bug de empates falsos (ver comentario en pickBestFullMoves): sin ruido, el 8 le ganaba al 7 el 86% (demasiado, por encima de la franja), porque el arreglo lo hizo más fuerte de lo que parecía antes
     9: { depth: 5, noise: 0.00, evalMode: "full" },       // CALIBRADO (V9): 8 vs 9 = 78% para el 9; 9 vs 10 = 86% para el 10 (borde superior sano, sin colapso)
     10: { timeLimitMs: 8000, maxDepth: 16, noise: 0.00, evalMode: "full" }
 };
 
-// ============================================================
-//  API PÚBLICA
-// ============================================================
-// Dado un tablero y un nivel, devuelve UNA jugada completa elegida por
-// ese nivel (o null si no hay ninguna jugada legal — no debería pasar
-// nunca en una partida real, porque el juego ya termina la partida por
-// bloqueo/aniquilación antes de que esto se llegue a llamar). El
-// parámetro player es opcional y por defecto es 'b' (el color del bot
-// cuando el humano juega con blancas); desde que el humano puede elegir
-// jugar con negras, la Arena lo pasa siempre explícito. El simulador de
-// auto-partidas (para calibrar) también lo llamaba con los dos colores, y
-// la auditoría (prueba de espejo) confirmó que el motor juega idéntico
-// con blancas que con negras.
 // ============================================================
 //  PERFIL DE ERRORES: ERRORES LEVES
 // ============================================================
@@ -1005,7 +1009,9 @@ const BOT_LEVEL_CONFIG = {
 //                     el error en "leve": desaprovechar algo, avanzar menos,
 //                     dejar algo de aire -- nunca un regalo.
 // Hoy lo usa solo el nivel 7 (a pedido de Otto, para que quede equidistante
-// entre el 6 y el 8 sin perder su capacidad de planificar).
+// entre el 6 y el 8 sin perder su capacidad de planificar). Busca a la
+// profundidad fija del nivel (config.depth): no sirve para un nivel que
+// busca por tiempo, como el 10.
 //
 // Devuelve la jugada "leve" elegida, o null si en este turno no corresponde
 // (y el bot juega su mejor jugada, como siempre).
@@ -1041,6 +1047,25 @@ function pickSoftErrorMove(boardForSearch, player, config, legalMoves) {
     return safe[Math.floor(Math.random() * safe.length)].move;
 }
 
+// ============================================================
+//  API PÚBLICA
+// ============================================================
+// Dado un tablero y un nivel, devuelve UNA jugada completa elegida por
+// ese nivel (o null si no hay ninguna jugada legal — no debería pasar
+// nunca en una partida real, porque el juego ya termina la partida por
+// bloqueo/aniquilación antes de que esto se llegue a llamar). La llama
+// bot-worker.js, en su propio hilo. El parámetro player es opcional y
+// por defecto es 'b' (el color del bot cuando el humano juega con
+// blancas); desde que el humano puede elegir jugar con negras, la
+// Arena lo pasa siempre explícito. El simulador de auto-partidas (para
+// calibrar) también lo llamaba con los dos colores, y la auditoría
+// (prueba de espejo) confirmó que el motor juega idéntico con blancas
+// que con negras.
+//
+// El orden en que decide cada jugada: (1) el ruido del nivel (una
+// jugada al azar); (2) la zona de azar, mientras no cayó ninguna ficha;
+// (3) los errores leves, si el nivel los tiene; (4) la mejor jugada de
+// la búsqueda.
 function getBotMove(boardForSearch, level, player = "b") {
     const config = BOT_LEVEL_CONFIG[level];
     if (!config) return null;
@@ -1075,7 +1100,7 @@ function getBotMove(boardForSearch, level, player = "b") {
         // legales"), cae al camino de siempre de abajo.
     }
 
-    // --- A PARTIR DE ACÁ: EXACTAMENTE EL CAMINO DE SIEMPRE, SIN NINGÚN CAMBIO ---
+    // --- FUERA DE LA ZONA DE AZAR: EL CAMINO DE SIEMPRE ---
     // --- ERRORES LEVES (perfil de errores; ver pickSoftErrorMove) ---
     if (config.softErrorRate && Math.random() < config.softErrorRate) {
         const softMove = pickSoftErrorMove(boardForSearch, player, config, legalMoves);
@@ -1115,13 +1140,12 @@ function getBotMove(boardForSearch, level, player = "b") {
 // marcador que se desnivela mucho y se sostiene, etc.) — para que cada
 // personaje pueda reaccionar con una frase propia (algunos, incluso,
 // con un sonido propio en vez de texto -- ver bot-dialogue.js). Este
-// archivo SOLO detecta qué pasó
-// y le pone una etiqueta — no sabe nada de qué dice cada personaje ni
-// de cómo se muestra en pantalla; eso vive aparte, en bot-dialogue.js
-// (el contenido) e index.html (la presentación visual, todavía sin
-// construir — por ahora, mientras se define cómo se va a ver, el
-// enganche en index.html se limita a mostrar el evento por consola,
-// para poder probar que el motor dispara bien).
+// archivo SOLO detecta qué pasó y le pone una etiqueta — no sabe nada
+// de qué dice cada personaje ni de cómo se muestra en pantalla; eso
+// vive aparte, en bot-dialogue.js (el contenido) e index.html (la
+// presentación: el globo de diálogo junto al retrato del personaje,
+// ver botSpeak y showBotSpeechBubble). Lo llama solamente la pantalla
+// del humano que juega; los espectadores reciben la frase ya elegida.
 //
 // Mismo espíritu "sin memoria propia" que el resto de este archivo:
 // esta función no guarda nada entre llamadas — recibe el estado de la
@@ -1129,10 +1153,11 @@ function getBotMove(boardForSearch, level, player = "b") {
 // que el llamador (index.html) lo guarde y se lo vuelva a pasar en la
 // próxima jugada, tal como ya se hace con moveHistory y compañía.
 
-// Los doce eventos, con su prioridad (1 = se prioriza primero). Si en
-// una misma jugada calificara más de uno a la vez (por ejemplo, una
-// captura múltiple que además corona), se elige uno solo — nunca se
-// muestra más de un comentario por jugada.
+// Los dieciséis eventos (los tres desenlaces, los doce de mitad de
+// partida y el saludo inicial), con su prioridad (1 = se prioriza
+// primero). Si en una misma jugada calificara más de uno a la vez (por
+// ejemplo, una captura múltiple que además corona), se elige uno solo —
+// nunca se muestra más de un comentario por jugada.
 const COMMENTARY_EVENTS = {
     // Los tres desenlaces de la partida tienen prioridad absoluta -- si
     // la jugada que se acaba de jugar terminó el partido, ninguno de
@@ -1160,11 +1185,10 @@ const COMMENTARY_EVENTS = {
     COMENTARIO_ALEATORIO: { priority: 15 },
 
     // INICIO_PARTIDA no pasa nunca por el arbitraje de prioridad de acá
-    // abajo -- se dispara aparte, con su propio llamado directo a
-    // pickBotDialogueLine, justo al arrancar la partida (antes de que
-    // exista ningún turno del que hablar). Nunca puede coincidir con
-    // ningún otro evento, así que el número de prioridad es puramente
-    // decorativo/documentación.
+    // abajo -- index.html lo dispara aparte, directo (botSpeak), justo al
+    // arrancar la partida (antes de que exista ningún turno del que
+    // hablar). Nunca puede coincidir con ningún otro evento, así que el
+    // número de prioridad es puramente decorativo/documentación.
     INICIO_PARTIDA: { priority: 16 }
 };
 
@@ -1225,8 +1249,8 @@ function boardIsAllKings(boardForSearch) {
     return hasAnyPiece;
 }
 
-// board: el tablero YA CON el turno completo aplicado (como queda justo
-//     antes de llamar a changeTurn() en index.html).
+// board: el tablero YA CON el turno completo aplicado (index.html llama
+//     a esta función desde changeTurn(), apenas termina el turno).
 // turnHops: los saltos de ESTE turno nada más (para un movimiento
 //     simple, un solo elemento; para una captura múltiple, uno por cada
 //     escalón de la cadena) — cada uno con AL MENOS {captured, crowned},
@@ -1235,7 +1259,8 @@ function boardIsAllKings(boardForSearch) {
 //     de moveHistory (las últimas entradas consecutivas del mismo
 //     color que se acaba de mover).
 // moverColor: 'w' o 'b', quién jugó este turno.
-// botColor: el color que juega el bot (en una partida real, siempre 'b').
+// botColor: el color que juega el bot (el contrario del que eligió el
+//     humano en la Sala de Armas; index.html pasa currentBotColor).
 // moveNumber: cuántas jugadas van en total en la partida hasta ahora
 //     (alcanza con pasar moveHistory.length).
 // state: el estado devuelto la vez anterior (o createInitialCommentaryState()
@@ -1348,4 +1373,5 @@ function detectCommentaryEvent(board, turnHops, moverColor, botColor, moveNumber
     candidates.sort((a, b) => COMMENTARY_EVENTS[a].priority - COMMENTARY_EVENTS[b].priority);
     return { event: candidates[0], state: newState };
 }
+
 

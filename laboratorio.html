@@ -16,17 +16,33 @@
         rel="stylesheet">
     <style>
         /* ============================================================
-           EL LABORATORIO — arquitectura aparte de la Arena principal
+           EL LABORATORIO — página aparte de la Arena principal
            ============================================================
-           Esta página vive sola: no hay turnos, no hay rival, no hay
-           reloj, no hay Crónica. Es un tablero de estudio, donde la
-           misma persona maneja blancas y negras a la vez. Comparte con
-           index.html el motor de reglas (rules-engine.js, cargado tal
-           cual, sin tocar una coma) y buena parte del CSS del tablero
-           (copiado a propósito, no importado, para que un cambio acá
-           nunca pueda romper la Arena real ni viceversa) — pero toda la
-           lógica de interacción (clic derecho para colocar/sacar
-           fichas, la ruedita, deshacer) es exclusiva de esta página. */
+           Un tablero de estudio donde la misma persona maneja blancas y
+           negras, sin rival ni reloj, siempre con las reglas de las damas
+           argentinas:
+           - El tablero: se arman posiciones a mano (clic derecho o dedo
+             apretado; la ruedita elige la ficha), se mueve con clic
+             izquierdo, se deshace y rehace, se rota, y el Control de
+             Turnos (con su ⇄) decide si se respetan los turnos.
+           - El Reproductor de Crónicas, al costado: carga una crónica
+             (pegada o desde un archivo), la recorre jugada por jugada y
+             deja apartarse de ella para probar otras jugadas. La
+             filmadora 🎥 genera crónicas nuevas: de cero, o dándole otro
+             final a una cargada.
+           - Los archivos: posiciones y crónicas se guardan y se cargan en
+             .txt, con el mismo formato que la Arena.
+           - El color del marco dice qué se está mirando: verde, una
+             hipótesis; violeta, la crónica tal cual pasó; rojo, grabando.
+           - Desde el Salón de los Caballeros, otros pueden mirar el
+             tablero en vivo (modo espectador, a través del servidor) o
+             desafiar al dueño.
+           - El 📖 Manual lo explica todo, sin salir de la página.
+           Comparte con index.html el motor de reglas (rules-engine.js,
+           cargado tal cual, sin tocar una coma), el chat del Salón y buena
+           parte del CSS del tablero (copiado a propósito, no importado,
+           para que un cambio acá nunca pueda romper la Arena ni viceversa).
+           Toda la lógica de interacción es propia de esta página. */
 
         * {
             box-sizing: border-box;
@@ -222,16 +238,15 @@
             }
         }
 
-        /* --- EL ESCUDO FLUIDO, calcado de index.html --- */
+        /* --- EL ESCUDO FLUIDO (la misma fórmula que index.html) --- */
         /* La casilla mide el 5,95% del ancho de la pantalla (entre 26 y 51
            px)... salvo en celular, donde eso dejaba el tablero chico (292 px
            en cualquier celular, por el mínimo de 26) con márgenes vacíos a
            los costados. Ahí, a pedido de Otto, el tablero ocupa todo el ancho
            menos 12 px de cada lado -- con un techo de 36 px por casilla, que
-           es justo donde la fórmula de siempre lo alcanza (a los ~605 px de
-           ancho): de ahí para arriba, todo queda exactamente como antes, y no
-           hay saltos al pasar de celular a tablet. (Solo en el Laboratorio,
-           por ahora: la Arena sigue con la fórmula de siempre.) */
+           es justo donde la fórmula del 5,95% lo alcanza (a los ~605 px de
+           ancho): de ahí para arriba manda esa fórmula, y no hay saltos al
+           pasar de celular a tablet. La Arena usa exactamente la misma. */
         :root {
             --sq-size: clamp(26px,
                 max(5.95vw, min((100vw - 24px - 2 * var(--board-border) - 2 * var(--board-padding)) / 10, 36px)),
@@ -250,6 +265,8 @@
              que pasó en la crónica cargada, en la jugada resaltada. Se
              activa al cargar una crónica y al navegarla; cualquier
              edición manual lo devuelve al verde (ver updateFrameMode).
+           - ROJO (.recording-territory, más abajo): la filmadora 🎥 está
+             grabando.
            Valores elegidos por Otto (el violeta lo afinó él mismo). */
         #board {
             display: grid;
@@ -401,8 +418,8 @@
            con el mismo tono que en la Arena. En la Arena es un naranja
            semitransparente sobre el fondo marrón del tablero; acá se usa
            el color ya mezclado, opaco, porque debajo de las casillas está
-           el marco (verde o violeta) y el mismo naranja transparente daría
-           otro tono. */
+           el marco (de cualquiera de los tres colores) y el mismo naranja
+           transparente daría otro tono. */
         .square.last-move-highlight {
             background-color: rgb(128, 82, 10);
         }
@@ -435,9 +452,9 @@
 
         /* Igual que en una partida real: mismo ancho que el tablero (así
            queda alineada con él, no con el título ni el epígrafe, en
-           pantallas anchas), mismo estilo visual. Como en esta tanda
-           todavía no hay servidor (eso llega en la Tanda 2), arranca
-           siempre en "-", sin nadie espectando. */
+           pantallas anchas), mismo estilo visual. Arranca en "-" y se
+           llena con los nombres de los que están mirando este laboratorio
+           (los manda el servidor: lab-spectators-update). */
         #spectatorsBox {
             width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
             box-sizing: border-box;
@@ -452,13 +469,14 @@
         }
 
         /* Arriba del tablero: donde en una partida real iría el nombre
-           del rival -- ahí van los tres botones y el contador de
-           fichas, todos juntos, a pedido de Otto. Quedan justos (el
-           ancho total apunta a coincidir con el del tablero), por eso
-           el padding/gap/tamaño de letra de .lab-btn están más
-           ajustados que en el resto del sitio -- y si aun así no
-           entran en una sola fila (pantallas muy angostas), envuelven
-           prolijamente en dos gracias al flex-wrap. */
+           del rival. En pantalla ancha, los tres botones grandes
+           (Posición inicial, Remover todo, Rotar Tablero), del mismo
+           ancho que el tablero; el contador de fichas y Deshacer/Rehacer
+           bajan a la fila de herramientas. En pantallas angostas, los
+           cuatro (con Deshacer/Rehacer) en dos pares, y el contador en su
+           propio renglón (ver "CONTADOR DE FICHAS" más abajo). Por eso el
+           padding/gap/tamaño de letra de .lab-btn están más ajustados que
+           en el resto del sitio. */
         #topControlsRow {
             display: flex;
             align-items: center;
@@ -469,15 +487,13 @@
             width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
         }
 
-        /* La fila de herramientas: ocupa EXACTAMENTE el hueco que dejaban
-           los botones de pasaje entre Laboratorio y Reproductor (que ya
-           no existen, porque ahora es todo un solo tablero) -- a pedido
-           de Otto, sin estirar ni comprimir ese espacio: el tablero
-           arranca a la misma altura que antes. A la izquierda el
-           selector de fichas (achatado a una sola fila), a la derecha
-           el Control de Turnos. min-height (y no height) para que, en
-           pantallas angostas donde el texto necesite otro renglón, la
-           fila crezca en vez de desbordar. */
+        /* La fila de herramientas, justo arriba del tablero: a la
+           izquierda el selector de fichas (en una sola fila), a la
+           derecha el Control de Turnos y, en pantalla ancha, en el medio
+           el contador de fichas y Deshacer/Rehacer (ver #toolsMiddle).
+           min-height (y no height) para que, en pantallas angostas donde
+           el texto necesite otro renglón, la fila crezca en vez de
+           desbordar. */
         #labToolsRow {
             width: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
             min-height: 80px;
@@ -489,8 +505,9 @@
         }
 
         /* --- EL CONTROL DE TURNOS ---
-           Todo el recuadro es un único botón: hundido cuando está
-           activado (SÍ), elevado cuando no (NO). El turno se muestra
+           Todo el recuadro funciona como un solo botón (salvo el ⇄, que
+           cambia el turno): hundido cuando está activado (SÍ), elevado
+           cuando no (NO). El turno se muestra
            SIEMPRE -- apagado, con la letra más apagada, como simple
            referencia; prendido, en amarillo. Así el recuadro nunca
            cambia de alto según el estado (nada sube ni baja). */
@@ -714,10 +731,9 @@
         }
 
         /* --- EL SELECTOR DE FICHAS (una sola fila de 4) ---
-           Antes era un grid de 2x2 al costado del tablero; ahora vive en
-           la fila de herramientas, arriba del tablero, achatado a una
-           sola fila horizontal para entrar en ese hueco (a pedido de
-           Otto). Sigue reflejando lo que se elija con la ruedita. */
+           Vive en la fila de herramientas, arriba del tablero: peón y dama
+           blancos, peón y dama negros. Refleja también lo que se elija con
+           la ruedita. */
         #pieceTypePanel {
             flex: 0 0 auto;
             background: rgba(0, 0, 0, 0.45);
@@ -770,10 +786,10 @@
             box-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
         }
 
-        /* Celulares: el tablero mide ~292px de ancho, y el selector y el
-           Control de Turnos tienen que entrar lado a lado en ese ancho
-           (como en el esquema de Otto) -- versiones compactas de los
-           dos. Este bloque va A PROPÓSITO después de las reglas base de
+        /* Celulares: el selector y el Control de Turnos tienen que entrar
+           lado a lado en el ancho del tablero (unos 336 px en un celular
+           de 360; como en el esquema de Otto) -- versiones compactas de
+           los dos. Este bloque va A PROPÓSITO después de las reglas base de
            arriba: un media query no suma especificidad, así que si
            estuviera antes, las reglas base (mismo selector, más abajo
            en el archivo) lo pisarían. Si aun así algún texto no entra,
@@ -840,11 +856,12 @@
         }
 
         /* --- EL REPRODUCTOR DE CRÓNICAS ---
-           Ya no es un "lugar" aparte: es un dispositivo dentro del
-           Laboratorio, siempre visible, que convive con el tablero. A
-           propósito, nada de esto se muestra/oculta con estilos inline
-           puestos por JS (le ganarían a cualquier regla CSS, incluido
-           el media query de mobile de más abajo). */
+           Un dispositivo dentro del Laboratorio, siempre visible, que
+           convive con el tablero (no es un lugar aparte). A propósito,
+           nada de su armado se muestra/oculta con estilos inline puestos
+           por JS (le ganarían a cualquier regla CSS, incluido el media
+           query de mobile de más abajo); solo el aviso de error, que
+           ningún media query toca. */
         #chroniclePlayerPanel {
             display: flex;
             flex-direction: column;
@@ -962,20 +979,20 @@
             gap: 5px;
         }
 
-        /* En mobile (mismo quiebre que ya usa #labWrapper para apilar),
-           el panel se reparte en dos columnas lado a lado, juntas del
-           mismo ancho que el tablero: a la izquierda el cuadro de
-           texto, el botón y JUSTO DEBAJO los controles de avance (a
-           pedido de Otto, pegados al botón, para dejar libre abajo el
-           lugar de los botones de archivo de las próximas tandas); a la
-           derecha la lista, ocupando toda la columna.
+        /* En pantallas angostas (el mismo quiebre que usa #labWrapper para
+           apilar), el Reproductor y los botones de archivo se reparten en
+           dos columnas lado a lado, juntas del mismo ancho que el tablero:
+           a la izquierda, de arriba abajo, los controles de avance, el
+           bloque de pegar la crónica (con Reproducir/Borrar y la
+           filmadora) y los botones de archivo; a la derecha la lista,
+           ocupando toda la columna.
            El truco de las filas "auto auto 1fr": la lista cruza las
            tres filas, y como la última es flexible, todo el alto que le
-           sobra a la lista se lo come ESA fila (vacía en la columna
-           izquierda) -- las dos primeras quedan del alto justo de su
-           contenido, sin huecos entre el botón y los controles. (Con
-           filas solo "auto", el navegador repartía ese sobrante entre
-           todas, y por eso los controles quedaban lejos del botón.) */
+           sobra a la lista se lo come ESA fila (la de los botones de
+           archivo) -- las dos primeras quedan del alto justo de su
+           contenido, sin huecos entre ellas. (Con filas solo "auto", el
+           navegador repartía ese sobrante entre todas, y quedaban huecos
+           entre los controles y el botón.) */
         @media (max-width: 899px) {
             /* La caja visible del Reproductor pasa a ser #labSideColumn
                (con el mismo aspecto que tiene el panel en pantalla ancha), y
@@ -1031,11 +1048,11 @@
                 grid-row: 2;
             }
 
-            /* Los botones de archivo: debajo de los controles, en la
-               columna izquierda (como en el esquema de Otto para celular). */
-            /* En celular, al revés que en pantalla ancha: el par de
-               Crónica primero (pegado a los controles del Reproductor), y
-               el de Posición después, más "afuera". */
+            /* Los botones de archivo: debajo del bloque de pegar la crónica,
+               en la columna izquierda (como en el esquema de Otto para
+               celular). Al revés que en pantalla ancha: el par de Crónica
+               primero (pegado al Reproductor), y el de Posición después, más
+               "afuera". */
             #fileButtonsBlock {
                 grid-column: 1;
                 grid-row: 3;
@@ -1121,7 +1138,10 @@
         /* ~15 líneas visibles (7 pasadas + 1 actual + 7 futuras).
            Alto FIJO (no máximo) a propósito: así el panel mide siempre
            lo mismo, haya o no crónica cargada y sea corta o larga --
-           nada de lo que esté alrededor se mueve al cargar una. */
+           nada de lo que esté alrededor se mueve al cargar una. (En
+           pantalla ancha la lista llena el alto que le deja el tablero;
+           en angosta, crece desde acá hasta igualar la columna de al
+           lado: ver los media queries de más abajo.) */
         #chronicleMoveList {
             overflow-y: auto;
             height: 315px;
@@ -1202,7 +1222,8 @@
         /* Ajustes del Reproductor para las dos columnas (pantallas
            angostas). Van A PROPÓSITO después de todas las reglas base de
            arriba, para pisarlas por orden y no depender solo de la
-           especificidad. En un celular cada columna mide ~130px: */
+           especificidad. En un celular de 360 px cada columna mide unos
+           155 px: */
         @media (max-width: 899px) {
             /* La fila de controles es UNA sola fila con el campito en el
                medio (como en el esquema de Otto), pero cada botón y el
@@ -1342,10 +1363,10 @@
                 height: calc(10 * var(--sq-size) + 2 * var(--board-border) + 2 * var(--board-padding));
             }
 
-            /* Para que el panel entre en el alto del tablero (~26px menos
-               que antes): se achica el cuadro de texto, que se usa una vez
-               por crónica, y la lista -- lo que más se usa -- se queda con
-               todo el resto del alto (ya no tiene alto fijo acá). */
+            /* Para que el panel entre en el alto del tablero: el cuadro de
+               texto, que se usa una vez por crónica, más bajo, y la lista --
+               lo que más se usa -- se queda con todo el resto del alto (acá
+               no tiene alto fijo). */
             #chronicleTextInput {
                 height: 66px;
             }
@@ -1726,9 +1747,10 @@
         }
 
         /* Pantallas angostas: los cuatro botones en dos pares -- Posición
-           inicial y Remover todo arriba; Rotar Tablero y Deshacer abajo
-           (Deshacer, el más usado, en el par más cercano al tablero y del
-           mismo lado derecho de siempre) --, y el contador en su fila. */
+           inicial y Remover todo arriba; Rotar Tablero y Deshacer (con su
+           Rehacer) abajo: Deshacer, el más usado, en el par más cercano al
+           tablero y del mismo lado derecho de siempre --, y el contador en
+           su fila. */
         @media (max-width: 899px) {
             #topControlsRow {
                 display: grid;
@@ -1762,8 +1784,8 @@
 
             /* Entre el selector de fichas y el Control de Turnos: el
                contador ARRIBA (alineado con el borde de arriba de los dos
-               paneles) y Deshacer ABAJO (alineado con el borde de abajo), a
-               pedido de Otto, con una luz chiquita entre los dos. */
+               paneles) y Deshacer/Rehacer ABAJO (alineados con el borde de
+               abajo), a pedido de Otto, con una luz chiquita entre los dos. */
             #toolsMiddle {
                 display: flex;
                 flex-direction: column;
@@ -3026,10 +3048,11 @@
                 <button id="posicionInicialBtn" class="lab-btn" data-i18n="posicionInicialBtn">▶️ Posición inicial</button>
                 <button id="removerTodoBtn" class="lab-btn" data-i18n="removerTodoBtn">🗑️ Remover todo</button>
                 <button id="rotarTableroBtn" class="lab-btn" data-i18n="rotarTableroBtn">🔄️ Rotar Tablero</button>
-                <!-- Copia de Deshacer para pantallas angostas (en pantalla
-                     ancha va abajo, entre el selector de fichas y el Control
-                     de Turnos, bien cerca del tablero). Las dos copias se
-                     habilitan y deshabilitan juntas (clase .undo-btn). -->
+                <!-- Copia del par Deshacer/Rehacer para pantallas angostas (en
+                     pantalla ancha va abajo, entre el selector de fichas y el
+                     Control de Turnos, bien cerca del tablero). Las dos copias
+                     se habilitan y deshabilitan juntas (clases .undo-btn y
+                     .redo-btn). -->
                 <span class="undo-pair" id="undoPairTop">
                     <button id="deshacerBtnTop" class="lab-btn undo-btn" disabled data-i18n="deshacerBtn" data-i18n-title="undoTitle" title="Deshacer (Ctrl+Z)">↩️ Deshacer</button>
                     <button id="rehacerBtnTop" class="lab-btn redo-btn" type="button" disabled data-i18n-title="redoTitle" data-i18n-aria-label="redoTitle" title="Rehacer (Ctrl+Y)" aria-label="Rehacer (Ctrl+Y)">↪️</button>
@@ -3058,8 +3081,8 @@
 
                 <!-- La columna del medio (solo en pantalla ancha): arriba el
                      contador de fichas (segunda copia; las dos se actualizan
-                     juntas, ver updatePieceCounter) y abajo el botón de
-                     Deshacer -- el que más se usa, bien a mano del tablero. -->
+                     juntas, ver updatePieceCounter) y abajo Deshacer/Rehacer
+                     -- lo que más se usa, bien a mano del tablero. -->
                 <div id="toolsMiddle">
                     <span id="pieceCounterTools" class="piece-counter">⚪ 0 | ⚫ 0</span>
                     <span class="undo-pair">
@@ -3098,7 +3121,8 @@
              de pantalla lo resuelve el CSS -- ver "LA COLUMNA DERECHA". -->
         <div id="labSideColumn">
             <!-- Botones de archivo, en dos pares: Posición (más "afuera") y
-                 Crónica (pegado al Reproductor; llega en la Tanda 4). -->
+                 Crónica (pegado al Reproductor). Los dos <input type="file">
+                 ocultos son los que abren el selector de archivos. -->
             <div id="fileButtonsBlock">
                 <div class="file-btn-group" id="positionFileButtons">
                     <button id="savePositionBtn" class="lab-btn file-btn" onclick="savePosition()" data-i18n="savePositionBtn">📸 Guardar Posición</button>
@@ -3195,10 +3219,10 @@
         </div>
     </div>
 
-    <!-- Los Términos de Uso: antes una página aparte (/terminos), con su
-         propio botón de "Volver" que te sacaba de cualquier laboratorio en
-         curso -- ahora una "manta" más: se abre y se cierra sin navegar a
-         ningún lado, así que nunca hay nada que perder. -->
+    <!-- Los Términos de Uso: una "manta" más (como el Manual), que se abre y
+         se cierra sin navegar a ningún lado -- así abrirlos nunca hace perder
+         lo que se estaba haciendo en el laboratorio. Siguen el idioma del
+         sitio (ver showTermsLang). -->
     <div id="termsModal">
         <div id="termsModalFrame">
             <div id="termsModalHeader">
@@ -4291,11 +4315,12 @@
         // ============================================================
         //  LA CRÓNICA CARGADA (el Reproductor, dentro del Laboratorio)
         // ============================================================
-        // Ya no hay "modos": el Laboratorio y el Reproductor de Crónicas
-        // comparten un único tablero. Una vez cargada y validada una
-        // crónica: un tablero por cada jugada (índice 0 = posición
-        // inicial), de quién es el turno en cada una, y los datos de
-        // cada jugada ya parseados -- ver replayChronicle más abajo.
+        // El Laboratorio y el Reproductor de Crónicas comparten un único
+        // tablero. Con una crónica cargada (validada, o generada con la
+        // filmadora): un tablero por cada jugada (índice 0 = posición de
+        // partida: la inicial, salvo en las crónicas no iniciales), de
+        // quién es el turno en cada una, y los datos de cada jugada ya
+        // parseados -- ver replayChronicle más abajo.
         let chronicleBoards = null;
         let chronicleTurns = null;
         let chronicleMoveList = null;
@@ -4311,11 +4336,13 @@
         // seguir capturando ({row, col}); si no, null.
         let chronicleChains = null;
         // ¿El tablero se apartó de la jugada resaltada? Pasa a true con
-        // CUALQUIER edición manual (mover, colocar/sacar fichas,
-        // Posición inicial, Remover todo) y vuelve a false con
-        // cualquier navegación de la crónica. Es lo que decide el color
-        // del marco y del resaltado: violeta si hay crónica cargada y
-        // NO hubo desvío, verde en todos los demás casos.
+        // CUALQUIER edición manual (mover, colocar/sacar fichas, ⇄,
+        // Posición inicial, Remover todo, Cargar Posición) y vuelve a
+        // false con cualquier navegación de la crónica (y con Deshacer,
+        // si vuelve exacto a la jugada). Junto con la filmadora, decide
+        // el color del marco y del resaltado: rojo grabando; si no,
+        // violeta si hay crónica cargada y NO hubo desvío, y verde en
+        // todos los demás casos.
         let chronicleDeviated = false;
 
         // ¿La filmadora 🎥 está prendida (generando una crónica)? Ver "EL
@@ -4415,14 +4442,13 @@
         // ============================================================
         //  EL REPRODUCTOR DE CRÓNICAS: parser + validador/reproductor
         // ============================================================
-        // Misma idea que se probó por separado antes de tocar esta
-        // página: reproducir la crónica jugada por jugada, DESDE la
-        // posición inicial, usando el mismo motor de reglas
-        // (rules-engine.js) que gobierna las partidas reales -- así la
-        // pregunta "¿esta jugada es congruente con la posición en ese
-        // momento?" no es una validación nueva e inventada, es
-        // literalmente la misma pregunta que el motor ya resuelve hoy en
-        // cualquier partida en vivo.
+        // La crónica se reproduce jugada por jugada, desde su posición de
+        // partida (la inicial, o la que trae arriba de las jugadas),
+        // usando el mismo motor de reglas (rules-engine.js) que gobierna
+        // las partidas reales -- así la pregunta "¿esta jugada es
+        // congruente con la posición en ese momento?" no es una validación
+        // nueva e inventada, es literalmente la misma pregunta que el
+        // motor ya resuelve en cualquier partida en vivo.
 
         // Mismo alfabeto que squareLabel() en index.html: columna a-j,
         // fila 1-10 (con la fila 0 del array = "10" visible).
@@ -4453,8 +4479,7 @@
         // con el mismo formato exacto de un archivo de posición (Cargar
         // Posición): es una crónica "no inicial", que no arranca en la
         // posición inicial. Sin esas líneas, arranca en la posición inicial,
-        // como todas las de la Arena -- y como todas las crónicas que
-        // existían hasta ahora, que se siguen cargando igual. Ejemplo:
+        // como todas las de la Arena. Ejemplo:
         //     blancas: a1-c1-e3-d4♛
         //     negras: b6-f8-h10
         //     turno: negras
@@ -4841,10 +4866,10 @@
             const rowLabelCol = boardRotated ? 9 : 0;
             const mustMoveSquares = computeMustMoveSquares();
             // La huella de la última jugada: solo mientras el tablero
-            // muestra la crónica tal cual pasó (marco violeta), y desde la
-            // jugada 1. Apenas se entra en territorio hipotético (verde),
-            // desaparece; si se deshace hasta volver exacto a la crónica,
-            // reaparece sola. En una captura en cadena, cada salto es su
+            // muestra la crónica tal cual pasó (marco violeta) o mientras se
+            // graba (rojo: la última jugada anotada), y desde la jugada 1.
+            // Apenas se entra en territorio hipotético (verde), desaparece;
+            // si se deshace hasta volver exacto a la crónica, reaparece sola. En una captura en cadena, cada salto es su
             // propia línea de la crónica: se marca el de esa línea.
             // El espectador no tiene la crónica: dibuja la huella que le
             // manda el dueño (ver syncLabBoard y lab-board-update).
@@ -5097,8 +5122,7 @@
                 // Saca lo que haya ahí, sin importar tipo ni color.
                 // (Colocar/sacar fichas a mano es territorio hipotético,
                 // pero NO cambia el turno: solo los movimientos lo hacen.)
-                // Se puede deshacer, igual que un movimiento (antes, colocar o
-                // sacar una ficha borraba todo el historial de Deshacer).
+                // Se puede deshacer, igual que un movimiento.
                 pushUndoSnapshot();
                 clearRedoStack();
                 board[row][col] = null;
@@ -5145,7 +5169,7 @@
         }
 
         // ============================================================
-        //  SELECCIÓN DEL TIPO DE FICHA A COLOCAR (rueda + grid 2x2)
+        //  SELECCIÓN DEL TIPO DE FICHA A COLOCAR (ruedita + los 4 botones)
         // ============================================================
         function updatePieceTypeUI() {
             document.querySelectorAll('.piece-type-btn').forEach(btn => {
@@ -5174,13 +5198,16 @@
         }, { passive: false });
 
         // ============================================================
-        //  BOTONES: POSICIÓN INICIAL / REMOVER TODO / DESHACER
+        //  BOTONES: POSICIÓN INICIAL / REMOVER TODO / DESHACER / REHACER /
+        //  ROTAR TABLERO
         // ============================================================
-        // Los dos son un "volver a empezar": territorio hipotético (marco
-        // verde, aunque haya una crónica cargada), y el turno vuelve a
-        // blancas -- en la posición inicial porque así arranca toda
-        // partida, y en el tablero vacío porque no queda ningún
-        // antecedente del cual agarrarse.
+        // Posición inicial y Remover todo son un "volver a empezar":
+        // territorio hipotético (marco verde, aunque haya una crónica
+        // cargada), sin Deshacer, y el turno vuelve a blancas -- en la
+        // posición inicial porque así arranca toda partida, y en el
+        // tablero vacío porque no queda ningún antecedente del cual
+        // agarrarse. Cargar Posición pasa por acá también, con el turno
+        // que dice el archivo.
         function resetBoardTo(newBoard, turn = 'w') {
             // Grabando, esto corta la grabación (la crónica generada queda en
             // la columna, como cualquier crónica cargada).
@@ -5436,7 +5463,7 @@
         //  LA LISTA DE JUGADAS: jugada 1 arriba, más reciente/actual
         //  hacia abajo (mismo orden que el texto pegado) -- todas las
         //  jugadas visibles, pasadas y futuras, con la actual resaltada
-        //  (violeta o verde, ver CSS) y clickeable.
+        //  (violeta, verde o roja, ver CSS) y clickeable (salvo grabando).
         // ============================================================
         function renderChronicleMoveList() {
             const container = document.getElementById('chronicleMoveList');
@@ -5476,8 +5503,8 @@
             });
         }
 
-        // Solo marca cuál es la línea actual (el color violeta/verde lo
-        // decide el CSS según la clase .deviated de la lista).
+        // Solo marca cuál es la línea actual (el color lo decide el CSS
+        // según las clases .deviated y .recording de la lista).
         function updateChronicleHighlight() {
             const container = document.getElementById('chronicleMoveList');
             container.querySelectorAll('.chronicle-move-entry').forEach(el => {
@@ -5739,9 +5766,8 @@
         // ============================================================
         //  CAMBIAR EL TURNO A MANO (el botoncito ⇄ del Control de Turnos)
         // ============================================================
-        // Para elegir quién mueve en una posición armada a mano (antes había
-        // que mover una ficha con el control apagado para "gastar" un turno).
-        // Funciona siempre, salvo: a mitad de una captura en cadena (tiene que
+        // Para elegir quién mueve en una posición armada a mano. Funciona
+        // siempre, salvo: a mitad de una captura en cadena (tiene que
         // terminar); grabando, una vez anotada la primera jugada (el turno de
         // la posición de partida ya quedó fijo); y grabando un enganche (el
         // turno lo marca la crónica original).
@@ -6089,11 +6115,13 @@
             location.href = url;
         }
 
-        // Le manda al servidor la foto actual del tablero -- se llama
-        // después de CUALQUIER acción que lo modifique (colocar, sacar,
-        // mover, deshacer, los dos botones grandes). No hace nada si
-        // estamos en modo espectador (ahí el tablero nunca se edita
-        // localmente) ni si por algún motivo el socket no está listo.
+        // Le manda al servidor la foto actual del tablero, para los
+        // espectadores -- se llama después de CUALQUIER acción que cambie
+        // lo que ellos ven (colocar, sacar, mover, deshacer, rehacer,
+        // navegar la crónica, grabar, rotar, Posición inicial, Remover
+        // todo, cargar un archivo...). No hace nada si estamos en modo
+        // espectador (ahí el tablero nunca se edita localmente) ni si por
+        // algún motivo el socket no está listo.
         function syncLabBoard() {
             if (isSpectatorMode) return;
             if (socket) socket.emit('sync-lab-board', {
@@ -6102,10 +6130,11 @@
                 // (violeta = está mostrando la crónica tal cual pasó;
                 // verde = territorio hipotético; rojo = grabando).
                 frameMode: isRecording ? 'recording' : (isChronicleTerritory() ? 'chronicle' : 'hypothetical'),
+                // Si el tablero está rotado (el espectador lo ve igual).
+                rotated: boardRotated,
                 // Y también la huella de la última jugada (solo existe en
                 // violeta y en rojo; si no, va null y el espectador la
                 // borra).
-                rotated: boardRotated,
                 lastMove: (() => {
                     const mv = currentChronicleLastMove();
                     return mv ? { from: { row: mv.from.row, col: mv.from.col }, to: { row: mv.to.row, col: mv.to.col } } : null;
@@ -6149,9 +6178,12 @@
         const spectateTarget = urlParams.get('spectate');
 
         // El espectador solo mira: sin botones, sin selector, sin Control
-        // de Turnos y sin Reproductor (la crónica es del dueño). Lo que sí
-        // ve es el color del marco, que le dice si lo que está mirando
-        // es la partida tal cual pasó (violeta) o una hipótesis (verde).
+        // de Turnos y sin Reproductor (la crónica es del dueño); sí tiene la
+        // barra de arriba (con el Manual) y el chat. Lo que ve, además del
+        // tablero (rotado o no, como lo tenga el dueño), es el color del
+        // marco, que le dice si lo que está mirando es la partida tal cual
+        // pasó (violeta, con la huella de la última jugada), una hipótesis
+        // (verde) o una grabación en curso (rojo).
         function enterSpectatorMode(labRoom) {
             isSpectatorMode = true;
             document.getElementById('topControlsRow').style.display = 'none';
@@ -6702,8 +6734,7 @@
                 this.dlgEl.classList.remove('show');
                 this.stripEl.innerHTML = '';
                 this.capEl.textContent = '';
-                // eslint-disable-next-line no-unused-expressions
-                this.stage.offsetWidth; // se aplica sin transiciones
+                this.stage.offsetWidth; // (forzar el dibujo: se aplica sin transiciones)
                 this.stage.classList.remove('lma-noanim');
             }
 
@@ -7210,10 +7241,10 @@
         })();
 
         // ============================================================
-        //  ARRANQUE: tablero vacío, tipo de ficha por defecto = peón
-        //  blanco, Control de Turnos apagado (turno: blancas), sin
-        //  crónica cargada (controles de navegación apagados, marco
-        //  verde).
+        //  ARRANQUE: tablero vacío y sin rotar, tipo de ficha por
+        //  defecto = peón blanco, Control de Turnos apagado (turno:
+        //  blancas), sin crónica cargada (controles de navegación
+        //  apagados, filmadora apagada, marco verde).
         // ============================================================
         updatePieceTypeUI();
         renderBoard();
@@ -7227,3 +7258,4 @@
 </body>
 
 </html>
+

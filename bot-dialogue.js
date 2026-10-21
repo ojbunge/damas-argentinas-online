@@ -2,19 +2,23 @@
 //  BOT-DIALOGUE.JS — lo que dice (o suena) cada personaje
 // ============================================================
 // Diccionario de DOS niveles de idioma primero (es / en), y adentro de
-// cada uno: botId -> código de evento -> lista de frases. Cuando el
-// motor de bots.js (ver detectCommentaryEvent) detecta un evento,
-// pickBotDialogueLine(botId, eventCode) busca la lista correspondiente
+// cada uno: botId -> código de evento -> lista de frases. Cuando pasa
+// algo digno de comentario (lo detecta detectCommentaryEvent, en
+// bots.js; el saludo de INICIO_PARTIDA lo dispara index.html al
+// arrancar), index.html (botSpeak) busca la lista correspondiente
 // DENTRO DEL IDIOMA ACTUAL (la variable global currentLang, definida en
 // index.html) y elige UNA frase al azar entre las que haya, con la
 // misma probabilidad para cada una — no importa si hay 1, 3 o 10
 // frases cargadas.
 //
 // Las frases en español y en inglés son traducciones fieles unas de
-// otras, en el mismo orden -- pero cada elección al azar es
-// independiente por idioma, así que no hace falta (ni tiene sentido)
-// que el índice elegido coincida entre ambos: cada jugador ve una
-// frase traducida al azar en SU propio idioma, nada más.
+// otras, en el mismo orden -- y ese orden IMPORTA: la frase la sortea
+// solamente la pantalla del humano que juega, que les manda a los
+// espectadores nada más que su número ("evento tal, frase número
+// tal"); cada espectador muestra la frase de ese mismo número en SU
+// propio idioma. Por eso, en cada evento de cada personaje, las dos
+// listas tienen que tener la misma cantidad de frases, y los sonidos
+// (ver más abajo) en la misma posición.
 //
 // Los nombres propios de los personajes (Neanderthalius, Leonor de
 // Aquitapia, Carlosaúlmagno, etc.) NUNCA se traducen -- son los mismos
@@ -30,21 +34,28 @@
 //   PARIDAD_POCAS_FICHAS, PARTIDO_LARGO,
 //   INICIO_HOSTILIDADES, COMENTARIO_ALEATORIO, INICIO_PARTIDA
 //
-// Completar de a poco, con total libertad: dejar como [] (arreglo
-// vacío) cualquier evento que todavía no tenga frase -- si la lista
-// está vacía, o directamente no existe la entrada para ese bot, no se
-// muestra nada (no revienta ni tira error, simplemente ese evento pasa
-// en silencio para ese personaje esa vez). Eso sí: si agregás una
-// frase nueva del lado español, acordate de agregar su traducción del
-// lado inglés (o viceversa) para que ambos idiomas sigan
-// paralelos -- si no, ese idioma le va a mostrar menos variedad al
-// jugador para ese evento puntual, aunque nada se rompa.
+// Hoy los diez personajes tienen frases para los dieciséis eventos, en
+// los dos idiomas. Si alguna vez un evento queda sin frase (dejado como
+// [], arreglo vacío, o sin entrada para ese bot), no se muestra nada
+// (no revienta ni tira error, simplemente ese evento pasa en silencio
+// para ese personaje esa vez). Eso sí: si agregás una frase nueva del
+// lado español, agregá su traducción en la MISMA posición del lado
+// inglés (o viceversa) -- si una lista queda más larga en un idioma
+// que en el otro, un espectador que use el otro idioma puede quedarse
+// sin ver la frase, o ver una distinta de la que vio el jugador.
 //
 // Cada frase va entre comillas, y las frases se separan con coma —
-// las comas que uses DENTRO de una frase (";eso, che, no importa!")
+// las comas que uses DENTRO de una frase ("¡eso, che, no importa!")
 // no rompen nada, porque quedan protegidas adentro de las comillas;
 // lo que separa una frase de la siguiente es la coma que está POR
 // FUERA de las comillas, en la lista.
+//
+// SONIDOS: una entrada que es la ruta de un archivo terminado en .mp3,
+// .wav u .ogg (por ejemplo "assets/bots/marolio2.mp3") no se muestra
+// como texto: se reproduce ese sonido, y el globo muestra una notita
+// (🎵). Lo resuelve index.html (ver BOT_AUDIO_EXTENSIONS). Va en la
+// misma lista y entre comillas, como cualquier frase; del lado inglés
+// va la misma ruta, en la misma posición.
 //
 
 
@@ -3406,6 +3417,10 @@ const BOT_DIALOGUE = {
 // el bot/evento ni siquiera existe en el diccionario) — el llamador
 // simplemente no muestra nada en ese caso, no hace falta que chequee
 // nada antes de llamar a esto.
+//
+// Hoy index.html no la usa: para poder mandarles a los espectadores el
+// NÚMERO de la frase elegida, hace el sorteo por su cuenta (ver
+// botDialogueLines y botSpeak, en index.html).
 function pickBotDialogueLine(botId, eventCode) {
     // typeof en vez de acceso directo: si currentLang todavía no existe
     // por algún motivo (no debería pasar, pero por las dudas), cae en

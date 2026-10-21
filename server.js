@@ -8,15 +8,24 @@ const io = new Server(server);
 
 app.use(express.static(__dirname));
 
-let connectedUsers = {}; // { socketId: { username, status, room } }
-let activeGames = {};    // { roomName: { w: id, b: id, name, board, turn } }
-let activeLabs = {};     // { labRoomName: { ownerId, board, spectators: [usernames] } }
+// { socketId: { username, status, room, role, botName } }
+//   status: lobby / playing (duelo entre humanos) / vsbot / inlab / spectating
+//   role: 'w' / 'b' (jugador), 'spectator', 'labOwner'
+let connectedUsers = {};
+// { roomName: { w: id, b: id, name, board, turn, spectators, moveHistory,
+//   concluded, timeControl, clocks, turnStartedAt, timeoutHandle } }
+//   Contra un bot, además: vsBot, botId, botName, botLevel, humanColor (y el
+//   lugar del color del bot, w o b, queda en null).
+let activeGames = {};
+// { labRoomName: { ownerId, board, frameMode, lastMove, rotated, spectators: [usernames] } }
+let activeLabs = {};
 let botRoomCounter = 0;  // contador incremental para nombres de sala de partidas vs. bot (más robusto que Date.now(), que puede repetirse si dos arrancan en el mismo milisegundo)
 
 // --- EL PERÍODO DE GRACIA DE GODOFREDO ---
-// Volver al lobby después de una partida recarga la página (ver el
-// "location.reload()" del botón "SALIR AL LOBBY"), lo que desconecta el
-// socket viejo y reconecta uno nuevo un instante después -- indistinguible,
+// Volver al lobby después de una partida recarga la página
+// (leaveAndReload, en index.html), e ir y venir entre el Salón y el
+// Laboratorio cambia de página (leaveAndGoTo): las dos cosas desconectan el
+// socket viejo y conectan uno nuevo un instante después -- indistinguible,
 // desde el punto de vista del servidor, de que alguien realmente se fue del
 // sitio. Por eso el aviso de despedida no se manda al toque: se espera un
 // ratito (DEPARTURE_GRACE_MS) y, si el MISMO nombre de usuario se vuelve a
@@ -93,11 +102,12 @@ function abandonCurrentGameIfAny(userId, connectedUsers, activeGames, io) {
 
 // --- EL LABORATORIO: mismo par de funciones, pero para activeLabs ---
 // Igual que abandonCurrentGameIfAny/leaveSpectatingIfAny de arriba, pero
-// para el laboratorio -- se llaman EXACTAMENTE en los mismos lugares que
-// esas dos (challenge-response para ambas partes, join-as-spectator,
-// start-bot-game), así que sin importar de dónde venga alguien (dueño de
-// un laboratorio, o espectador de uno), queda prolijamente limpio antes
-// de arrancar cualquier otra cosa.
+// para el laboratorio -- se llaman junto con esas dos cada vez que alguien
+// arranca otra cosa (challenge-response para ambas partes,
+// join-as-spectator, start-bot-game, enter-lab y join-lab-spectator), así
+// que sin importar de dónde venga alguien (dueño de un laboratorio, o
+// espectador de uno), queda prolijamente limpio antes de arrancar
+// cualquier otra cosa.
 function leaveLabIfAny(userId, connectedUsers, activeLabs, io) {
     const user = connectedUsers[userId];
     if (!user || user.status !== "inlab" || !user.room) return;
@@ -122,8 +132,9 @@ function leaveLabSpectatingIfAny(userId, connectedUsers, activeLabs, io) {
 
 // --- EL CUERVO MENSAJERO DE GODOFREDO (Chat del Salón) ---
 // Un feed único y global (no por partida) con los mensajes de los jugadores
-// y los avisos automáticos del sistema (desafíos aceptados, espectadores,
-// llegadas, victorias). Guardamos solo los últimos 30 en memoria: alcanza
+// y los avisos automáticos del sistema (llegadas y despedidas, desafíos
+// aceptados, espectadores, victorias, empates y victorias por tiempo).
+// Guardamos solo los últimos 30 en memoria: alcanza
 // de sobra para el scroll hacia atrás, y no hace falta base de datos.
 let chatHistory = [];
 const CHAT_HISTORY_LIMIT = 30;
@@ -150,12 +161,13 @@ function pushSystemMessage(io, eventCode, params) {
 }
 
 // Mandamos a TODOS los conectados con su status (lobby / spectating /
-// playing / vsbot). El cliente decide qué mostrar como "desafiable" en
-// el Salón (todos menos los que están jugando contra un humano), pero
+// playing / vsbot / inlab). El cliente decide qué mostrar como "desafiable"
+// en el Salón (todos menos los que están jugando contra un humano), pero
 // necesita conocer también a los que están jugando para poder resaltar
-// @menciones a ellos en el chat. botName y room solo importan para los
-// que están en 'vsbot' (etiqueta "(vs. Nombre)" y el modal de
-// desafiar-o-espectar), pero no cuesta nada mandarlos siempre.
+// @menciones a ellos en el chat. botName solo importa para los que están en
+// 'vsbot' (la etiqueta "(vs. Nombre)"), y room para los que están en 'vsbot'
+// o en 'inlab' (el cartel de desafiar-o-espectar necesita saber qué sala
+// mirar), pero no cuesta nada mandarlos siempre.
 //
 // A nivel de MÓDULO (no adentro de io.on('connection', ...) como
 // estaba antes) -- ahí adentro no era alcanzable desde afuera del
@@ -289,7 +301,8 @@ io.on('connection', (socket) => {
         // Si había un aviso de despedida pendiente para este mismo
         // nombre, lo cancelamos: se acaba de reconectar a tiempo, así
         // que nunca se fue de verdad (fue un reload al volver al lobby
-        // después de una partida, no un cierre de pestaña).
+        // después de una partida, o un cambio de página entre el Salón y el
+        // Laboratorio, no un cierre de pestaña).
         if (pendingDepartureTimers[username]) {
             clearTimeout(pendingDepartureTimers[username]);
             delete pendingDepartureTimers[username];
@@ -489,12 +502,16 @@ io.on('connection', (socket) => {
     });
 
     // --- LA ARENA CONTRA UN BOT ---
-    // El "cerebro" del bot vive 100% en el cliente (ver bots.js) — acá el
-    // servidor solo necesita saber que la partida existe, para poder
-    // listarla en "Torneos en Curso" y dejar que alguien la espectee.
-    // Reutilizamos activeGames y toda la maquinaria existente
+    // El "cerebro" del bot vive 100% en el cliente (ver bots.js, que corre en
+    // el Web Worker de la pantalla del humano) — acá el servidor solo
+    // necesita saber que la partida existe, para que alguien la pueda
+    // espectar (no se lista en "Torneos en Curso": se llega clickeando el
+    // nombre del jugador en el Salón, ver broadcastStatus) y para
+    // retransmitirles a los espectadores los comentarios del bot (ver
+    // 'bot-line'). Reutilizamos activeGames y toda la maquinaria existente
     // (player-surrendered, disconnect, sync-board-state...) tratando al
-    // bot como un "segundo jugador" sin socket real: game.b queda en
+    // bot como un "segundo jugador" sin socket real: el lugar de su color
+    // (game.w o game.b, según con qué color juegue el humano) queda en
     // null, marcado con vsBot:true. No se anuncia en el chat global (a
     // diferencia de un desafío entre humanos) para no llenarlo de ruido.
     socket.on('start-bot-game', (data) => {
@@ -566,9 +583,10 @@ io.on('connection', (socket) => {
     // A diferencia de una partida, acá no hay reglas que validar del lado
     // del servidor: es UNA sola persona manejando las dos fichas a su
     // antojo, así que el servidor no necesita saber nada de captura
-    // obligatoria ni de turnos -- solo guarda la última foto del tablero
-    // (para poder mandársela a quien se sume después) y la retransmite en
-    // vivo a los espectadores. Reutiliza connectedUsers y broadcastStatus
+    // obligatoria ni de turnos -- solo guarda la última foto del tablero, y
+    // cómo la está mostrando el dueño (el color del marco, la huella de la
+    // última jugada y si el tablero está rotado), para poder mandársela a
+    // quien se sume después, y la retransmite en vivo a los espectadores. Reutiliza connectedUsers y broadcastStatus
     // tal cual, tratando "estar en el laboratorio" como una tercera forma
     // de estar ocupado, junto a "jugando" y "jugando contra un bot".
     socket.on('enter-lab', () => {
@@ -605,10 +623,6 @@ io.on('connection', (socket) => {
         broadcastStatus();
     });
 
-    // El dueño del laboratorio manda la foto actualizada del tablero cada
-    // vez que coloca, saca o mueve una ficha -- la guardamos y se la
-    // retransmitimos a quien esté espectando (nunca al dueño mismo, que
-    // ya tiene el tablero al día del lado suyo).
     // Valida la huella de la última jugada: dos casillas con fila y columna
     // enteras entre 0 y 9. Cualquier otra cosa se descarta (null).
     function sanitizeLastMove(lm) {
@@ -618,6 +632,11 @@ io.on('connection', (socket) => {
         return { from: { row: lm.from.row, col: lm.from.col }, to: { row: lm.to.row, col: lm.to.col } };
     }
 
+    // El dueño del laboratorio manda la foto actualizada cada vez que cambia
+    // algo de lo que ven los espectadores (las fichas, el color del marco,
+    // la huella o el giro del tablero) -- la guardamos y se la
+    // retransmitimos a quien esté espectando (nunca al dueño mismo, que
+    // ya tiene el tablero al día del lado suyo).
     socket.on('sync-lab-board', (data) => {
         const user = connectedUsers[socket.id];
         if (!user || user.status !== "inlab" || !user.room) return;
@@ -639,8 +658,9 @@ io.on('connection', (socket) => {
 
     // Alguien se suma a mirar un laboratorio ajeno -- mismo mecanismo que
     // join-as-spectator, pero apuntando a activeLabs en vez de
-    // activeGames, y sin nada de turno/reloj/crónica (el laboratorio no
-    // tiene ninguna de esas cosas).
+    // activeGames, y sin turno ni reloj (el laboratorio no los tiene).
+    // Tampoco viaja la crónica que esté mirando el dueño: al espectador le
+    // llega lo que se ve en el tablero (fichas, marco, huella y giro).
     socket.on('join-lab-spectator', (labRoom) => {
         const lab = activeLabs[labRoom];
         if (!lab) {
@@ -682,9 +702,9 @@ io.on('connection', (socket) => {
 
     // --- LA FOTO ACTUALIZADA DE GODOFREDO ---
     // Evento separado de 'make-move': no se retransmite a nadie, solo actualiza
-    // la foto que el servidor guarda de la partida. Así, cuando un espectador
-    // (o un jugador reconectando) se une, el servidor ya sabe cómo está el
-    // tablero de verdad, en vez de tener que esperar al próximo movimiento.
+    // la foto que el servidor guarda de la partida (y su crónica). Así,
+    // cuando un espectador se une, el servidor ya sabe cómo está el tablero
+    // de verdad, en vez de tener que esperar al próximo movimiento.
     socket.on('sync-board-state', (data) => {
         const room = connectedUsers[socket.id]?.room;
         if (room && activeGames[room]) {
@@ -850,11 +870,13 @@ io.on('connection', (socket) => {
 
     // --- LA CRÓNICA DE GODOFREDO ---
     // Cuando un cliente detecta localmente que la partida terminó "de forma
-    // natural" (captura total o bloqueo, a diferencia de la rendición, que
-    // ya se maneja arriba), nos avisa acá para anunciarlo en el chat. Como
-    // AMBOS jugadores detectan el mismo final de forma independiente en sus
-    // pantallas, los dos van a mandar este evento — por eso usamos la bandera
-    // "concluded" para asegurarnos de anunciarlo una sola vez.
+    // natural" (captura total, bloqueo o empate, a diferencia de la
+    // rendición, que ya se maneja arriba), nos avisa acá para anunciarlo en
+    // el chat. En un duelo entre humanos, AMBOS jugadores detectan el mismo
+    // final de forma independiente en sus pantallas, y los dos van a mandar
+    // este evento — por eso usamos la bandera "concluded" para asegurarnos
+    // de anunciarlo una sola vez. (Contra un bot lo manda solo el humano, y
+    // en el chat no se anuncia: el bot no está en connectedUsers.)
     socket.on('game-over', (data) => {
         const room = connectedUsers[socket.id]?.room;
         const game = activeGames[room];

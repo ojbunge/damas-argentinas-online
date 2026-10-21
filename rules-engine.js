@@ -2,20 +2,22 @@
 //  EL MOTOR DE REGLAS COMPARTIDO
 // ============================================================
 // Estas cuatro funciones vivían inline en index.html. Se mudaron acá
-// para que TANTO la página principal COMO el Web Worker del bot (que
-// corre en su propio hilo, sin acceso al scope de index.html) puedan
-// cargarlas — con esto, sigue habiendo una única fuente de verdad para
-// las reglas del juego, nunca dos copias que puedan divergir.
+// para que la Arena (index.html), el Laboratorio (laboratorio.html) y el
+// Web Worker del bot (que corre en su propio hilo, sin acceso al scope de
+// ninguna página) puedan cargarlas — con esto, sigue habiendo una única
+// fuente de verdad para las reglas del juego, nunca dos copias que puedan
+// divergir.
 //
 // index.html las carga con <script src="rules-engine.js">, ANTES que
-// bots.js y que el script principal (ambos las necesitan).
-// El Web Worker las carga con importScripts('rules-engine.js').
+// bots.js y que el script principal (ambos las necesitan); laboratorio.html,
+// igual, antes de su script. El Web Worker las carga con
+// importScripts('rules-engine.js').
 //
 // getLegalMoves y getGlobalBestMoves aceptan un tablero opcional
-// (boardToUse), con el board global de index.html como valor por
-// defecto — así todo el código existente que las llama sin ese
-// argumento (asumiendo el tablero real de la partida) sigue funcionando
-// exactamente igual que antes.
+// (boardToUse), con el board global de la página (el de la partida, o el
+// del Laboratorio) como valor por defecto — así todo el código que las
+// llama sin ese argumento sigue usando el tablero real. El Worker no tiene
+// board global: bots.js les pasa siempre su propio tablero.
 
         function isEnemyPiece(piece, currentPiece) {
 

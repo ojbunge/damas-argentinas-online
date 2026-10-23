@@ -502,8 +502,8 @@ io.on('connection', (socket) => {
     });
 
     // --- LA ARENA CONTRA UN BOT ---
-    // El "cerebro" del bot vive 100% en el cliente (ver bots.js, que corre en
-    // el Web Worker de la pantalla del humano) — acá el servidor solo
+    // El "cerebro" del bot vive 100% en el cliente (ver bot-engine.js, que
+    // corre en el Web Worker de la pantalla del humano) — acá el servidor solo
     // necesita saber que la partida existe, para que alguien la pueda
     // espectar (no se lista en "Torneos en Curso": se llega clickeando el
     // nombre del jugador en el Salón, ver broadcastStatus) y para

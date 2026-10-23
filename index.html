@@ -3302,6 +3302,11 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="rules-engine.js"></script>
+    <!-- El motor de los bots, antes que bots.js: la página usa
+         countTotalPieces y STARTING_PIECE_COUNT (el modo lento y el
+         Pregonero). Las jugadas del bot las calcula bot-worker.js, que
+         carga este mismo archivo en su propio hilo. -->
+    <script src="bot-engine.js"></script>
     <script src="bots.js"></script>
     <script src="bot-dialogue.js"></script>
 
@@ -3804,7 +3809,7 @@
         // ahí todavía no usa su motor profundo y responde tan rápido como
         // los demás; después ya piensa de verdad varios segundos, y sumarle
         // más sería demasiado (a pedido de Otto). El criterio de la zona de
-        // azar es el MISMO que usa el motor (bots.js), no una copia.
+        // azar es el MISMO que usa el motor (bot-engine.js), no una copia.
         function slowModeAppliesTo(level, boardSnapshot) {
             if (!slowModeEnabled) return false;
             if (level < 10) return true;
@@ -5633,10 +5638,11 @@
         // ============================================================
         //  LA SALA DE ARMAS (selección de bots)
         // ============================================================
-        // El motor que decide las jugadas del bot vive en bots.js (junto
-        // con rules-engine.js y bot-worker.js) — acá abajo es la
-        // estructura conductora: elegir un bot, arrancar la partida, y
-        // que el resto del Salón se entere.
+        // El motor que decide las jugadas del bot vive en bot-engine.js
+        // (junto con rules-engine.js y bot-worker.js); los personajes y el
+        // Pregonero, en bots.js — acá abajo es la estructura conductora:
+        // elegir un bot, arrancar la partida, y que el resto del Salón se
+        // entere.
 
         let selectedBotId = null; // bot resaltado dentro de la Sala de Armas
         let currentBotId = null;  // bot contra el que jugamos AHORA MISMO (null si es duelo humano)
@@ -5902,7 +5908,7 @@
         // ============================================================
         //  GODOFREDO LE DA VIDA AL BOT
         // ============================================================
-        // El "cerebro" (getBotMove, en bots.js) es puro: recibe un tablero
+        // El "cerebro" (getBotMove, en bot-engine.js) es puro: recibe un tablero
         // y devuelve una decisión. Corre en su propio Web Worker (ver
         // bot-worker.js), en un hilo aparte del de la página — así, sin
         // importar cuánto tarde una búsqueda profunda, la interfaz sigue

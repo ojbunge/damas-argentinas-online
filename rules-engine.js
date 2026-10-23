@@ -9,15 +9,15 @@
 // divergir.
 //
 // index.html las carga con <script src="rules-engine.js">, ANTES que
-// bots.js y que el script principal (ambos las necesitan); laboratorio.html,
-// igual, antes de su script. El Web Worker las carga con
+// bot-engine.js y que el script principal (los dos las necesitan);
+// laboratorio.html, igual, antes de su script. El Web Worker las carga con
 // importScripts('rules-engine.js').
 //
 // getLegalMoves y getGlobalBestMoves aceptan un tablero opcional
 // (boardToUse), con el board global de la página (el de la partida, o el
 // del Laboratorio) como valor por defecto — así todo el código que las
 // llama sin ese argumento sigue usando el tablero real. El Worker no tiene
-// board global: bots.js les pasa siempre su propio tablero.
+// board global: bot-engine.js les pasa siempre su propio tablero.
 
         function isEnemyPiece(piece, currentPiece) {
 
